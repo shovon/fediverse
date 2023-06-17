@@ -13,4 +13,8 @@ package simpleld
 // If you want a more proper JSON-LD implementation, this library is not it.
 //
 // This library will not filter out fields that are not defined by the context,
-// thus violating Postel's law.
+// thus violating Postel's law as a sender (be conservative in what you send),
+// but is honours Postel's law as a recipient (be liberal in what you accept).
+//
+// Is this bad? Yes! But I am currently prioritizing just getting a basic
+// Fediverse server going.

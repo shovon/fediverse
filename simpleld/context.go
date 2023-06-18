@@ -36,10 +36,18 @@ var _ json.Marshaler = Context{}
 func (c Context) MarshalJSON() ([]byte, error) {
 	switch c.contextType {
 	case urlType:
-		return maybe.MarshalJSONWithMaybe(c.url)
+		value, err := c.url.Get()
+		if err != nil {
+			return nil, err
+		}
+		return json.Marshal(value)
 	case termsListType:
-		return maybe.MarshalJSONWithMaybe(c.termsList)
+		value, err := c.termsList.Get()
+		if err != nil {
+			return nil, err
+		}
+		return json.Marshal(value)
 	default:
-		return nil, errors.New("Unknown context type")
+		return nil, errors.New("unknown context type")
 	}
 }

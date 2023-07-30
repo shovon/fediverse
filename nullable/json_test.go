@@ -1,4 +1,4 @@
-package maybe
+package nullable
 
 import (
 	"testing"
@@ -6,8 +6,8 @@ import (
 
 func TestMarshal(t *testing.T) {
 	type testStruct struct {
-		Number Maybe[int]    `json:"number"`
-		String Maybe[string] `json:"string"`
+		Number Nullable[int]    `json:"number"`
+		String Nullable[string] `json:"string"`
 	}
 	test := testStruct{
 		Number: Just[int](5),
@@ -25,12 +25,12 @@ func TestMarshal(t *testing.T) {
 
 func TestMissing(t *testing.T) {
 	type testStruct struct {
-		Number Maybe[int]    `json:"number"`
-		String Maybe[string] `json:"string"`
+		Number Nullable[int]    `json:"number"`
+		String Nullable[string] `json:"string"`
 	}
 	test := testStruct{
-		Number: Nothing[int](),
-		String: Nothing[string](),
+		Number: Null[int](),
+		String: Null[string](),
 	}
 	data, err := MarshalJSONWithMaybe(test)
 	if err != nil {

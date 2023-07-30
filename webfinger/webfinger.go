@@ -2,7 +2,7 @@ package webfinger
 
 import (
 	"fediverse/jrd"
-	"fediverse/maybe"
+	"fediverse/nullable"
 	"net/http"
 )
 
@@ -33,7 +33,7 @@ import (
 //   "rel" parameter, which whitelists the link relation types that the client
 //   is interested in, and the server must filter out
 
-type WebFingerQueryHandler func(string) (maybe.Maybe[jrd.JRD], error)
+type WebFingerQueryHandler func(string) (nullable.Nullable[jrd.JRD], error)
 
 func CreateHandler(queryHandler WebFingerQueryHandler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +48,7 @@ func CreateHandler(queryHandler WebFingerQueryHandler) http.Handler {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		jrd, err := maybeJrd.Get()
+		jrd, err := maybeJrd.Value()
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return

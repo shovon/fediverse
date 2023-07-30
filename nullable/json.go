@@ -1,4 +1,4 @@
-package maybe
+package nullable
 
 import (
 	"encoding/json"
@@ -33,7 +33,7 @@ func MarshalJSONWithMaybe(v any) ([]byte, error) {
 		}
 
 		// Check if the field is of type NullableInt
-		if strings.HasPrefix(fieldType.Type.Name(), "Maybe[") {
+		if strings.HasPrefix(fieldType.Type.Name(), "Nullable[") {
 			isSet := field.FieldByName("hasValue").Bool()
 			if !isSet {
 				continue // Ignore if IsSet is false

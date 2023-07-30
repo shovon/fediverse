@@ -7,7 +7,7 @@ import (
 )
 
 type JRD struct {
-	Expires    nullable.Nullable[time.Time]                            `json:"expires"`
+	Expires    nullable.Nullable[time.Time]                            `json:"expires,omitempty"`
 	Subject    string                                                  `json:"subject"`
 	Aliases    nullable.Nullable[[]string]                             `json:"aliases"`
 	Properties nullable.Nullable[map[string]nullable.Nullable[string]] `json:"properties"`

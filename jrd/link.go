@@ -8,9 +8,9 @@ import (
 type Link struct {
 	Rel        string                                                  `json:"rel"`
 	Href       string                                                  `json:"href"`
-	Type       nullable.Nullable[string]                               `json:"type"`
-	Titles     nullable.Nullable[map[string]string]                    `json:"titles"`
-	Properties nullable.Nullable[map[string]nullable.Nullable[string]] `json:"properties"`
+	Type       nullable.Nullable[string]                               `json:"type,omitempty"`
+	Titles     nullable.Nullable[map[string]string]                    `json:"titles,omitempty"`
+	Properties nullable.Nullable[map[string]nullable.Nullable[string]] `json:"properties,omitempty"`
 }
 
 var _ json.Marshaler = Link{}

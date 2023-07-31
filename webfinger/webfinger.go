@@ -3,6 +3,7 @@ package webfinger
 import (
 	"encoding/json"
 	"fediverse/jrd"
+	"fediverse/nullable"
 	"net/http"
 )
 
@@ -43,16 +44,31 @@ func CreateHandler(queryHandler WebFingerQueryHandler) http.Handler {
 
 		// TODO: implement the rel parameter
 
-		jrd, err := queryHandler(r.URL.Query().Get("resource"))
+		j, err := queryHandler(r.URL.Query().Get("resource"))
+
+		rel := r.URL.Query().Get("rel")
+		if rel != "" {
+			currentLinks, err := j.Links.Value()
+			if err != nil {
+				links := []jrd.Link{}
+				for _, link := range currentLinks {
+					if link.Rel == rel {
+						links = append(links, link)
+					}
+				}
+				j.Links = nullable.Just(links)
+			}
+		}
+
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		j, err := json.Marshal(jrd)
+		js, err := json.Marshal(j)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.Write(j)
+		w.Write(js)
 	})
 }

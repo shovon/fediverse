@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fediverse/jrd"
+	"fediverse/nullable"
 	"fediverse/webfinger"
 	"net/http"
 
@@ -24,8 +25,14 @@ func main() {
 	// })
 	r.Route("/.well-known", func(r chi.Router) {
 		r.Get("/webfinger", toHandlerFunc(webfinger.CreateHandler(func(acct string) (jrd.JRD, error) {
-			return jrd.JRD{}, errors.New("not yet implemented")
+			return jrd.JRD{
+				Subject: nullable.Just(acct),
+
+				Links: nullable.Just([]jrd.Link{}),
+			}, errors.New("not yet implemented")
 		})))
+		r.Get("/nodeinfo", func(w http.ResponseWriter, r *http.Request) {
+		})
 	})
 	http.ListenAndServe(":3000", r)
 }

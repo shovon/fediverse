@@ -1,9 +1,8 @@
 package webfinger
 
 import (
-	"encoding/json"
 	"fediverse/jrd"
-	"fediverse/nullable"
+	"fediverse/jrd/jrdhttp"
 	"net/http"
 )
 
@@ -36,39 +35,34 @@ import (
 
 type WebFingerQueryHandler func(string) (jrd.JRD, error)
 
+// CreateHandler creates a handler for the WebFinger endpoint.
+//
+// As far as the API exposed by the `CreateHandler` endpoint is concerned, it is
+// a somewhat opininated API, as well as the implementation itself is not fully
+// complete. One example is that the handler does not filter out requests that
+// aren't done via HTTPS.
+//
+// One way that this implemenation is opinionated is that if the entire
+// request/response cycle yields an error, what to respond with in the body is
+// not defined by the WebFinger specification.
 func CreateHandler(queryHandler WebFingerQueryHandler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Access-Control-Allow-Origin", "*")
-		w.Header().Add("Access-Control-Allow-Methods", "GET")
-		w.Header().Add("Content-Type", "application/jrd+json")
-
-		// TODO: implement the rel parameter
+		CORS(w)
 
 		j, err := queryHandler(r.URL.Query().Get("resource"))
 
-		rel := r.URL.Query().Get("rel")
-		if rel != "" {
-			currentLinks, err := j.Links.Value()
-			if err != nil {
-				links := []jrd.Link{}
-				for _, link := range currentLinks {
-					if link.Rel == rel {
-						links = append(links, link)
-					}
-				}
-				j.Links = nullable.Just(links)
-			}
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+		subject, err := j.Subject.Value()
+		if err != nil && subject == "" {
+			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-		js, err := json.Marshal(j)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		w.Write(js)
+
+		j = HandleRel(j, r)
+		jrdhttp.CreateJRDHandler(j).ServeHTTP(w, r)
 	})
 }

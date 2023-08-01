@@ -24,14 +24,15 @@ func main() {
 	// 	w.Write([]byte("welcome"))
 	// })
 	r.Route("/.well-known", func(r chi.Router) {
-		r.Get("/webfinger", toHandlerFunc(webfinger.CreateHandler(func(acct string) (jrd.JRD, error) {
+		r.Get("/webfinger", toHandlerFunc(webfinger.CreateHandler(func(resource string) (jrd.JRD, error) {
 			return jrd.JRD{
-				Subject: nullable.Just(acct),
+				Subject: nullable.Just(resource),
 
 				Links: nullable.Just([]jrd.Link{}),
 			}, errors.New("not yet implemented")
 		})))
 		r.Get("/nodeinfo", func(w http.ResponseWriter, r *http.Request) {
+
 		})
 	})
 	http.ListenAndServe(":3000", r)

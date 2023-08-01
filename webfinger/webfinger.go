@@ -58,7 +58,7 @@ func CreateHandler(queryHandler WebFingerQueryHandler) http.Handler {
 
 		subject, err := j.Subject.Value()
 		if err != nil && subject == "" {
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 

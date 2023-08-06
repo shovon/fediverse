@@ -35,7 +35,14 @@ func (n Nullable[T]) Value() (T, error) {
 	}
 
 	return n.value, nil
+}
 
+func (n Nullable[T]) ValueOrDefault(d T) T {
+	if !n.hasValue {
+		return d
+	}
+
+	return n.value
 }
 
 func (n Nullable[T]) MarshalJSON() ([]byte, error) {

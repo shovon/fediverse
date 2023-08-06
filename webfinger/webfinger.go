@@ -1,8 +1,11 @@
 package webfinger
 
 import (
+	"fediverse/httphelpers"
 	"fediverse/jrd"
 	"fediverse/jrd/jrdhttp"
+	"fediverse/jrd/jrdhttp/jrdhttperrors"
+	"fediverse/wellknown"
 	"net/http"
 )
 
@@ -45,24 +48,22 @@ type WebFingerQueryHandler func(string) (jrd.JRD, error)
 // One way that this implemenation is opinionated is that if the entire
 // request/response cycle yields an error, what to respond with in the body is
 // not defined by the WebFinger specification.
-func CreateHandler(queryHandler WebFingerQueryHandler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		CORS(w)
-
+func WebFinger(queryHandler WebFingerQueryHandler) func(http.Handler) http.Handler {
+	return wellknown.WellKnown("webfinger", httphelpers.MiddlewaresList([](func(http.Handler) http.Handler){
+		CORS,
+	})(jrdhttp.CreateJRDHandler(func(r *http.Request) (jrd.JRD, jrdhttperrors.JRDHttpError) {
 		j, err := queryHandler(r.URL.Query().Get("resource"))
 
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
+			return j, jrdhttperrors.InternalServerError()
 		}
 
 		subject, err := j.Subject.Value()
-		if err != nil && subject == "" {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
+		if err != nil || subject == "" {
+			return j, jrdhttperrors.InternalServerError()
 		}
 
 		j = HandleRel(j, r)
-		jrdhttp.CreateJRDHandler(j).ServeHTTP(w, r)
-	})
+		return j, nil
+	})))
 }

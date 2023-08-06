@@ -2,6 +2,7 @@ package main
 
 import (
 	"fediverse/jrd"
+	"fediverse/jrd/jrdhttp/jrdhttperrors"
 	"fediverse/webfinger"
 	"net/http"
 
@@ -12,7 +13,7 @@ import (
 func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	r.Use(webfinger.WebFinger(func(resource string) (jrd.JRD, error) {
+	r.Use(webfinger.WebFinger(func(resource string) (jrd.JRD, jrdhttperrors.JRDHttpError) {
 		return jrd.JRD{}, nil
 	}))
 	http.ListenAndServe(":3000", r)

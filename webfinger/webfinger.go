@@ -36,7 +36,7 @@ import (
 //   "rel" parameter, which whitelists the link relation types that the client
 //   is interested in, and the server must filter out
 
-type WebFingerQueryHandler func(string) (jrd.JRD, error)
+type WebFingerQueryHandler func(string) (jrd.JRD, jrdhttperrors.JRDHttpError)
 
 // CreateHandler creates a handler for the WebFinger endpoint.
 //
@@ -58,9 +58,11 @@ func WebFinger(queryHandler WebFingerQueryHandler) func(http.Handler) http.Handl
 			return j, jrdhttperrors.InternalServerError()
 		}
 
-		subject, err := j.Subject.Value()
-		if err != nil || subject == "" {
-			return j, jrdhttperrors.InternalServerError()
+		{
+			subject, err := j.Subject.Value()
+			if err != nil || subject == "" {
+				return j, jrdhttperrors.InternalServerError()
+			}
 		}
 
 		j = HandleRel(j, r)

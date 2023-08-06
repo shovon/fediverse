@@ -2,9 +2,9 @@ package webfinger
 
 import (
 	"fediverse/httphelpers"
+	"fediverse/httphelpers/httperrors"
 	"fediverse/jrd"
 	"fediverse/jrd/jrdhttp"
-	"fediverse/jrd/jrdhttp/jrdhttperrors"
 	"fediverse/wellknown"
 	"net/http"
 )
@@ -36,32 +36,33 @@ import (
 //   "rel" parameter, which whitelists the link relation types that the client
 //   is interested in, and the server must filter out
 
-type WebFingerQueryHandler func(string) (jrd.JRD, jrdhttperrors.JRDHttpError)
+type WebFingerQueryHandler func(string) (jrd.JRD, httperrors.HTTPError)
 
 // CreateHandler creates a handler for the WebFinger endpoint.
 //
 // As far as the API exposed by the `CreateHandler` endpoint is concerned, it is
 // a somewhat opininated API, as well as the implementation itself is not fully
-// complete. One example is that the handler does not filter out requests that
+// compliant. One example is that the handler does not filter out requests that
 // aren't done via HTTPS.
 //
 // One way that this implemenation is opinionated is that if the entire
 // request/response cycle yields an error, what to respond with in the body is
-// not defined by the WebFinger specification.
+// not defined by the WebFinger specification, but this implementation has opted
+// instead to respond with a status code and an empty body.
 func WebFinger(queryHandler WebFingerQueryHandler) func(http.Handler) http.Handler {
 	return wellknown.WellKnown("webfinger", httphelpers.MiddlewaresList([](func(http.Handler) http.Handler){
 		CORS,
-	})(jrdhttp.CreateJRDHandler(func(r *http.Request) (jrd.JRD, jrdhttperrors.JRDHttpError) {
+	})(jrdhttp.CreateJRDHandler(func(r *http.Request) (jrd.JRD, httperrors.HTTPError) {
 		j, err := queryHandler(r.URL.Query().Get("resource"))
 
 		if err != nil {
-			return j, jrdhttperrors.InternalServerError()
+			return j, err
 		}
 
 		{
 			subject, err := j.Subject.Value()
 			if err != nil || subject == "" {
-				return j, jrdhttperrors.InternalServerError()
+				return j, httperrors.InternalServerError()
 			}
 		}
 

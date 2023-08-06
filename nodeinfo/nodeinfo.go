@@ -2,9 +2,9 @@ package nodeinfo
 
 import (
 	"fediverse/httphelpers"
+	"fediverse/httphelpers/httperrors"
 	"fediverse/jrd"
 	"fediverse/jrd/jrdhttp"
-	"fediverse/jrd/jrdhttp/jrdhttperrors"
 	"fediverse/nodeinfo/schema2p0"
 	"fediverse/nullable"
 	"fediverse/wellknown"
@@ -39,7 +39,7 @@ type NodeInfoProps struct {
 
 func CreateNodeInfoMiddleware(nodeInfoRoot string, handler func() NodeInfoProps) func(http.Handler) http.Handler {
 	return httphelpers.MiddlewaresList([](func(http.Handler) http.Handler){
-		wellknown.WellKnown("nodeinfo", jrdhttp.CreateJRDHandler(func(r *http.Request) (jrd.JRD, jrdhttperrors.JRDHttpError) {
+		wellknown.WellKnown("nodeinfo", jrdhttp.CreateJRDHandler(func(r *http.Request) (jrd.JRD, httperrors.HTTPError) {
 			return jrd.JRD{
 				Links: nullable.Just([]jrd.Link{
 					{

@@ -2,13 +2,13 @@ package jrdhttp
 
 import (
 	"fediverse/httphelpers"
+	"fediverse/httphelpers/httperrors"
 	"fediverse/jrd"
-	"fediverse/jrd/jrdhttp/jrdhttperrors"
 	"fediverse/nullable"
 	"net/http"
 )
 
-func CreateJRDHandler(handler func(r *http.Request) (jrd.JRD, jrdhttperrors.JRDHttpError)) http.Handler {
+func CreateJRDHandler(handler func(r *http.Request) (jrd.JRD, httperrors.HTTPError)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		j, errjrd := handler(r)
 		if errjrd != nil {

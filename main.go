@@ -45,6 +45,8 @@ func main() {
 		acctQuery, errAcct := acct.ParseAcct(resource)
 		urlQuery, errURL := url.Parse(resource)
 
+		fmt.Printf("%s %s\n", acctQuery.User, acctQuery.Host)
+
 		if errAcct != nil && errURL != nil {
 			return jrd.JRD{}, httperrors.BadRequest()
 		}
@@ -104,11 +106,6 @@ func main() {
 			}),
 		}, nil
 	}))
-
-	r := httphelpers.Router(m)
-	r.Use("/cool", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("cool"))
-	}))
 	fmt.Printf("Listening on %s\n", hostname())
-	panic(http.ListenAndServe(hostname(), r))
+	panic(http.ListenAndServe(hostname(), m))
 }

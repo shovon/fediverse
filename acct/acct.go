@@ -43,7 +43,7 @@ func ParseAcct(acct string) (Acct, error) {
 	if u.Scheme != "acct" {
 		return Acct{}, ErrNotAcct
 	}
-	if u.Opaque != "" {
+	if u.Opaque == "" {
 		return Acct{}, ErrNotAcct
 	}
 

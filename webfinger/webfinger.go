@@ -1,8 +1,11 @@
 package webfinger
 
 import (
+	"fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
 	"fediverse/jrd"
+	"fediverse/jrd/jrdhttp"
+	"fediverse/wellknown"
 	"net/http"
 )
 
@@ -47,29 +50,24 @@ type WebFingerQueryHandler func(string) (jrd.JRD, httperrors.HTTPError)
 // not defined by the WebFinger specification, but this implementation has opted
 // instead to respond with a status code and an empty body.
 func WebFinger(queryHandler WebFingerQueryHandler) func(http.Handler) http.Handler {
-	return func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(200)
-			w.Write([]byte("Hello, world!"))
-		})
-	}
-	// return wellknown.WellKnown("webfinger", httphelpers.MiddlewaresList([](func(http.Handler) http.Handler){
-	// 	CORS,
-	// })(jrdhttp.CreateJRDHandler(func(r *http.Request) (jrd.JRD, httperrors.HTTPError) {
-	// 	j, err := queryHandler(r.URL.Query().Get("resource"))
+	m := httphelpers.Middlewares{}
+	m.Use(CORS)
+	m.Use(httphelpers.ToMiddleware(jrdhttp.CreateJRDHandler(func(r *http.Request) (jrd.JRD, httperrors.HTTPError) {
+		j, err := queryHandler(r.URL.Query().Get("resource"))
 
-	// 	if err != nil {
-	// 		return j, err
-	// 	}
+		if err != nil {
+			return j, err
+		}
 
-	// 	{
-	// 		subject, err := j.Subject.Value()
-	// 		if err != nil || subject == "" {
-	// 			return j, httperrors.InternalServerError()
-	// 		}
-	// 	}
+		{
+			subject, err := j.Subject.Value()
+			if err != nil || subject == "" {
+				return j, httperrors.InternalServerError()
+			}
+		}
 
-	// 	j = HandleRel(j, r)
-	// 	return j, nil
-	// })))
+		j = HandleRel(j, r)
+		return j, nil
+	})))
+	return wellknown.WellKnown("webfinger", m)
 }

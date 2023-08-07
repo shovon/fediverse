@@ -1,6 +1,8 @@
 package httphelpers
 
-import "net/http"
+import (
+	"net/http"
+)
 
 type Middlewares []func(http.Handler) http.Handler
 

@@ -1,15 +1,49 @@
 package httphelpers
 
-import "net/http"
+import (
+	"context"
+	"net/http"
+	"strings"
+)
 
-func Route(route string, handler http.HandlerFunc) func(http.Handler) http.Handler {
+type contextValue struct {
+	key string
+}
+
+func Route(route string, handler http.Handler) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == route {
-				handler.ServeHTTP(w, r)
+			pathSplit := strings.Split(r.URL.Path, "/")
+			routeSplit := strings.Split(route, "/")
+
+			if len(pathSplit) != len(routeSplit) {
+				next.ServeHTTP(w, r)
 				return
 			}
-			next.ServeHTTP(w, r)
+
+			newR := r.WithContext(r.Context())
+
+			for i, pathPart := range pathSplit {
+				routePart := routeSplit[i]
+				if strings.HasPrefix(routePart, ":") {
+					newR = r.WithContext(context.WithValue(r.Context(), contextValue{routePart[1:]}, pathPart))
+					continue
+				}
+				if pathPart != routePart {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
+
+			handler.ServeHTTP(w, newR)
 		})
 	}
+}
+
+func GetRouteParam(r *http.Request, key string) string {
+	value := r.Context().Value(contextValue{key})
+	if value == nil {
+		return ""
+	}
+	return value.(string)
 }

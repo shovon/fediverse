@@ -1,6 +1,8 @@
 package httphelpers
 
-import "net/http"
+import (
+	"net/http"
+)
 
 func recursiveApply[T any](fn []func(T) T, d T) T {
 	if len(fn) == 0 {

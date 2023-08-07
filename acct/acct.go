@@ -18,16 +18,20 @@ type Acct struct {
 	Host string
 }
 
-func ParseUserHost(s string) (string, string, error) {
+func ParseUserHost(s string) (Acct, error) {
 	split := strings.Split(s, "@")
 	if len(split) != 2 {
-		return "", "", ErrNotValidUserHost
+		return Acct{}, ErrNotValidUserHost
 	}
 	user, err := url.QueryUnescape(split[0])
 	if err != nil {
-		return "", "", err
+		return Acct{}, err
 	}
-	return user, split[1], nil
+	host, err := url.QueryUnescape(split[1])
+	if err != nil {
+		return Acct{}, err
+	}
+	return Acct{User: user, Host: host}, nil
 }
 
 // ParseAcct parses an acct URI into its components.
@@ -43,10 +47,10 @@ func ParseAcct(acct string) (Acct, error) {
 		return Acct{}, ErrNotAcct
 	}
 
-	user, host, err := ParseUserHost(u.Opaque)
+	a, err := ParseUserHost(u.Opaque)
 	if err != nil {
 		return Acct{}, err
 	}
 
-	return Acct{User: user, Host: host}, nil
+	return Acct{User: a.User, Host: a.Host}, nil
 }

@@ -8,10 +8,10 @@ import (
 
 type JRD struct {
 	Expires    nullable.Nullable[time.Time]                            `json:"expires,omitempty"`
-	Subject    nullable.Nullable[string]                               `json:"subject"`
-	Aliases    nullable.Nullable[[]string]                             `json:"aliases"`
-	Properties nullable.Nullable[map[string]nullable.Nullable[string]] `json:"properties"`
-	Links      nullable.Nullable[[]Link]                               `json:"links"`
+	Subject    nullable.Nullable[string]                               `json:"subject,omitempty"`
+	Aliases    nullable.Nullable[[]string]                             `json:"aliases,omitempty"`
+	Properties nullable.Nullable[map[string]nullable.Nullable[string]] `json:"properties,omitempty"`
+	Links      nullable.Nullable[[]Link]                               `json:"links,omitempty"`
 }
 
 var _ json.Marshaler = JRD{}

@@ -45,8 +45,6 @@ func main() {
 		acctQuery, errAcct := acct.ParseAcct(resource)
 		urlQuery, errURL := url.Parse(resource)
 
-		fmt.Printf("%s %s\n", acctQuery.User, acctQuery.Host)
-
 		if errAcct != nil && errURL != nil {
 			return jrd.JRD{}, httperrors.BadRequest()
 		}
@@ -87,7 +85,7 @@ func main() {
 		jsonLDAddress := origin() + "/users/" + user
 
 		return jrd.JRD{
-			Subject: nullable.Just("acct:" + user + "@" + host),
+			Subject: nullable.Just("acct:" + user + "@" + url.QueryEscape(host)),
 			Aliases: nullable.Just([]string{
 				htmlAddress,
 				jsonLDAddress,

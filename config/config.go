@@ -7,10 +7,14 @@ import (
 	"strings"
 )
 
-func Hostname() string {
-	hostname := os.Getenv("HOSTNAME")
+var hostname string
+var httpProtocol string
+
+func getHostname() {
+	hostname = os.Getenv("HOSTNAME")
 	if hostname == "" {
-		return "localhost:3131"
+		hostname = "localhost:3131"
+		return
 	}
 	hostnameParts := strings.Split(hostname, ":")
 	host := hostnameParts[0]
@@ -32,19 +36,28 @@ func Hostname() string {
 			panic("invalid port. A port is a number between 0 to 65535")
 		}
 	}
+}
 
+func getHTTPProtocol() {
+	httpProtocol = os.Getenv("PROTOCOL")
+	if httpProtocol == "" {
+		httpProtocol = "http"
+		return
+	}
+
+	if httpProtocol != "http" && httpProtocol != "https" {
+		panic("PROTOCOL must be either http or https")
+	}
+}
+
+func init() {
+	getHostname()
+}
+
+func Hostname() string {
 	return hostname
 }
 
 func HttpProtocol() string {
-	protocol := os.Getenv("PROTOCOL")
-	if protocol == "" {
-		return "http"
-	}
-
-	if protocol != "http" && protocol != "https" {
-		panic("PROTOCOL must be either http or https")
-	}
-
-	return protocol
+	return httpProtocol
 }

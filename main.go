@@ -21,16 +21,8 @@ func username() string {
 	return "username"
 }
 
-func hostname() string {
-	return config.Hostname()
-}
-
-func httpProtocol() string {
-	return config.HttpProtocol()
-}
-
 func origin() string {
-	return fmt.Sprintf("%s://%s", httpProtocol(), hostname())
+	return fmt.Sprintf("%s://%s", config.HttpProtocol(), config.Hostname())
 }
 
 type UserHost struct {
@@ -73,7 +65,7 @@ func main() {
 			}
 		}
 
-		if host != hostname() {
+		if host != config.Hostname() {
 			return jrd.JRD{}, httperrors.NotFound()
 		}
 
@@ -104,6 +96,6 @@ func main() {
 			}),
 		}, nil
 	}))
-	fmt.Printf("Listening on %s\n", hostname())
-	panic(http.ListenAndServe(hostname(), m))
+	fmt.Printf("Listening on %d\n", config.LocalPort())
+	panic(http.ListenAndServe(fmt.Sprintf(":%d", config.LocalPort()), m))
 }

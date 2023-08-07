@@ -9,6 +9,21 @@ import (
 
 var hostname string
 var httpProtocol string
+var localPort uint16
+
+func getLocalPort() {
+	port := os.Getenv("LOCAL_PORT")
+	if port == "" {
+		localPort = 3131
+		return
+	}
+
+	parsedPort, err := strconv.Atoi(port)
+	if parsedPort < 0 || parsedPort > 65535 || err != nil {
+		panic("invalid port. A port is a number between 0 to 65535")
+	}
+	localPort = uint16(parsedPort)
+}
 
 func getHostname() {
 	hostname = os.Getenv("HOSTNAME")
@@ -51,7 +66,9 @@ func getHTTPProtocol() {
 }
 
 func init() {
+	getLocalPort()
 	getHostname()
+	getHTTPProtocol()
 }
 
 func Hostname() string {
@@ -60,4 +77,8 @@ func Hostname() string {
 
 func HttpProtocol() string {
 	return httpProtocol
+}
+
+func LocalPort() uint16 {
+	return localPort
 }

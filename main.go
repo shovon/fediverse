@@ -3,10 +3,11 @@ package main
 import (
 	"fediverse/acct"
 	"fediverse/config"
-	"fediverse/httphelpers"
+	"fediverse/functional"
 	"fediverse/httphelpers/httperrors"
 	"fediverse/jrd"
 	"fediverse/nullable"
+	"fediverse/slices"
 	"fediverse/webfinger"
 	"fmt"
 	"net/http"
@@ -31,9 +32,9 @@ type UserHost struct {
 }
 
 func main() {
-	m := httphelpers.Middlewares{}
-	m.Use(middleware.Logger)
-	m.Use(webfinger.WebFinger(func(resource string) (jrd.JRD, httperrors.HTTPError) {
+	m := slices.Pusher[func(http.Handler) http.Handler]{}
+	m.Push(middleware.Logger)
+	m.Push(webfinger.WebFinger(func(resource string) (jrd.JRD, httperrors.HTTPError) {
 		acctQuery, errAcct := acct.ParseAcct(resource)
 		urlQuery, errURL := url.Parse(resource)
 
@@ -97,5 +98,8 @@ func main() {
 		}, nil
 	}))
 	fmt.Printf("Listening on %d\n", config.LocalPort())
-	panic(http.ListenAndServe(fmt.Sprintf(":%d", config.LocalPort()), m))
+	panic(http.ListenAndServe(fmt.Sprintf(":%d", config.LocalPort()), functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler)(m))(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(404)
+		w.Write([]byte("Not Found"))
+	}))))
 }

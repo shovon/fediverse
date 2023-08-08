@@ -10,7 +10,7 @@ type contextValue struct {
 	key string
 }
 
-func Route(route string, handler http.Handler) func(http.Handler) http.Handler {
+func Route(route string, middleware func(http.Handler) http.Handler) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			pathSplit := strings.Split(r.URL.Path, "/")
@@ -35,7 +35,7 @@ func Route(route string, handler http.Handler) func(http.Handler) http.Handler {
 				}
 			}
 
-			handler.ServeHTTP(w, newR)
+			middleware(next).ServeHTTP(w, newR)
 		})
 	}
 }

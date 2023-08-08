@@ -7,5 +7,5 @@ import (
 )
 
 func WellKnown(path string, handler http.Handler) func(http.Handler) http.Handler {
-	return httphelpers.Route(fmt.Sprintf("/.well-known/%s", path), handler)
+	return httphelpers.Route(fmt.Sprintf("/.well-known/%s", path), httphelpers.ToMiddleware(handler))
 }

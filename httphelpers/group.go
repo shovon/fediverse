@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+// TODO: use the pathhelpers library
+
 func Group(route string, middleware func(http.Handler) http.Handler) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

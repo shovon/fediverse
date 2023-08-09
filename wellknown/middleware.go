@@ -2,10 +2,9 @@ package wellknown
 
 import (
 	"fediverse/httphelpers"
-	"fmt"
 	"net/http"
 )
 
 func WellKnown(path string, handler http.Handler) func(http.Handler) http.Handler {
-	return httphelpers.Route(fmt.Sprintf("/.well-known/%s", path), httphelpers.ToMiddleware(handler))
+	return httphelpers.Route("/.well-known/"+path, httphelpers.ToMiddleware(handler))
 }

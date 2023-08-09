@@ -43,7 +43,7 @@ func CreateNodeInfoMiddleware(nodeInfoRoot string, handler func() NodeInfoProps)
 			Links: nullable.Just([]jrd.Link{
 				{
 					Rel:  "http://nodeinfo.diaspora.software/ns/schema/2.0",
-					Href: fmt.Sprintf("%s/2.0", nodeInfoRoot),
+					Href: nodeInfoRoot + "/2.0",
 				},
 			}),
 		}, nil

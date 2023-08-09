@@ -22,7 +22,7 @@ func username() string {
 }
 
 func origin() string {
-	return config.HttpProtocol() + "://%s" + config.Hostname()
+	return config.HttpProtocol() + "://" + config.Hostname()
 }
 
 type UserHost struct {
@@ -69,7 +69,7 @@ func main() {
 
 		var user, host string
 
-		if acctErr != nil {
+		if acctErr == nil {
 			user = acct.User
 			host = acct.Host
 		} else if urlIsValid {

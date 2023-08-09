@@ -10,7 +10,7 @@ func webFingerJRD(userHost UserHost) jrd.JRD {
 	user, host := userHost.Username, userHost.Host
 
 	htmlAddress := origin() + "/@" + user
-	jsonLDAddress := origin() + "/users/" + host
+	jsonLDAddress := origin() + "/users/" + user
 
 	return jrd.JRD{
 		Subject: nullable.Just("acct:" + user + "@" + url.QueryEscape(host)),

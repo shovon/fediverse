@@ -1,6 +1,8 @@
 package webfinger
 
 import (
+	"fediverse/functional"
+	"fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
 	"fediverse/jrd"
 	"fediverse/jrd/jrdhttp"
@@ -49,7 +51,14 @@ type WebFingerQueryHandler func(string) (jrd.JRD, httperrors.HTTPError)
 // not defined by the WebFinger specification, but this implementation has opted
 // instead to respond with a status code and an empty body.
 func WebFinger(queryHandler WebFingerQueryHandler) func(http.Handler) http.Handler {
-	return wellknown.WellKnown("webfinger", CORS(jrdhttp.CreateJRDHandler(func(r *http.Request) (jrd.JRD, httperrors.HTTPError) {
+
+	m := [](func(http.Handler) http.Handler){}
+	m = append(m, CORS)
+	m = append(m, httphelpers.Method("GET", functional.ID[http.Handler]))
+
+	middlewares := functional.RecursiveApply[http.Handler](m)
+
+	return wellknown.WellKnown("webfinger", middlewares(jrdhttp.CreateJRDHandler(func(r *http.Request) (jrd.JRD, httperrors.HTTPError) {
 		j, err := queryHandler(r.URL.Query().Get("resource"))
 
 		if err != nil {

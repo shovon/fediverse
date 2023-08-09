@@ -8,7 +8,6 @@ import (
 	"fediverse/jrd"
 	"fediverse/nodeinfo"
 	"fediverse/pathhelpers"
-	"fediverse/slices"
 	"fediverse/webfinger"
 	"fmt"
 	"net/http"
@@ -58,9 +57,9 @@ func parseURLResource(resource string) (UserHost, *url.URL, bool) {
 }
 
 func main() {
-	m := slices.Pusher[func(http.Handler) http.Handler]{}
-	m.Push(middleware.Logger)
-	m.Push(webfinger.WebFinger(func(resource string) (jrd.JRD, httperrors.HTTPError) {
+	m := [](func(http.Handler) http.Handler){}
+	m = append(m, middleware.Logger)
+	m = append(m, webfinger.WebFinger(func(resource string) (jrd.JRD, httperrors.HTTPError) {
 		acct, acctErr := acct.ParseAcct(resource)
 		userHost, urlQuery, urlIsValid := parseURLResource(resource)
 
@@ -101,7 +100,7 @@ func main() {
 
 		return webFingerJRD(UserHost{user, host}), nil
 	}))
-	m.Push(nodeinfo.CreateNodeInfoMiddleware(origin(), "/nodinfo", func() nodeinfo.NodeInfoProps {
+	m = append(m, nodeinfo.CreateNodeInfoMiddleware(origin(), "/nodinfo", func() nodeinfo.NodeInfoProps {
 		return nodeinfo.NodeInfoProps{
 			Software: nodeinfo.SoftwareInfo{
 				Name:    "fediverse",

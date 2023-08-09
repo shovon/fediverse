@@ -50,7 +50,6 @@ type WebFingerQueryHandler func(string) (jrd.JRD, httperrors.HTTPError)
 // not defined by the WebFinger specification, but this implementation has opted
 // instead to respond with a status code and an empty body.
 func WebFinger(queryHandler WebFingerQueryHandler) func(http.Handler) http.Handler {
-
 	return httphelpers.Method(
 		"GET",
 		wellknown.WellKnown(

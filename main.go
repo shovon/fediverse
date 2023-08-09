@@ -78,9 +78,12 @@ func main() {
 			host = userHost.Host
 		}
 
+		// NOTE: if this software is a multi-user instance, then we will need to
+		// check if the user exists in the database.
 		if user != username() {
 			return jrd.JRD{}, httperrors.NotFound()
 		}
+
 		if host != config.Hostname() {
 			return jrd.JRD{}, httperrors.NotFound()
 		}

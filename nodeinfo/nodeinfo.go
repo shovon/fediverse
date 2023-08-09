@@ -8,7 +8,6 @@ import (
 	"fediverse/nodeinfo/schema2p0"
 	"fediverse/nullable"
 	"fediverse/wellknown"
-	"fmt"
 	"net/http"
 )
 
@@ -37,19 +36,19 @@ type NodeInfoProps struct {
 	Usage             Usage        `json:"usage"`
 }
 
-func CreateNodeInfoMiddleware(nodeInfoRoot string, handler func() NodeInfoProps) func(http.Handler) http.Handler {
+func CreateNodeInfoMiddleware(origin string, nodeInfoRoot string, handler func() NodeInfoProps) func(http.Handler) http.Handler {
 	wellKnown := wellknown.WellKnown("nodeinfo", jrdhttp.CreateJRDHandler(func(r *http.Request) (jrd.JRD, httperrors.HTTPError) {
 		return jrd.JRD{
 			Links: nullable.Just([]jrd.Link{
 				{
 					Rel:  "http://nodeinfo.diaspora.software/ns/schema/2.0",
-					Href: nodeInfoRoot + "/2.0",
+					Href: origin + nodeInfoRoot + "/2.0",
 				},
 			}),
 		}, nil
 	}))
 
-	schema2p0 := httphelpers.Route(fmt.Sprintf("%s/2.0", nodeInfoRoot), httphelpers.ToMiddleware(httphelpers.ToHandlerFunc(httphelpers.ErrorHandler(func(w http.ResponseWriter, r *http.Request) error {
+	schema2p0 := httphelpers.Route(nodeInfoRoot+"/2.0", httphelpers.ToMiddleware(httphelpers.ToHandlerFunc(httphelpers.ErrorHandler(func(w http.ResponseWriter, r *http.Request) error {
 		nodeInfoProps := handler()
 		schema := schema2p0.Schema{
 			Software: schema2p0.Software{

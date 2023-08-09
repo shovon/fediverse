@@ -6,6 +6,7 @@ import (
 	"fediverse/functional"
 	"fediverse/httphelpers/httperrors"
 	"fediverse/jrd"
+	"fediverse/nodeinfo"
 	"fediverse/pathhelpers"
 	"fediverse/slices"
 	"fediverse/webfinger"
@@ -89,9 +90,29 @@ func main() {
 
 		return webFingerJRD(UserHost{user, host}), nil
 	}))
-	fmt.Printf("Listening on %d\n", config.LocalPort())
-	panic(http.ListenAndServe(fmt.Sprintf(":%d", config.LocalPort()), functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler)(m))(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	m.Push(nodeinfo.CreateNodeInfoMiddleware(origin(), "/nodinfo", func() nodeinfo.NodeInfoProps {
+		return nodeinfo.NodeInfoProps{
+			Software: nodeinfo.SoftwareInfo{
+				Name:    "fediverse",
+				Version: "0.0.1",
+			},
+			OpenRegistrations: false,
+			Usage: nodeinfo.Usage{
+				Users: nodeinfo.UsersStats{
+					Total:          1,
+					ActiveHalfyear: 0,
+					ActiveMonth:    0,
+				},
+				LocalPosts:    0,
+				LocalComments: 0,
+			},
+		}
+	}))
+	handler := functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler)(m))(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(404)
 		w.Write([]byte("Not Found"))
-	}))))
+	}))
+
+	fmt.Printf("Listening on %d\n", config.LocalPort())
+	panic(http.ListenAndServe(fmt.Sprintf(":%d", config.LocalPort()), handler))
 }

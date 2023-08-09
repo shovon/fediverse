@@ -1,7 +1,6 @@
 package webfinger
 
 import (
-	"fediverse/functional"
 	"fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
 	"fediverse/jrd"
@@ -52,27 +51,27 @@ type WebFingerQueryHandler func(string) (jrd.JRD, httperrors.HTTPError)
 // instead to respond with a status code and an empty body.
 func WebFinger(queryHandler WebFingerQueryHandler) func(http.Handler) http.Handler {
 
-	m := [](func(http.Handler) http.Handler){}
-	m = append(m, CORS)
-	m = append(m, httphelpers.Method("GET", functional.ID[http.Handler]))
+	return httphelpers.Method(
+		"GET",
+		wellknown.WellKnown(
+			"webfinger",
+			CORS(jrdhttp.CreateJRDHandler(func(r *http.Request) (jrd.JRD, httperrors.HTTPError) {
+				j, err := queryHandler(r.URL.Query().Get("resource"))
 
-	middlewares := functional.RecursiveApply[http.Handler](m)
+				if err != nil {
+					return j, err
+				}
 
-	return wellknown.WellKnown("webfinger", middlewares(jrdhttp.CreateJRDHandler(func(r *http.Request) (jrd.JRD, httperrors.HTTPError) {
-		j, err := queryHandler(r.URL.Query().Get("resource"))
+				{
+					subject, err := j.Subject.Value()
+					if err != nil || subject == "" {
+						return j, httperrors.InternalServerError()
+					}
+				}
 
-		if err != nil {
-			return j, err
-		}
-
-		{
-			subject, err := j.Subject.Value()
-			if err != nil || subject == "" {
-				return j, httperrors.InternalServerError()
-			}
-		}
-
-		j = HandleRel(j, r)
-		return j, nil
-	})))
+				j = HandleRel(j, r)
+				return j, nil
+			})),
+		),
+	)
 }

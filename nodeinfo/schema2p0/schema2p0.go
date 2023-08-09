@@ -4,22 +4,6 @@ import (
 	"encoding/json"
 )
 
-type Services struct {
-	// if your platform is going to support some actual inbound and outbound, then
-	// add them here.
-}
-
-func (s Services) MarshalJSON() ([]byte, error) {
-	type marshaler struct {
-		Inbound  []string `json:"inbound"`
-		Outbound []string `json:"outbound"`
-	}
-
-	m := marshaler{}
-
-	return json.Marshal(m)
-}
-
 type Software struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
@@ -35,6 +19,11 @@ type Usage struct {
 	Users         UsersStats `json:"users"`
 	LocalPosts    uint       `json:"localPosts"`
 	LocalComments uint       `json:"localComments"`
+}
+
+type Services struct {
+	InboundP  []string `json:"inbound"`
+	OutboundP []string `json:"outbound"`
 }
 
 type Schema struct {
@@ -55,6 +44,12 @@ func (s Schema) MarshalJSON() ([]byte, error) {
 		Software          Software `json:"software"`
 		Usage             Usage    `json:"usage"`
 		OpenRegistrations bool     `json:"openRegistrations"`
+		Services          Services `json:"services"`
+	}
+
+	services := Services{
+		InboundP:  []string{},
+		OutboundP: []string{},
 	}
 
 	m := marshaler{
@@ -66,6 +61,7 @@ func (s Schema) MarshalJSON() ([]byte, error) {
 		Software:          s.Software,
 		Usage:             s.Usage,
 		OpenRegistrations: s.OpenRegistrations,
+		Services:          services,
 	}
 
 	return json.Marshal(m)

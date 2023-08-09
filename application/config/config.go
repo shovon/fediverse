@@ -7,9 +7,25 @@ import (
 	"strings"
 )
 
+var username string
+var displayName string
 var hostname string
 var httpProtocol string
 var localPort uint16
+
+func getUsername() {
+	username = os.Getenv("USERNAME")
+	if username == "" {
+		panic("USERNAME environment variable is not set")
+	}
+}
+
+func getDisplayName() {
+	displayName = os.Getenv("DISPLAY_NAME")
+	if displayName == "" {
+		displayName = username
+	}
+}
 
 func getLocalPort() {
 	port := os.Getenv("LOCAL_PORT")
@@ -66,9 +82,19 @@ func getHTTPProtocol() {
 }
 
 func init() {
+	getUsername()
+	getDisplayName()
 	getLocalPort()
 	getHostname()
 	getHTTPProtocol()
+}
+
+func Username() string {
+	return username
+}
+
+func DisplayName() string {
+	return displayName
 }
 
 func Hostname() string {

@@ -18,11 +18,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func username() string {
-	// Just a hard-coded username.
-	return "username"
-}
-
 func origin() string {
 	return config.HttpProtocol() + "://" + config.Hostname()
 }
@@ -95,7 +90,7 @@ func Start() {
 		// If the software is also a multi-tenant instance, then we will need to
 		// check that not only is the user in the database, but if it is associated
 		// with the correct host.
-		if user != username() {
+		if user != config.Username() {
 			return jrd.JRD{}, httperrors.NotFound()
 		}
 
@@ -134,9 +129,11 @@ func Start() {
 				"@content": []interface{}{
 					"https://www.w3.org/ns/activitystreams",
 				},
-				"id":                origin() + "/users/" + username(),
+				"id":                origin() + "/users/" + config.Username(),
 				"type":              "Person",
-				"preferredUsername": username(),
+				"preferredUsername": config.Username(),
+				"following":         origin() + "/users/" + config.Username() + "/following",
+				"followers":         origin() + "/users/" + config.Username() + "/followers",
 			}, nullable.Just("application/json; charset=utf-8"))
 		}))),
 	))

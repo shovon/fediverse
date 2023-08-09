@@ -5,7 +5,7 @@ import "net/http"
 type useless struct{}
 
 type HTTPError interface {
-	Useless() useless
+	useless() useless
 	Status() int
 	Error() string
 	ServeHTTP(w http.ResponseWriter, r *http.Request)
@@ -20,7 +20,7 @@ var _ HTTPError = dummy{}
 var _ error = dummy{}
 var _ http.Handler = dummy{}
 
-func (d dummy) Useless() useless {
+func (d dummy) useless() useless {
 	return useless{}
 }
 

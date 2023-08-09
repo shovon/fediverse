@@ -17,9 +17,8 @@ func CreateJRDHandler(handler func(r *http.Request) (jrd.JRD, httperrors.HTTPErr
 		}
 		err := httphelpers.WriteJSON(w, 200, j, nullable.Just("application/jrd+json"))
 		if err != nil {
-			errjrd.ServeHTTP(w, r)
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Internal Server Error"))
+			w.Write([]byte("Internal server error"))
 		}
 	})
 }

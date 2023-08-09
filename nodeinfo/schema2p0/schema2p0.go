@@ -38,8 +38,9 @@ type Usage struct {
 }
 
 type Schema struct {
-	Software Software `json:"software"`
-	Usage    Usage    `json:"users"`
+	Software          Software `json:"software"`
+	Usage             Usage    `json:"usage"`
+	OpenRegistrations bool     `json:"openRegistrations"`
 }
 
 var _ json.Marshaler = Schema{}
@@ -51,11 +52,20 @@ func (s Schema) MarshalJSON() ([]byte, error) {
 		Metadata  struct {
 			ChatEnabled bool `json:"chat_enabled"`
 		} `json:"metadata"`
+		Software          Software `json:"software"`
+		Usage             Usage    `json:"usage"`
+		OpenRegistrations bool     `json:"openRegistrations"`
 	}
 
 	m := marshaler{
 		Version:   "2.0",
 		Protocols: []string{"activitypub"},
+		Metadata: struct {
+			ChatEnabled bool `json:"chat_enabled"`
+		}{ChatEnabled: false},
+		Software:          s.Software,
+		Usage:             s.Usage,
+		OpenRegistrations: s.OpenRegistrations,
 	}
 
 	return json.Marshal(m)

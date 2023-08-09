@@ -78,15 +78,23 @@ func main() {
 			host = userHost.Host
 		}
 
+		// Note: if this software is a multi-tenant instance, then we will need to
+		// check if the host exists in the database, and that it matches the HTTP
+		// HOST header.
+		if host != config.Hostname() {
+			return jrd.JRD{}, httperrors.NotFound()
+		}
+
 		// NOTE: if this software is a multi-user instance, then we will need to
 		// check if the user exists in the database.
+		//
+		// If the software is a multi-tenant instance, then we will need to check
+		// that not only is the user in the database, but if it is associated with
+		//
 		if user != username() {
 			return jrd.JRD{}, httperrors.NotFound()
 		}
 
-		if host != config.Hostname() {
-			return jrd.JRD{}, httperrors.NotFound()
-		}
 		if urlIsValid && urlQuery.Scheme != config.HttpProtocol() {
 			return jrd.JRD{}, httperrors.NotFound()
 		}

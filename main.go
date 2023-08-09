@@ -6,13 +6,12 @@ import (
 	"fediverse/functional"
 	"fediverse/httphelpers/httperrors"
 	"fediverse/jrd"
-	"fediverse/nullable"
+	"fediverse/pathhelpers"
 	"fediverse/slices"
 	"fediverse/webfinger"
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -23,7 +22,7 @@ func username() string {
 }
 
 func origin() string {
-	return fmt.Sprintf("%s://%s", config.HttpProtocol(), config.Hostname())
+	return config.HttpProtocol() + "://%s" + config.Hostname()
 }
 
 type UserHost struct {
@@ -31,71 +30,64 @@ type UserHost struct {
 	Host     string
 }
 
+const usernameParamKey = "username"
+
+func parseURLResource(resource string) (UserHost, *url.URL, bool) {
+	urlQuery, errURL := url.Parse(resource)
+
+	if errURL != nil {
+		return UserHost{}, urlQuery, false
+	}
+
+	handlers := pathhelpers.Handlers{}
+	handlers["/users/:"+usernameParamKey] = func(p map[string]string) (bool, map[string]string) { return true, p }
+	handlers["/:"+usernameParamKey] = func(params map[string]string) (bool, map[string]string) {
+		if params[usernameParamKey][0] != '@' {
+			return false, nil
+		}
+		return true, map[string]string{usernameParamKey: params[usernameParamKey][1:]}
+	}
+
+	match, params := handlers.Handle(urlQuery.Path)
+	if !match {
+		return UserHost{}, urlQuery, false
+	}
+
+	return UserHost{params[usernameParamKey], urlQuery.Host}, urlQuery, true
+}
+
 func main() {
 	m := slices.Pusher[func(http.Handler) http.Handler]{}
 	m.Push(middleware.Logger)
 	m.Push(webfinger.WebFinger(func(resource string) (jrd.JRD, httperrors.HTTPError) {
-		acctQuery, errAcct := acct.ParseAcct(resource)
-		urlQuery, errURL := url.Parse(resource)
+		acct, acctErr := acct.ParseAcct(resource)
+		userHost, urlQuery, urlIsValid := parseURLResource(resource)
 
-		if errAcct != nil && errURL != nil {
+		if acctErr != nil && !urlIsValid {
 			return jrd.JRD{}, httperrors.BadRequest()
 		}
 
 		var user, host string
 
-		if errAcct == nil {
-			user = acctQuery.User
-			host = acctQuery.Host
-		} else {
-			pathParts := strings.Split(urlQuery.Path, "/")
-			if len(pathParts) != 2 && len(pathParts) != 3 {
-				return jrd.JRD{}, httperrors.BadRequest()
-			}
-
-			host = urlQuery.Host
-
-			if len(pathParts) == 2 {
-				user = pathParts[1]
-				user = user[1:]
-			} else {
-				if pathParts[1] != "users" {
-					return jrd.JRD{}, httperrors.BadRequest()
-				}
-				user = pathParts[2]
-			}
-		}
-
-		if host != config.Hostname() {
-			return jrd.JRD{}, httperrors.NotFound()
+		if acctErr != nil {
+			user = acct.User
+			host = acct.Host
+		} else if urlIsValid {
+			user = userHost.Username
+			host = userHost.Host
 		}
 
 		if user != username() {
 			return jrd.JRD{}, httperrors.NotFound()
 		}
+		if host != config.Hostname() {
+			return jrd.JRD{}, httperrors.NotFound()
+		}
+		if urlIsValid && urlQuery.Scheme != config.HttpProtocol() {
+			return jrd.JRD{}, httperrors.NotFound()
+		}
 
-		htmlAddress := origin() + "/@" + user
-		jsonLDAddress := origin() + "/users/" + user
-
-		return jrd.JRD{
-			Subject: nullable.Just("acct:" + user + "@" + url.QueryEscape(host)),
-			Aliases: nullable.Just([]string{
-				htmlAddress,
-				jsonLDAddress,
-			}),
-			Links: nullable.Just([]jrd.Link{
-				{
-					Rel:  "http://webfinger.net/rel/profile-page",
-					Type: nullable.Just("text/html"),
-					Href: htmlAddress,
-				},
-				{
-					Rel:  "self",
-					Type: nullable.Just("application/activity+json"),
-					Href: jsonLDAddress,
-				},
-			}),
-		}, nil
+		return webFingerJRD(UserHost{user, host}), nil
 	}))
 	fmt.Printf("Listening on %d\n", config.LocalPort())
 	panic(http.ListenAndServe(fmt.Sprintf(":%d", config.LocalPort()), functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler)(m))(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

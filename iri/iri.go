@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// TODO: unit test this
 type IRI struct {
 	Scheme      string
 	Opaque      string        // encoded opaque data

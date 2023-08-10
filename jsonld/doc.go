@@ -7,5 +7,10 @@
 // entirely honour the JSON-LD spec. This is why it's a good idea to grant the
 // producer some flexibility in how they produce JSON-LD documents, in the case
 // that there are clients that don't care about the specifics of JSON-LD.
+//
+// This package is pretty much a living library to make working with JSON-LD
+// easier. It's not going to behave "robotically". Instead, it will only aid
+// in guiding us to be as compliant with JSON-LD as possible, but also grant us
+// flexibility for clients that ignore JSON-LD contexts.
 
 package jsonld

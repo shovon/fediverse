@@ -29,6 +29,8 @@ func Match(pattern, path string) (bool, map[string]string) {
 	return true, params
 }
 
+// TODO: unit test this
+
 func PartialMatch(pattern, path string) (bool, string, map[string]string) {
 	patternSplit := strings.Split(pattern, "/")
 	pathSplit := strings.Split(path, "/")

@@ -42,6 +42,8 @@ func getLocalPort() {
 }
 
 func getHostname() {
+	// TODO: unit test this
+
 	hostname = os.Getenv("HOSTNAME")
 	if hostname == "" {
 		hostname = "localhost:3131"

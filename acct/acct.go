@@ -18,6 +18,8 @@ type Acct struct {
 	Host string
 }
 
+// TODO: unit test this
+
 func ParseUserHost(s string) (Acct, error) {
 	split := strings.Split(s, "@")
 	if len(split) != 2 {
@@ -33,6 +35,8 @@ func ParseUserHost(s string) (Acct, error) {
 	}
 	return Acct{User: user, Host: host}, nil
 }
+
+// TODO: unit test this
 
 // ParseAcct parses an acct URI into its components.
 func ParseAcct(acct string) (Acct, error) {

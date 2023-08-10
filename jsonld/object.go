@@ -1,4 +1,4 @@
-package object
+package jsonld
 
 type useless struct{}
 

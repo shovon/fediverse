@@ -7,6 +7,7 @@ import (
 	hh "fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
 	"fediverse/jrd"
+	"fediverse/jsonld/jsonldkeywords"
 	"fediverse/nodeinfo"
 	"fediverse/nullable"
 	"fediverse/pathhelpers"
@@ -126,15 +127,17 @@ func Start() {
 		"GET", hh.Route("/users/:username", hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// TODO; log the error output from WriteJSON
 			hh.WriteJSON(w, 200, map[string]interface{}{
-				"@content": []interface{}{
+				jsonldkeywords.Context: []interface{}{
 					"https://www.w3.org/ns/activitystreams",
 				},
-				"id":                origin() + "/users/" + config.Username(),
-				"type":              "Person",
-				"preferredUsername": config.Username(),
-				"following":         origin() + "/users/" + config.Username() + "/following",
-				"followers":         origin() + "/users/" + config.Username() + "/followers",
-			}, nullable.Just("application/json; charset=utf-8"))
+				"id":                        origin() + "/users/" + config.Username(),
+				"type":                      "Person",
+				"preferredUsername":         config.Username(),
+				"name":                      config.DisplayName(),
+				"following":                 origin() + "/users/" + config.Username() + "/following",
+				"followers":                 origin() + "/users/" + config.Username() + "/followers",
+				"manuallyApprovesFollowers": false,
+			}, nullable.Just("application/activty+json; charset=utf-8"))
 		}))),
 	))
 

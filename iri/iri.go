@@ -1,6 +1,7 @@
 package iri
 
 import (
+	"encoding/json"
 	"net/url"
 	"strings"
 )
@@ -19,6 +20,8 @@ type IRI struct {
 	Fragment    string        // fragment for references, without '#'
 	RawFragment string        // encoded fragment hint (see EscapedFragment method)
 }
+
+var _ json.Marshaler = &IRI{}
 
 func ParseIRI(raw string) (IRI, error) {
 	u, err := url.Parse(raw)
@@ -91,4 +94,8 @@ func (u IRI) String() string {
 		buf.WriteString(u.RawFragment)
 	}
 	return buf.String()
+}
+
+func (u IRI) MarshalJSON() ([]byte, error) {
+	return json.Marshal(u.String())
 }

@@ -123,6 +123,7 @@ func Start() {
 			},
 		}
 	}))
+
 	m = append(m, hh.Method(
 		"GET", hh.Route("/users/:username", hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// TODO; log the error output from WriteJSON

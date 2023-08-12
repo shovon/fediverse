@@ -2,8 +2,8 @@ package httphelpers
 
 import (
 	"context"
+	"fediverse/pathhelpers"
 	"net/http"
-	"strings"
 )
 
 // TODO: use the pathhelpers library
@@ -11,31 +11,18 @@ import (
 func Group(route string, middleware func(http.Handler) http.Handler) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			pathSplit := strings.Split(r.URL.Path, "/")
-			routeSplit := strings.Split(route, "/")
+			hasMatch, remainder, params := pathhelpers.PartialMatch(route, r.URL.Path)
 
-			if len(pathSplit) < len(routeSplit) {
+			if !hasMatch {
 				next.ServeHTTP(w, r)
 				return
 			}
 
 			newR := r.WithContext(r.Context())
-			newPathSplit := pathSplit[len(pathSplit):]
-
-			for i, routePart := range routeSplit {
-				pathPart := pathSplit[i]
-				if strings.HasPrefix(routePart, ":") {
-					newR = r.WithContext(context.WithValue(r.Context(), contextValue{routePart[1:]}, pathPart))
-					continue
-				}
-				if pathPart != routePart {
-					next.ServeHTTP(w, r)
-					return
-				}
-				newPathSplit = newPathSplit[1:]
+			for key, value := range params {
+				newR = newR.WithContext(context.WithValue(newR.Context(), contextValue{key}, value))
 			}
-
-			newR.URL.Path = "/" + strings.Join(newPathSplit, "/")
+			newR.URL.Path = remainder
 
 			middleware(next).ServeHTTP(w, newR)
 		})

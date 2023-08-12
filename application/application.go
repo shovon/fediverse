@@ -124,7 +124,7 @@ func Start() {
 		}
 	}))
 
-	m = append(m, hh.Method(
+	m = append(m, hh.Group("/ap", hh.Accept([]string{"application/*+json"}, hh.Method(
 		"GET", hh.Route("/users/:username", hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// TODO; log the error output from WriteJSON
 			hh.WriteJSON(w, 200, map[string]interface{}{
@@ -140,7 +140,11 @@ func Start() {
 				"manuallyApprovesFollowers": false,
 			}, nullable.Just("application/activty+json; charset=utf-8"))
 		}))),
-	))
+	))))
+
+	m = append(m, hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Just an article. Coming soon"))
+	})))
 
 	finalMiddlware := functional.RecursiveApply[http.Handler](
 		[](func(http.Handler) http.Handler)(m))

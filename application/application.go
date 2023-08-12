@@ -101,6 +101,7 @@ func Start() {
 
 		return webFingerJRD(UserHost{user, host}), nil
 	}))
+
 	m = append(m, nodeinfo.CreateNodeInfoMiddleware(origin(), "/nodinfo", func() nodeinfo.NodeInfoProps {
 		return nodeinfo.NodeInfoProps{
 			Software: nodeinfo.SoftwareInfo{
@@ -124,6 +125,10 @@ func Start() {
 		}
 	}))
 
+	m = append(m, hh.NotAccept([]string{"application/*+json"}, hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Just an article. Coming soon"))
+	}))))
+
 	m = append(m, hh.Group("/ap", hh.Accept([]string{"application/*+json"}, hh.Method(
 		"GET", hh.Route("/users/:username", hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// TODO; log the error output from WriteJSON
@@ -141,10 +146,6 @@ func Start() {
 			}, nullable.Just("application/activty+json; charset=utf-8"))
 		}))),
 	))))
-
-	m = append(m, hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Just an article. Coming soon"))
-	})))
 
 	finalMiddlware := functional.RecursiveApply[http.Handler](
 		[](func(http.Handler) http.Handler)(m))

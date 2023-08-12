@@ -14,7 +14,8 @@ func Accept(supported []string, middleware func(http.Handler) http.Handler) func
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			negotiator := contentnegotiation.NewNegotiator(supported...)
-			negotiated, provided, err := negotiator.Negotiate(r.Header.Get("Accept"))
+			acceptHeader := r.Header.Get("Accept")
+			negotiated, provided, err := negotiator.Negotiate(acceptHeader)
 			if err != nil {
 				next.ServeHTTP(w, r)
 				return
@@ -31,6 +32,22 @@ func Accept(supported []string, middleware func(http.Handler) http.Handler) func
 						),
 					),
 				)
+		})
+	}
+}
+
+func NotAccept(supported []string, middleware func(http.Handler) http.Handler) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			negotiator := contentnegotiation.NewNegotiator(supported...)
+			acceptHeader := r.Header.Get("Accept")
+			_, _, err := negotiator.Negotiate(acceptHeader)
+			if err == nil {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			middleware(next).ServeHTTP(w, r)
 		})
 	}
 }

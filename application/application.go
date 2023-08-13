@@ -139,7 +139,7 @@ func Start() {
 		}
 	}))
 
-	resolveURI := func(u *url.URL, path string) possibleerror.PossibleError[string] {
+	resolveURIToString := func(u *url.URL, path string) possibleerror.PossibleError[string] {
 		return possibleerror.Then(
 			urlhelpers.ResolvePath(u, path), possibleerror.MapToThen(urlhelpers.ToString),
 		)
@@ -161,8 +161,8 @@ func Start() {
 						"type":                      "Person",
 						"preferredUsername":         config.Username(),
 						"name":                      config.DisplayName(),
-						"following":                 resolveURI(baseURL().ResolveReference(r.URL), "following"),
-						"followers":                 resolveURI(baseURL().ResolveReference(r.URL), "followers"),
+						"following":                 resolveURIToString(baseURL().ResolveReference(r.URL), "following"),
+						"followers":                 resolveURIToString(baseURL().ResolveReference(r.URL), "followers"),
 						"manuallyApprovesFollowers": false,
 					}, nullable.Just("application/activty+json; charset=utf-8"))
 					if err != nil {

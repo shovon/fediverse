@@ -161,8 +161,12 @@ func Start() {
 						"type":                      "Person",
 						"preferredUsername":         config.Username(),
 						"name":                      config.DisplayName(),
+						"summary":                   "This person doesn't have a bio yet.",
 						"following":                 resolveURIToString(baseURL().ResolveReference(r.URL), "following"),
 						"followers":                 resolveURIToString(baseURL().ResolveReference(r.URL), "followers"),
+						"inbox":                     resolveURIToString(baseURL().ResolveReference(r.URL), "inbox"),
+						"outbox":                    resolveURIToString(baseURL().ResolveReference(r.URL), "outbox"),
+						"liked":                     resolveURIToString(baseURL().ResolveReference(r.URL), "liked"),
 						"manuallyApprovesFollowers": false,
 					}, nullable.Just("application/activty+json; charset=utf-8"))
 					if err != nil {

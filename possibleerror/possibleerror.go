@@ -17,6 +17,17 @@ func Error[T any](err error) PossibleError[T] {
 	return PossibleError[T]{err: err}
 }
 
+func New[T any](value T, err error) PossibleError[T] {
+	return PossibleError[T]{value: value, err: err}
+}
+
+func Then[T any, V any](p PossibleError[T], fn func(T) PossibleError[V]) PossibleError[V] {
+	if p.err != nil {
+		return Error[V](p.err)
+	}
+	return fn(p.value)
+}
+
 func (p PossibleError[T]) Value() (T, error) {
 	return p.value, p.err
 }
@@ -26,4 +37,10 @@ func (p PossibleError[T]) MarshalJSON() ([]byte, error) {
 		return nil, p.err
 	}
 	return json.Marshal(p.value)
+}
+
+func MapToThen[T any, V any](fn func(t T) V) func(t T) PossibleError[V] {
+	return func(t T) PossibleError[V] {
+		return Value[V](fn(t))
+	}
 }

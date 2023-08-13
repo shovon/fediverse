@@ -11,11 +11,12 @@ import (
 	"fediverse/nodeinfo"
 	"fediverse/nullable"
 	"fediverse/pathhelpers"
+	"fediverse/possibleerror"
+	"fediverse/urlhelpers"
 	"fediverse/webfinger"
 	"fmt"
 	"net/http"
 	"net/url"
-	"path"
 
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -147,6 +148,10 @@ func Start() {
 					hh.Route("/users/:username"),
 				}.Process(hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					// TODO; log the error output from WriteJSON
+
+					following := possibleerror.Then(urlhelpers.ResolvePath(baseURL().ResolveReference(r.URL), "following"), possibleerror.MapToThen(urlhelpers.ToString))
+					followers := possibleerror.Then(urlhelpers.ResolvePath(baseURL().ResolveReference(r.URL), "followers"), possibleerror.MapToThen(urlhelpers.ToString))
+
 					err := hh.WriteJSON(w, 200, map[string]interface{}{
 						jsonldkeywords.Context: []interface{}{
 							"https://www.w3.org/ns/activitystreams",
@@ -155,8 +160,8 @@ func Start() {
 						"type":                      "Person",
 						"preferredUsername":         config.Username(),
 						"name":                      config.DisplayName(),
-						"following":                 origin() + path.Join(r.URL.Path, "following"),
-						"followers":                 origin() + path.Join(r.URL.Path, "followers"),
+						"following":                 following,
+						"followers":                 followers,
 						"manuallyApprovesFollowers": false,
 					}, nullable.Just("application/activty+json; charset=utf-8"))
 					if err != nil {

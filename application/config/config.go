@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 	"strconv"
@@ -12,6 +13,7 @@ var displayName string
 var hostname string
 var httpProtocol string
 var localPort uint16
+var outputDir string
 
 func getUsername() {
 	username = os.Getenv("USERNAME")
@@ -42,7 +44,8 @@ func getLocalPort() {
 }
 
 func getHostname() {
-	// TODO: unit test this
+	// TODO: the hostname is a lot more than just a FQDN and a port number. This
+	// thing should handle more use cases.
 
 	hostname = os.Getenv("HOSTNAME")
 	if hostname == "" {
@@ -51,15 +54,15 @@ func getHostname() {
 	}
 	hostnameParts := strings.Split(hostname, ":")
 	host := hostnameParts[0]
-	if len(host) > 2 {
-		panic("invalid hostname")
+	if len(hostnameParts) > 2 {
+		panic(fmt.Sprintf("invalid hostname %s. Way too many colons. Total number of colons %d", hostname, len(hostnameParts)))
 	}
 	regex := regexp.MustCompile(`^([A-Za-z0-9]{0,63})(\\.([A-Za-z0-9]{0,63}))*$`)
 	if len(host) > 255 {
 		panic("hostname too long")
 	}
 	if !regex.MatchString(host) {
-		panic("invalid hostname")
+		panic("invalid hostname " + hostname)
 	}
 
 	if len(hostnameParts) == 2 {
@@ -72,7 +75,7 @@ func getHostname() {
 }
 
 func getHTTPProtocol() {
-	httpProtocol = os.Getenv("PROTOCOL")
+	httpProtocol = os.Getenv("HTTP_PROTOCOL")
 	if httpProtocol == "" {
 		httpProtocol = "http"
 		return
@@ -80,6 +83,13 @@ func getHTTPProtocol() {
 
 	if httpProtocol != "http" && httpProtocol != "https" {
 		panic("PROTOCOL must be either http or https")
+	}
+}
+
+func getOutputDir() {
+	outputDir = os.Getenv("OUTPUT_DIR")
+	if outputDir == "" {
+		panic("an output directory must be specified")
 	}
 }
 
@@ -109,4 +119,8 @@ func HttpProtocol() string {
 
 func LocalPort() uint16 {
 	return localPort
+}
+
+func OutputDir() string {
+	return outputDir
 }

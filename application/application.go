@@ -7,12 +7,8 @@ import (
 	hh "fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
 	"fediverse/jrd"
-	"fediverse/jsonld/jsonldkeywords"
 	"fediverse/nodeinfo"
-	"fediverse/nullable"
 	"fediverse/pathhelpers"
-	"fediverse/possibleerror"
-	"fediverse/urlhelpers"
 	"fediverse/webfinger"
 	"fmt"
 	"net/http"
@@ -139,43 +135,7 @@ func Start() {
 		}
 	}))
 
-	resolveURIToString := func(u *url.URL, path string) possibleerror.PossibleError[string] {
-		return possibleerror.Then(
-			urlhelpers.JoinPath(u, path), possibleerror.MapToThen(urlhelpers.ToString),
-		)
-	}
-
-	m = append(
-		m,
-		hh.Accept([]string{"application/json", "application/activity+json"}).
-			Process(hh.Group("/ap",
-				hh.Processors{
-					hh.Method("GET"),
-					hh.Route("/users/:username"),
-				}.Process(hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					err := hh.WriteJSON(w, 200, map[string]interface{}{
-						jsonldkeywords.Context: []interface{}{
-							"https://www.w3.org/ns/activitystreams",
-						},
-						"id":                        baseURL().ResolveReference(r.URL).String(),
-						"type":                      "Person",
-						"preferredUsername":         config.Username(),
-						"name":                      config.DisplayName(),
-						"summary":                   "This person doesn't have a bio yet.",
-						"following":                 resolveURIToString(baseURL().ResolveReference(r.URL), "following"),
-						"followers":                 resolveURIToString(baseURL().ResolveReference(r.URL), "followers"),
-						"inbox":                     resolveURIToString(baseURL().ResolveReference(r.URL), "inbox"),
-						"outbox":                    resolveURIToString(baseURL().ResolveReference(r.URL), "outbox"),
-						"liked":                     resolveURIToString(baseURL().ResolveReference(r.URL), "liked"),
-						"manuallyApprovesFollowers": false,
-					}, nullable.Just("application/activty+json; charset=utf-8"))
-					if err != nil {
-						w.WriteHeader(500)
-						w.Write([]byte("Internal Server Error"))
-					}
-				}))),
-			)),
-	)
+	m = append(m, ap())
 
 	m = append(m, hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Just an article. Coming soon"))

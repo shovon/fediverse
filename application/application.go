@@ -139,6 +139,12 @@ func Start() {
 		}
 	}))
 
+	resolveURI := func(u *url.URL, path string) possibleerror.PossibleError[string] {
+		return possibleerror.Then(
+			urlhelpers.ResolvePath(u, path), possibleerror.MapToThen(urlhelpers.ToString),
+		)
+	}
+
 	m = append(
 		m,
 		hh.Accept([]string{"application/json", "application/activity+json"}).
@@ -147,17 +153,6 @@ func Start() {
 					hh.Method("GET"),
 					hh.Route("/users/:username"),
 				}.Process(hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					// TODO; log the error output from WriteJSON
-
-					following := possibleerror.
-						Then(
-							urlhelpers.ResolvePath(baseURL().ResolveReference(r.URL), "following"), possibleerror.MapToThen(urlhelpers.ToString),
-						)
-					followers := possibleerror.
-						Then(
-							urlhelpers.ResolvePath(baseURL().ResolveReference(r.URL), "followers"), possibleerror.MapToThen(urlhelpers.ToString),
-						)
-
 					err := hh.WriteJSON(w, 200, map[string]interface{}{
 						jsonldkeywords.Context: []interface{}{
 							"https://www.w3.org/ns/activitystreams",
@@ -166,8 +161,8 @@ func Start() {
 						"type":                      "Person",
 						"preferredUsername":         config.Username(),
 						"name":                      config.DisplayName(),
-						"following":                 following,
-						"followers":                 followers,
+						"following":                 resolveURI(baseURL().ResolveReference(r.URL), "following"),
+						"followers":                 resolveURI(baseURL().ResolveReference(r.URL), "followers"),
 						"manuallyApprovesFollowers": false,
 					}, nullable.Just("application/activty+json; charset=utf-8"))
 					if err != nil {

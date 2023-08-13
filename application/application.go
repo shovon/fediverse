@@ -149,8 +149,14 @@ func Start() {
 				}.Process(hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					// TODO; log the error output from WriteJSON
 
-					following := possibleerror.Then(urlhelpers.ResolvePath(baseURL().ResolveReference(r.URL), "following"), possibleerror.MapToThen(urlhelpers.ToString))
-					followers := possibleerror.Then(urlhelpers.ResolvePath(baseURL().ResolveReference(r.URL), "followers"), possibleerror.MapToThen(urlhelpers.ToString))
+					following := possibleerror.
+						Then(
+							urlhelpers.ResolvePath(baseURL().ResolveReference(r.URL), "following"), possibleerror.MapToThen(urlhelpers.ToString),
+						)
+					followers := possibleerror.
+						Then(
+							urlhelpers.ResolvePath(baseURL().ResolveReference(r.URL), "followers"), possibleerror.MapToThen(urlhelpers.ToString),
+						)
 
 					err := hh.WriteJSON(w, 200, map[string]interface{}{
 						jsonldkeywords.Context: []interface{}{

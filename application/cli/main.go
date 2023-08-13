@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fediverse/application/config"
+	"fmt"
+)
 
 func main() {
-	fmt.Println("Hello, world!")
+	fmt.Println(config.OutputDir())
 }

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fediverse/pathhelpers"
 	"fmt"
 	"os"
 	"regexp"
@@ -87,10 +88,15 @@ func getHTTPProtocol() {
 }
 
 func getOutputDir() {
-	outputDir = os.Getenv("OUTPUT_DIR")
-	if outputDir == "" {
+	odir := os.Getenv("OUTPUT_DIR")
+	if odir == "" {
 		panic("an output directory must be specified")
 	}
+	wd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	outputDir = pathhelpers.Resolve(wd, odir)
 }
 
 func init() {
@@ -99,6 +105,7 @@ func init() {
 	getLocalPort()
 	getHostname()
 	getHTTPProtocol()
+	getOutputDir()
 }
 
 func Username() string {

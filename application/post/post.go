@@ -17,7 +17,7 @@ var file *os.File
 
 func init() {
 	os.MkdirAll(config.OutputDir(), os.ModePerm)
-	f, err := os.OpenFile(path.Join(config.OutputDir()), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	f, err := os.OpenFile(path.Join(config.OutputDir(), "posts.jsonl"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		panic(err)
 	}

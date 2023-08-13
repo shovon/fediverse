@@ -50,27 +50,24 @@ type WebFingerQueryHandler func(string) (jrd.JRD, httperrors.HTTPError)
 // not defined by the WebFinger specification, but this implementation has opted
 // instead to respond with a status code and an empty body.
 func WebFinger(queryHandler WebFingerQueryHandler) func(http.Handler) http.Handler {
-	return httphelpers.Method(
-		"GET",
-		wellknown.WellKnown(
-			"webfinger",
-			CORS(jrdhttp.CreateJRDHandler(func(r *http.Request) (jrd.JRD, httperrors.HTTPError) {
-				j, err := queryHandler(r.URL.Query().Get("resource"))
+	return httphelpers.Method("GET").Process(wellknown.WellKnown(
+		"webfinger",
+		CORS(jrdhttp.CreateJRDHandler(func(r *http.Request) (jrd.JRD, httperrors.HTTPError) {
+			j, err := queryHandler(r.URL.Query().Get("resource"))
 
-				if err != nil {
-					return j, err
+			if err != nil {
+				return j, err
+			}
+
+			{
+				subject, err := j.Subject.Value()
+				if err != nil || subject == "" {
+					return j, httperrors.InternalServerError()
 				}
+			}
 
-				{
-					subject, err := j.Subject.Value()
-					if err != nil || subject == "" {
-						return j, httperrors.InternalServerError()
-					}
-				}
-
-				j = HandleRel(j, r)
-				return j, nil
-			})),
-		),
-	)
+			j = HandleRel(j, r)
+			return j, nil
+		})),
+	))
 }

@@ -12,22 +12,24 @@ type contextValue struct {
 
 // TODO: use the pathhelpers library
 
-func Route(route string, middleware func(http.Handler) http.Handler) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			hasMatch, params := pathhelpers.Match(route, r.URL.Path)
+func Route(route string) Processor {
+	return ProcessorFunc(func(middleware func(http.Handler) http.Handler) func(http.Handler) http.Handler {
+		return func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				hasMatch, params := pathhelpers.Match(route, r.URL.Path)
 
-			if !hasMatch {
-				next.ServeHTTP(w, r)
-				return
-			}
+				if !hasMatch {
+					next.ServeHTTP(w, r)
+					return
+				}
 
-			newR := r.WithContext(r.Context())
-			for key, value := range params {
-				newR = newR.WithContext(context.WithValue(newR.Context(), contextValue{key}, value))
-			}
+				newR := r.WithContext(r.Context())
+				for key, value := range params {
+					newR = newR.WithContext(context.WithValue(newR.Context(), contextValue{key}, value))
+				}
 
-			middleware(next).ServeHTTP(w, newR)
-		})
-	}
+				middleware(next).ServeHTTP(w, newR)
+			})
+		}
+	})
 }

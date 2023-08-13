@@ -6,8 +6,6 @@ import (
 	"net/http"
 )
 
-// TODO: use the pathhelpers library
-
 func Group(route string, middleware func(http.Handler) http.Handler) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -22,9 +20,10 @@ func Group(route string, middleware func(http.Handler) http.Handler) func(http.H
 			for key, value := range params {
 				newR = newR.WithContext(context.WithValue(newR.Context(), contextValue{key}, value))
 			}
+			oldPath := newR.URL.Path
 			newR.URL.Path = remainder
-
 			middleware(next).ServeHTTP(w, newR)
+			newR.URL.Path = oldPath
 		})
 	}
 }

@@ -16,7 +16,7 @@ func Route(route string) Processor {
 	return ProcessorFunc(func(middleware func(http.Handler) http.Handler) func(http.Handler) http.Handler {
 		return func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				hasMatch, params := pathhelpers.Match(route, r.URL.Path)
+				hasMatch, params := pathhelpers.Match(route, GetRelativePath(r))
 
 				if !hasMatch {
 					next.ServeHTTP(w, r)

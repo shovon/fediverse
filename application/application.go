@@ -15,12 +15,25 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"path"
 
 	"github.com/go-chi/chi/v5/middleware"
 )
 
 func origin() string {
 	return config.HttpProtocol() + "://" + config.Hostname()
+}
+
+func baseURL() *url.URL {
+	u, err := url.Parse(origin())
+	if err != nil {
+		panic(fmt.Errorf("URL of origin %s is not a valid URL. Are we generating base URLs correctly?", origin()))
+	}
+	return u
+}
+
+func init() {
+	baseURL()
 }
 
 type UserHost struct {
@@ -127,10 +140,6 @@ func Start() {
 
 	activitypubMediaTypes := []string{"application/json", "application/activity+json"}
 
-	m = append(m, hh.NotAccept(activitypubMediaTypes).Process(hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Just an article. Coming soon"))
-	}))))
-
 	m = append(
 		m,
 		hh.Group("/ap",
@@ -144,17 +153,21 @@ func Start() {
 					jsonldkeywords.Context: []interface{}{
 						"https://www.w3.org/ns/activitystreams",
 					},
-					"id":                        origin() + "/users/" + config.Username(),
+					"id":                        baseURL().ResolveReference(r.URL).String(),
 					"type":                      "Person",
 					"preferredUsername":         config.Username(),
 					"name":                      config.DisplayName(),
-					"following":                 origin() + "/users/" + config.Username() + "/following",
-					"followers":                 origin() + "/users/" + config.Username() + "/followers",
+					"following":                 origin() + path.Join(r.URL.Path, "following"),
+					"followers":                 origin() + path.Join(r.URL.Path, "followers"),
 					"manuallyApprovesFollowers": false,
 				}, nullable.Just("application/activty+json; charset=utf-8"))
 			}))),
 		),
 	)
+
+	m = append(m, hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Just an article. Coming soon"))
+	})))
 
 	finalMiddlware := functional.RecursiveApply[http.Handler](
 		[](func(http.Handler) http.Handler)(m))

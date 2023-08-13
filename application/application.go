@@ -138,31 +138,33 @@ func Start() {
 		}
 	}))
 
-	activitypubMediaTypes := []string{"application/json", "application/activity+json"}
-
 	m = append(
 		m,
-		hh.Group("/ap",
-			hh.Processors{
-				hh.Accept(activitypubMediaTypes),
-				hh.Method("GET"),
-				hh.Route("/users/:username"),
-			}.Process(hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				// TODO; log the error output from WriteJSON
-				hh.WriteJSON(w, 200, map[string]interface{}{
-					jsonldkeywords.Context: []interface{}{
-						"https://www.w3.org/ns/activitystreams",
-					},
-					"id":                        baseURL().ResolveReference(r.URL).String(),
-					"type":                      "Person",
-					"preferredUsername":         config.Username(),
-					"name":                      config.DisplayName(),
-					"following":                 origin() + path.Join(r.URL.Path, "following"),
-					"followers":                 origin() + path.Join(r.URL.Path, "followers"),
-					"manuallyApprovesFollowers": false,
-				}, nullable.Just("application/activty+json; charset=utf-8"))
-			}))),
-		),
+		hh.Accept([]string{"application/json", "application/activity+json"}).
+			Process(hh.Group("/ap",
+				hh.Processors{
+					hh.Method("GET"),
+					hh.Route("/users/:username"),
+				}.Process(hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					// TODO; log the error output from WriteJSON
+					err := hh.WriteJSON(w, 200, map[string]interface{}{
+						jsonldkeywords.Context: []interface{}{
+							"https://www.w3.org/ns/activitystreams",
+						},
+						"id":                        baseURL().ResolveReference(r.URL).String(),
+						"type":                      "Person",
+						"preferredUsername":         config.Username(),
+						"name":                      config.DisplayName(),
+						"following":                 origin() + path.Join(r.URL.Path, "following"),
+						"followers":                 origin() + path.Join(r.URL.Path, "followers"),
+						"manuallyApprovesFollowers": false,
+					}, nullable.Just("application/activty+json; charset=utf-8"))
+					if err != nil {
+						w.WriteHeader(500)
+						w.Write([]byte("Internal Server Error"))
+					}
+				}))),
+			)),
 	)
 
 	m = append(m, hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

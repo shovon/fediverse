@@ -141,7 +141,7 @@ func Start() {
 
 	resolveURIToString := func(u *url.URL, path string) possibleerror.PossibleError[string] {
 		return possibleerror.Then(
-			urlhelpers.ResolvePath(u, path), possibleerror.MapToThen(urlhelpers.ToString),
+			urlhelpers.JoinPath(u, path), possibleerror.MapToThen(urlhelpers.ToString),
 		)
 	}
 

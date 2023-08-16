@@ -25,6 +25,7 @@ func init() {
 }
 
 type Post struct {
+	ID          string    `json:"id"`
 	WhenCreated time.Time `json:"whenCreated"`
 	Body        string    `json:"body"`
 }

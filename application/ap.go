@@ -54,14 +54,14 @@ func ap() func(http.Handler) http.Handler {
 						hh.Route("/followers"),
 					}.Process(hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 						w.WriteHeader(501)
-						w.Write([]byte("Internal Server Error"))
+						w.Write([]byte("Not implemented"))
 					}))),
 					hh.Processors{
 						hh.Method("POST"),
 						hh.Route("/inbox"),
 					}.Process(hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 						w.WriteHeader(501)
-						w.Write([]byte("Internal Server Error"))
+						w.Write([]byte("Not implemented"))
 					}))),
 				}),
 			),

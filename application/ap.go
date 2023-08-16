@@ -56,6 +56,13 @@ func ap() func(http.Handler) http.Handler {
 						w.WriteHeader(500)
 						w.Write([]byte("Internal Server Error"))
 					}))),
+					hh.Processors{
+						hh.Method("POST"),
+						hh.Route("/inbox"),
+					}.Process(hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						w.WriteHeader(500)
+						w.Write([]byte("Internal Server Error"))
+					}))),
 				}),
 			),
 		))

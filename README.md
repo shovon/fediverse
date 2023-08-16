@@ -5,3 +5,9 @@ Just a bunch of stuff related to the Fediverse. Not just ActivityPub, but the in
 This is all just one big WIP.
 
 Stay tuned.
+
+Running:
+
+```
+env -S "`cat ./.example.env`" go run ./application/cli* create 'Testing this once more'
+```

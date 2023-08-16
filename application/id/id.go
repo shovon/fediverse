@@ -2,6 +2,7 @@ package id
 
 import (
 	"crypto/rand"
+	"encoding/hex"
 )
 
 func Generate() (string, error) {
@@ -10,5 +11,5 @@ func Generate() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(buf), nil
+	return hex.EncodeToString(buf), nil
 }

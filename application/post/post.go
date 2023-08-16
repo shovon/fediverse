@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fediverse/application/config"
+	"fediverse/application/id"
 	"fmt"
 	"os"
 	"path"
@@ -31,7 +32,13 @@ type Post struct {
 }
 
 func CreatePost(body string) error {
+	i, err := id.Generate()
+	if err != nil {
+		return err
+	}
+
 	post := Post{
+		ID:          i,
 		WhenCreated: time.Now(),
 		Body:        body,
 	}

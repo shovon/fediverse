@@ -6,6 +6,7 @@ import (
 	"fediverse/functional"
 	hh "fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
+	"fediverse/httphelpers/requestbaseurl"
 	"fediverse/jrd"
 	"fediverse/nodeinfo"
 	"fediverse/pathhelpers"
@@ -69,6 +70,7 @@ func Start() {
 
 	// TODO: move away from Chi, and use some other logger library.
 	m = append(m, middleware.Logger)
+	m = append(m, requestbaseurl.Override(baseURL()))
 
 	m = append(m, webfinger.WebFinger(func(resource string) (jrd.JRD, httperrors.HTTPError) {
 		acct, acctErr := acct.ParseAcct(resource)

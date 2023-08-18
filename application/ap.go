@@ -6,6 +6,8 @@ import (
 	"fediverse/functional"
 	"fediverse/httphelpers"
 	hh "fediverse/httphelpers"
+	"fediverse/httphelpers/httperrors"
+	"fediverse/httphelpers/requestbaseurl"
 	"fediverse/jsonld/jsonldkeywords"
 	"fediverse/nullable"
 	"fediverse/possibleerror"
@@ -21,10 +23,6 @@ func resolveURIToString(u *url.URL, path string) possibleerror.PossibleError[str
 }
 
 func ap() func(http.Handler) http.Handler {
-	absolute := func(a *url.URL, b string) possibleerror.PossibleError[string] {
-		return resolveURIToString(baseURL().ResolveReference(a), b)
-	}
-
 	return hh.Accept([]string{"application/*+json"}).
 		Process(hh.Group("/ap",
 			hh.Group(
@@ -46,7 +44,11 @@ func ap() func(http.Handler) http.Handler {
 						hh.Route("/"),
 					}.Process(hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 						a := func(path string) possibleerror.PossibleError[string] {
-							return absolute(r.URL, path)
+							u, err := requestbaseurl.GetRequestURL(r)
+							if err != nil {
+								return possibleerror.Error[string](err)
+							}
+							return resolveURIToString(u.ResolveReference(r.URL), path)
 						}
 
 						err := hh.WriteJSON(w, 200, map[string]interface{}{
@@ -66,8 +68,8 @@ func ap() func(http.Handler) http.Handler {
 							"manuallyApprovesFollowers": false,
 						}, nullable.Just("application/activty+json; charset=utf-8"))
 						if err != nil {
-							w.WriteHeader(500)
-							w.Write([]byte("Internal Server Error"))
+							httperrors.InternalServerError().ServeHTTP(w, r)
+							return
 						}
 					}))),
 					hh.Processors{

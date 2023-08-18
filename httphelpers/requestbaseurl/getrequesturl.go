@@ -5,7 +5,7 @@ import (
 	"net/url"
 )
 
-func GetRequestUrl(r *http.Request) (*url.URL, error) {
+func GetRequestURL(r *http.Request) (*url.URL, error) {
 	if u, ok := r.Context().Value(overriden{}).(*url.URL); ok {
 		return u, nil
 	}

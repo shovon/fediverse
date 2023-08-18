@@ -2,7 +2,9 @@ package application
 
 import (
 	"fediverse/application/config"
+	"fediverse/application/lib"
 	"fediverse/functional"
+	"fediverse/httphelpers"
 	hh "fediverse/httphelpers"
 	"fediverse/jsonld/jsonldkeywords"
 	"fediverse/nullable"
@@ -12,11 +14,15 @@ import (
 	"net/url"
 )
 
+func resolveURIToString(u *url.URL, path string) possibleerror.PossibleError[string] {
+	return possibleerror.Then(
+		urlhelpers.JoinPath(u, path), possibleerror.MapToThen(urlhelpers.ToString),
+	)
+}
+
 func ap() func(http.Handler) http.Handler {
-	resolveURIToString := func(u *url.URL, path string) possibleerror.PossibleError[string] {
-		return possibleerror.Then(
-			urlhelpers.JoinPath(u, path), possibleerror.MapToThen(urlhelpers.ToString),
-		)
+	absolute := func(a *url.URL, b string) possibleerror.PossibleError[string] {
+		return resolveURIToString(baseURL().ResolveReference(a), b)
 	}
 
 	return hh.Accept([]string{"application/*+json"}).
@@ -24,10 +30,25 @@ func ap() func(http.Handler) http.Handler {
 			hh.Group(
 				"/users/:username",
 				functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler){
+					func(next http.Handler) http.Handler {
+						return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+							if lib.UserExists(httphelpers.GetRouteParam(r, "username")) {
+								w.WriteHeader(404)
+								w.Write([]byte("Not Found"))
+								return
+							}
+
+							next.ServeHTTP(w, r)
+						})
+					},
 					hh.Processors{
 						hh.Method("GET"),
 						hh.Route("/"),
 					}.Process(hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						a := func(path string) possibleerror.PossibleError[string] {
+							return absolute(r.URL, path)
+						}
+
 						err := hh.WriteJSON(w, 200, map[string]interface{}{
 							jsonldkeywords.Context: []interface{}{
 								"https://www.w3.org/ns/activitystreams",
@@ -37,11 +58,11 @@ func ap() func(http.Handler) http.Handler {
 							"preferredUsername":         config.Username(),
 							"name":                      config.DisplayName(),
 							"summary":                   "This person doesn't have a bio yet.",
-							"following":                 resolveURIToString(baseURL().ResolveReference(r.URL), "following"),
-							"followers":                 resolveURIToString(baseURL().ResolveReference(r.URL), "followers"),
-							"inbox":                     resolveURIToString(baseURL().ResolveReference(r.URL), "inbox"),
-							"outbox":                    resolveURIToString(baseURL().ResolveReference(r.URL), "outbox"),
-							"liked":                     resolveURIToString(baseURL().ResolveReference(r.URL), "liked"),
+							"following":                 a("following"),
+							"followers":                 a("followers"),
+							"inbox":                     a("inbox"),
+							"outbox":                    a("outbox"),
+							"liked":                     a("liked"),
 							"manuallyApprovesFollowers": false,
 						}, nullable.Just("application/activty+json; charset=utf-8"))
 						if err != nil {

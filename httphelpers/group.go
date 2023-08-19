@@ -25,7 +25,9 @@ func Group(route string, middleware func(http.Handler) http.Handler) func(http.H
 			}
 
 			newR = newR.WithContext(context.WithValue(newR.Context(), relativePath{}, remainder))
-			middleware(next).ServeHTTP(w, newR)
+			middleware(http.HandlerFunc(func(w http.ResponseWriter, newR *http.Request) {
+				next.ServeHTTP(w, r)
+			})).ServeHTTP(w, newR)
 		})
 	}
 }

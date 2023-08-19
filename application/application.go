@@ -15,24 +15,11 @@ import (
 	"net/http"
 	"net/url"
 
+	"fediverse/application/ap"
+	"fediverse/application/common"
+
 	"github.com/go-chi/chi/v5/middleware"
 )
-
-func origin() string {
-	return config.HttpProtocol() + "://" + config.Hostname()
-}
-
-func baseURL() *url.URL {
-	u, err := url.Parse(origin())
-	if err != nil {
-		panic(fmt.Errorf("URL of origin %s is not a valid URL. Are we generating base URLs correctly?", origin()))
-	}
-	return u
-}
-
-func init() {
-	baseURL()
-}
 
 type UserHost struct {
 	Username string
@@ -70,7 +57,7 @@ func Start() {
 
 	// TODO: move away from Chi, and use some other logger library.
 	m = append(m, middleware.Logger)
-	m = append(m, requestbaseurl.Override(baseURL()))
+	m = append(m, requestbaseurl.Override(common.BaseURL()))
 
 	m = append(m, webfinger.WebFinger(func(resource string) (jrd.JRD, httperrors.HTTPError) {
 		acct, acctErr := acct.ParseAcct(resource)
@@ -114,7 +101,7 @@ func Start() {
 		return webFingerJRD(UserHost{user, host}), nil
 	}))
 
-	m = append(m, nodeinfo.CreateNodeInfoMiddleware(origin(), "/nodinfo", func() nodeinfo.NodeInfoProps {
+	m = append(m, nodeinfo.CreateNodeInfoMiddleware(common.Origin(), "/nodinfo", func() nodeinfo.NodeInfoProps {
 		return nodeinfo.NodeInfoProps{
 			Software: nodeinfo.SoftwareInfo{
 				Name:    "fediverse",
@@ -137,7 +124,7 @@ func Start() {
 		}
 	}))
 
-	m = append(m, ap())
+	m = append(m, ap.ActivityPub())
 
 	m = append(m, hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Just an article. Coming soon"))

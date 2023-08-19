@@ -4,7 +4,6 @@ import (
 	"fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
 	"fediverse/jrd"
-	"fediverse/nullable"
 	"net/http"
 )
 
@@ -15,7 +14,7 @@ func CreateJRDHandler(handler func(r *http.Request) (jrd.JRD, httperrors.HTTPErr
 			errjrd.ServeHTTP(w, r)
 			return
 		}
-		err := httphelpers.WriteJSON(w, 200, j, nullable.Just("application/jrd+json"))
+		err := httphelpers.WriteJSON(w, j)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Internal server error"))

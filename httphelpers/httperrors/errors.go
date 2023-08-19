@@ -33,6 +33,7 @@ func (d dummy) Error() string {
 }
 
 func (d dummy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(d.status)
 	w.Write([]byte(d.err))
 }

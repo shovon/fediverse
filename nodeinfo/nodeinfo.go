@@ -86,7 +86,7 @@ func CreateNodeInfoMiddleware(origin string, nodeInfoRoot string, handler func()
 				LocalComments: nodeInfoProps.Usage.LocalComments,
 			},
 		}
-		return httphelpers.WriteJSON(w, 200, schema, nullable.Null[string]())
+		return httphelpers.WriteJSON(w, schema)
 	}))))
 
 	return func(next http.Handler) http.Handler {

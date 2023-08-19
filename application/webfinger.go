@@ -1,6 +1,7 @@
 package application
 
 import (
+	"fediverse/application/common"
 	"fediverse/jrd"
 	"fediverse/nullable"
 	"net/url"
@@ -9,8 +10,8 @@ import (
 func webFingerJRD(userHost UserHost) jrd.JRD {
 	user, host := userHost.Username, userHost.Host
 
-	htmlAddress := origin() + "/@" + user
-	jsonLDAddress := origin() + "/users/" + user
+	htmlAddress := common.Origin() + "/@" + user
+	jsonLDAddress := common.Origin() + "/users/" + user
 
 	return jrd.JRD{
 		Subject: nullable.Just("acct:" + user + "@" + url.QueryEscape(host)),

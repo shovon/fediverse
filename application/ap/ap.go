@@ -71,6 +71,10 @@ func ActivityPub() func(http.Handler) http.Handler {
 				}))),
 				hh.Processors{
 					hh.Method("GET"),
+					hh.Route("/following"),
+				}.Process(hh.ToMiddleware(httperrors.NotImplemented())),
+				hh.Processors{
+					hh.Method("GET"),
 					hh.Route("/followers"),
 				}.Process(hh.ToMiddleware(httperrors.NotImplemented())),
 				hh.Processors{

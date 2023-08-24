@@ -2,6 +2,7 @@ package cavage
 
 import (
 	"fediverse/nullable"
+	"fediverse/pair"
 	"fediverse/slices"
 	"fmt"
 	"net/http"
@@ -29,37 +30,32 @@ const (
 	expires       = "(expires)"
 )
 
-type pair[K any, V any] struct {
-	key   K
-	value V
-}
-
 func (ssi SigningStringInfo) ConstringSigningString() string {
-	result := slices.Map(ssi.ExpectedHeaders, func(s string) pair[string, string] {
+	result := slices.Map(ssi.ExpectedHeaders, func(s string) pair.Pair[string, string] {
 		switch s {
 		case requestTarget:
-			return pair[string, string]{
-				key:   requestTarget,
-				value: ssi.Method,
+			return pair.Pair[string, string]{
+				Key:   requestTarget,
+				Value: ssi.Method,
 			}
 		case created:
-			return pair[string, string]{
-				key:   created,
-				value: stringifyNullableTime(ssi.Created),
+			return pair.Pair[string, string]{
+				Key:   created,
+				Value: stringifyNullableTime(ssi.Created),
 			}
 		case expires:
-			return pair[string, string]{
-				key:   expires,
-				value: stringifyNullableTime(ssi.Created),
+			return pair.Pair[string, string]{
+				Key:   expires,
+				Value: stringifyNullableTime(ssi.Created),
 			}
 		}
 
-		return pair[string, string]{key: s, value: ssi.Headers.Get(s)}
+		return pair.Pair[string, string]{Key: s, Value: ssi.Headers.Get(s)}
 	})
 	return strings.Join(
 		slices.Map(
 			result,
-			func(p pair[string, string]) string { return p.key + ": " + p.value },
+			func(p pair.Pair[string, string]) string { return p.Key + ": " + p.Value },
 		),
 		"\n",
 	)

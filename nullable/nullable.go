@@ -71,3 +71,11 @@ func (n *Nullable[T]) UnmarshalJSON(data []byte) error {
 	n.value = value
 	return nil
 }
+
+func Then[T any, V any](n Nullable[T], fn func(T) Nullable[V]) Nullable[V] {
+	if !n.hasValue {
+		return Null[V]()
+	}
+
+	return fn(n.value)
+}

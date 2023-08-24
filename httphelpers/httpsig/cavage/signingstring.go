@@ -30,7 +30,7 @@ const (
 	expires       = "(expires)"
 )
 
-func (ssi SigningStringInfo) ConstringSigningString() string {
+func (ssi SigningStringInfo) ConstructSigningString() string {
 	result := slices.Map(ssi.ExpectedHeaders, func(s string) pair.Pair[string, string] {
 		switch s {
 		case requestTarget:

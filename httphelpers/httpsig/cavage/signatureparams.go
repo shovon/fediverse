@@ -18,7 +18,7 @@ func ParseSignatureParams(params string) map[string]string {
 		if len(parts) != 2 {
 			continue
 		}
-		result[strings.TrimSpace(parts[0])] = strings.TrimSpace(parts[1])
+		result[strings.TrimSpace(parts[0])] = strings.Trim(strings.TrimSpace(parts[1]), "\"")
 	}
 	return result
 }

@@ -58,7 +58,7 @@ func getHostname() {
 	if len(hostnameParts) > 2 {
 		panic(fmt.Sprintf("invalid hostname %s. Way too many colons. Total number of colons %d", hostname, len(hostnameParts)))
 	}
-	regex := regexp.MustCompile(`^([A-Za-z0-9]{0,63})(\\.([A-Za-z0-9]{0,63}))*$`)
+	regex := regexp.MustCompile(`^[\w\d]{0,63}(?:\.[\w\d]{0,63})*$`)
 	if len(host) > 255 {
 		panic("hostname too long")
 	}

@@ -1,7 +1,6 @@
 package ap
 
 import (
-	"fediverse/application/common"
 	"fediverse/application/config"
 	"fediverse/application/lib"
 	"fediverse/functional"
@@ -52,11 +51,12 @@ func ActivityPub() func(http.Handler) http.Handler {
 						return resolveURIToString(u.ResolveReference(r.URL), path)
 					}
 
-					return map[string]interface{}{
+					return map[string]any{
 						jsonldkeywords.Context: []interface{}{
 							"https://www.w3.org/ns/activitystreams",
+							"https://w3id.org/security/v1",
 						},
-						"id":                        common.BaseURL().ResolveReference(r.URL).String(),
+						"id":                        a(""),
 						"type":                      "Person",
 						"preferredUsername":         config.Username(),
 						"name":                      config.DisplayName(),
@@ -67,6 +67,11 @@ func ActivityPub() func(http.Handler) http.Handler {
 						"outbox":                    a("outbox"),
 						"liked":                     a("liked"),
 						"manuallyApprovesFollowers": false,
+						"publicKey": map[string]any{
+							"id":           a("#main-key"),
+							"owner":        a(""),
+							"publicKeyPem": "",
+						},
 					}, nil
 				}))),
 				hh.Processors{

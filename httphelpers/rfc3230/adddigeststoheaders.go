@@ -10,7 +10,7 @@ type Digester interface {
 	Digest([]byte) (string, error)
 }
 
-func AddDigestsToheaders(h *http.Header, body []byte, digesters []Digester) error {
+func AddDigestsToheaders(h http.Header, body []byte, digesters []Digester) error {
 	digestParts := []pair.Pair[string, string]{}
 
 	for _, digester := range digesters {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fediverse/application/crypto"
 	"fediverse/application/post"
 	"fmt"
 	"os"
@@ -25,6 +26,14 @@ func main() {
 		}
 		post.CreatePost(args[1])
 		fmt.Println("Post successfully created!")
+	case "genrsa":
+		pair, err := crypto.GenerateRSAKeyPair(2048)
+		if err != nil {
+			panic(err)
+		}
+		pemPair := crypto.ToPemPair(pair)
+		fmt.Println(string(pemPair.PrivateKey))
+		fmt.Println(string(pemPair.PublicKey))
 	default:
 		fmt.Println("Unknown command " + command + ". Expecting a `create` command")
 	}

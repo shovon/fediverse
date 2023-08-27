@@ -3,6 +3,7 @@ package main
 import (
 	"fediverse/application/crypto"
 	"fediverse/application/post"
+	"flag"
 	"fmt"
 	"os"
 )
@@ -31,9 +32,17 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+
+		fs := flag.NewFlagSet("genrsa", flag.ExitOnError)
+		var showPublic bool
+		fs.BoolVar(&showPublic, "public", false, "Show public key")
+		fs.Parse(os.Args[2:])
+
 		pemPair := crypto.ToPemPair(pair)
 		fmt.Println(string(pemPair.PrivateKey))
-		fmt.Println(string(pemPair.PublicKey))
+		if showPublic {
+			fmt.Println(string(pemPair.PublicKey))
+		}
 	default:
 		fmt.Println("Unknown command " + command + ". Expecting a `create` command")
 	}

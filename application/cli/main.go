@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/x509"
+	"encoding/pem"
 	"fediverse/application/crypto"
 	"fediverse/application/post"
 	"flag"
@@ -43,6 +45,33 @@ func main() {
 		if showPublic {
 			fmt.Println(string(pemPair.PublicKey))
 		}
+	case "getrsapublic":
+		content := os.Args[2]
+		block, _ := pem.Decode([]byte(content))
+		if block == nil || block.Type != "RSA PRIVATE KEY" {
+			fmt.Println("Invalid private key")
+			os.Exit(1)
+			return
+		}
+		privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+		if err != nil {
+			fmt.Println("Error parsing private key:", err)
+			os.Exit(1)
+			return
+		}
+		publicKey := &privateKey.PublicKey
+		publicKeyBytes, err := x509.MarshalPKIXPublicKey(publicKey)
+		if err != nil {
+			fmt.Println("Error marshaling public key:", err)
+			return
+		}
+
+		publicKeyPEM := pem.EncodeToMemory(&pem.Block{
+			Type:  "PUBLIC KEY",
+			Bytes: publicKeyBytes,
+		})
+
+		fmt.Println(string(publicKeyPEM))
 	default:
 		fmt.Println("Unknown command " + command + ". Expecting a `create` command")
 	}

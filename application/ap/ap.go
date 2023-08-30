@@ -1,10 +1,10 @@
 package ap
 
 import (
+	"crypto/rsa"
 	"fediverse/application/config"
 	"fediverse/application/lib"
 	"fediverse/functional"
-	"fediverse/httphelpers"
 	hh "fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
 	"fediverse/httphelpers/requestbaseurl"
@@ -22,6 +22,8 @@ func resolveURIToString(u *url.URL, path string) possibleerror.PossibleError[str
 	)
 }
 
+var keyStore map[string]*rsa.PrivateKey = map[string]*rsa.PrivateKey{}
+
 func ActivityPub() func(http.Handler) http.Handler {
 	return hh.Processors{
 		hh.Accept([]string{"application/*+json"}),
@@ -32,7 +34,7 @@ func ActivityPub() func(http.Handler) http.Handler {
 			functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler){
 				func(next http.Handler) http.Handler {
 					return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-						if !lib.UserExists(httphelpers.GetRouteParam(r, "username")) {
+						if !lib.UserExists(hh.GetRouteParam(r, "username")) {
 							httperrors.NotFound().ServeHTTP(w, r)
 							return
 						}
@@ -51,12 +53,14 @@ func ActivityPub() func(http.Handler) http.Handler {
 						return resolveURIToString(u.ResolveReference(r.URL), path)
 					}
 
+					id := a("")
+
 					return map[string]any{
 						jsonldkeywords.Context: []interface{}{
 							"https://www.w3.org/ns/activitystreams",
 							"https://w3id.org/security/v1",
 						},
-						"id":                        a(""),
+						"id":                        id,
 						"type":                      "Person",
 						"preferredUsername":         config.Username(),
 						"name":                      config.DisplayName(),
@@ -70,7 +74,7 @@ func ActivityPub() func(http.Handler) http.Handler {
 						"publicKey": map[string]any{
 							"id":           a("#main-key"),
 							"owner":        a(""),
-							"publicKeyPem": "",
+							"publicKeyPem": id,
 						},
 					}, nil
 				}))),

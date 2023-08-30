@@ -38,6 +38,18 @@ func readFromStdin() []byte {
 	return content
 }
 
+func parsePrivateKey(payload []byte) (*rsa.PrivateKey, error) {
+	block, _ := pem.Decode([]byte(payload))
+	if block == nil || block.Type != rsahelpers.RSAPrivateKeyLabel {
+		return nil, fmt.Errorf("invalid private key")
+	}
+	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing private key: %w", err)
+	}
+	return privateKey, nil
+}
+
 func main() {
 	args := os.Args[1:]
 	if len(args) <= 0 {
@@ -100,30 +112,19 @@ func main() {
 			return
 		}
 		content := os.Args[2]
-		block, _ := pem.Decode([]byte(content))
-		if block == nil || block.Type != "RSA PRIVATE KEY" {
-			fmt.Println("Invalid private key")
-			os.Exit(1)
-			return
-		}
-		privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+		privateKey, err := parsePrivateKey([]byte(content))
 		if err != nil {
 			fmt.Println("Error parsing private key:", err)
 			os.Exit(1)
 			return
 		}
-		publicKey := &privateKey.PublicKey
-		publicKeyBytes, err := x509.MarshalPKIXPublicKey(publicKey)
+		publicKeyPEM, err := rsahelpers.PublicKeyToPKIXString(
+			&privateKey.PublicKey,
+		)
 		if err != nil {
 			fmt.Println("Error marshaling public key:", err)
 			return
 		}
-
-		publicKeyPEM := pem.EncodeToMemory(&pem.Block{
-			Type:  "PUBLIC KEY",
-			Bytes: publicKeyBytes,
-		})
-
 		fmt.Print(string(publicKeyPEM))
 	case "sign":
 		// This command signs a payload. It expects a private key as the first

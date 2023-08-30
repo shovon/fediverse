@@ -4,6 +4,7 @@ import (
 	"crypto/rsa"
 	"fediverse/application/config"
 	"fediverse/application/lib"
+	"fediverse/cryptohelpers/rsahelpers"
 	"fediverse/functional"
 	hh "fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
@@ -23,6 +24,25 @@ func resolveURIToString(u *url.URL, path string) possibleerror.PossibleError[str
 }
 
 var keyStore map[string]*rsa.PrivateKey = map[string]*rsa.PrivateKey{}
+
+func getKey(id string) (*rsa.PrivateKey, error) {
+	if keyStore[id] == nil {
+		key, err := rsahelpers.GenerateRSPrivateKey(2048)
+		if err != nil {
+			return nil, err
+		}
+		keyStore[id] = key
+	}
+	return keyStore[id], nil
+}
+
+func getPublicKeyPEMString(id string) (string, error) {
+	key, err := getKey(id)
+	if err != nil {
+		return "", err
+	}
+	return rsahelpers.PublicKeyToPKIXString(&key.PublicKey)
+}
 
 func ActivityPub() func(http.Handler) http.Handler {
 	return hh.Processors{

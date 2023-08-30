@@ -154,15 +154,10 @@ func main() {
 		if pemPrivateKey == "--" {
 			pemPrivateKey = os.Args[3]
 		}
-		block, _ := pem.Decode([]byte(pemPrivateKey))
-		if block == nil || block.Type != "RSA PRIVATE KEY" {
-			fmt.Println("Invalid private key")
-			os.Exit(1)
-			return
-		}
-		privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+
+		privateKey, err := parsePrivateKey([]byte(pemPrivateKey))
 		if err != nil {
-			fmt.Println("Error parsing private key:", err)
+			fmt.Println("Invalid private key")
 			os.Exit(1)
 			return
 		}

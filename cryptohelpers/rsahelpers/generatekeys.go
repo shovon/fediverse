@@ -76,3 +76,8 @@ func PublicKeyToPKIXString(key *rsa.PublicKey) (string, error) {
 //     if err != nil {
 //       // Handle error
 //     }
+//
+// The signing logic is quite straightforward:
+//
+//     hash := sha256.Sum256(payload)
+//     signature, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, hash[:])

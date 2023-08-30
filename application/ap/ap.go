@@ -23,6 +23,7 @@ func resolveURIToString(u *url.URL, path string) possibleerror.PossibleError[str
 	)
 }
 
+// TODO: perhaps throw all of this into a third-party in-memory store.
 var keyStore map[string]*rsa.PrivateKey = map[string]*rsa.PrivateKey{}
 
 func getKey(id string) (*rsa.PrivateKey, error) {
@@ -73,6 +74,12 @@ func ActivityPub() func(http.Handler) http.Handler {
 						return resolveURIToString(u.ResolveReference(r.URL), path)
 					}
 
+					username := hh.GetRouteParam(r, "username")
+					key, err := getPublicKeyPEMString(username)
+					if err != nil {
+						return nil, err
+					}
+
 					id := a("")
 
 					return map[string]any{
@@ -94,7 +101,7 @@ func ActivityPub() func(http.Handler) http.Handler {
 						"publicKey": map[string]any{
 							"id":           a("#main-key"),
 							"owner":        a(""),
-							"publicKeyPem": id,
+							"publicKeyPem": key,
 						},
 					}, nil
 				}))),

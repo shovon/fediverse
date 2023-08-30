@@ -2,3 +2,5 @@
 .config.json
 __debug_bin
 *.pem
+payload.txt
+signature.base64

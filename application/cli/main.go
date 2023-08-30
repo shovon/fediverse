@@ -8,7 +8,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
-	"fediverse/application/cryptohelpers"
+	"fediverse/application/cryptohelpers/rsahelpers"
 	"fediverse/application/post"
 	"flag"
 	"fmt"
@@ -69,21 +69,25 @@ func main() {
 		// But the typical use case for this would be to generate only the private
 		// key, and then use the `getrsapublic` command to get the public key.
 
-		pair, err := cryptohelpers.GenerateRSAKeyPair(2048)
-		if err != nil {
-			panic(err)
-		}
-
 		fs := flag.NewFlagSet("genrsa", flag.ExitOnError)
 		var showPublic bool
 		fs.BoolVar(&showPublic, "public", false, "Show public key")
 		fs.Parse(os.Args[2:])
 
-		pemPair := cryptohelpers.ToPemPair(pair)
-		fmt.Print(string(pemPair.PrivateKey))
+		privateKey, err := rsahelpers.GenerateRSPrivateKey(2048)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Print(rsahelpers.PrivateKeyToPEMString(privateKey))
 		if showPublic {
-			fmt.Println("")
-			fmt.Print(string(pemPair.PublicKey))
+			publicKeyPEMString, err := rsahelpers.PublicKeyToPEMString(
+				&privateKey.PublicKey,
+			)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Print(publicKeyPEMString)
 		}
 	case "getrsapublic":
 		// This command gets the public key from a private key. It expects a private

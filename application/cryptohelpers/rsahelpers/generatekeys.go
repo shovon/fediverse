@@ -15,23 +15,18 @@ func GenerateRSPrivateKey(bits int) (*rsa.PrivateKey, error) {
 	return privateKey, nil
 }
 
-type PemPair struct {
-	PrivateKey []byte
-	PublicKey  []byte
-}
-
-func ToPrivatePEMBlock(key *rsa.PrivateKey) *pem.Block {
+func PrivateKeyToPKCS1PEMBlock(key *rsa.PrivateKey) *pem.Block {
 	return &pem.Block{
 		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(key),
 	}
 }
 
-func PrivateKeyToPEMString(key *rsa.PrivateKey) string {
-	return string(pem.EncodeToMemory(ToPrivatePEMBlock(key)))
+func PrivateKeyToPKCS1PEMString(key *rsa.PrivateKey) string {
+	return string(pem.EncodeToMemory(PrivateKeyToPKCS1PEMBlock(key)))
 }
 
-func PublicPEMblock(key *rsa.PublicKey) (*pem.Block, error) {
+func PublicKeyToPKIXBlock(key *rsa.PublicKey) (*pem.Block, error) {
 	publicKeyPEMBytes, err := x509.MarshalPKIXPublicKey(key)
 	if err != nil {
 		return nil, err
@@ -42,8 +37,8 @@ func PublicPEMblock(key *rsa.PublicKey) (*pem.Block, error) {
 	}, nil
 }
 
-func PublicKeyToPEMString(key *rsa.PublicKey) (string, error) {
-	publicKeyPEMBlock, err := PublicPEMblock(key)
+func PublicKeyToPKIXString(key *rsa.PublicKey) (string, error) {
+	publicKeyPEMBlock, err := PublicKeyToPKIXBlock(key)
 	if err != nil {
 		return "", err
 	}

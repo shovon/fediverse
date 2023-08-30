@@ -79,9 +79,9 @@ func main() {
 			panic(err)
 		}
 
-		fmt.Print(rsahelpers.PrivateKeyToPEMString(privateKey))
+		fmt.Print(rsahelpers.PrivateKeyToPKCS1PEMString(privateKey))
 		if showPublic {
-			publicKeyPEMString, err := rsahelpers.PublicKeyToPEMString(
+			publicKeyPEMString, err := rsahelpers.PublicKeyToPKIXString(
 				&privateKey.PublicKey,
 			)
 			if err != nil {
@@ -89,7 +89,7 @@ func main() {
 			}
 			fmt.Print(publicKeyPEMString)
 		}
-	case "getrsapublic":
+	case "deriversapublic":
 		// This command gets the public key from a private key. It expects a private
 		// key as the first argument, and will output the public key, in the
 		// standard out (console, on your terminal).

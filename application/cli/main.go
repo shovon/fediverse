@@ -50,6 +50,22 @@ func parsePrivateKey(payload []byte) (*rsa.PrivateKey, error) {
 	return privateKey, nil
 }
 
+func parsePublicKey(payload []byte) (*rsa.PublicKey, error) {
+	block, _ := pem.Decode([]byte(payload))
+	if block == nil || block.Type != rsahelpers.PublicKeyLabel {
+		return nil, fmt.Errorf("invalid public key")
+	}
+	publicKeyInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing public key: %w", err)
+	}
+	rsaPubKey, ok := publicKeyInterface.(*rsa.PublicKey)
+	if !ok {
+		return nil, fmt.Errorf("error casting public key to RSA public key")
+	}
+	return rsaPubKey, nil
+}
+
 func main() {
 	args := os.Args[1:]
 	if len(args) <= 0 {
@@ -203,28 +219,14 @@ func main() {
 			payload = []byte(content)
 		}
 
-		block, _ := pem.Decode([]byte(publicKey))
-		if block == nil || block.Type != "PUBLIC KEY" {
-			fmt.Println("Invalid public key")
-			os.Exit(1)
-			return
-		}
-		publicKeyInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
+		rsaPublicKey, err := parsePublicKey([]byte(publicKey))
 		if err != nil {
 			fmt.Println("Error parsing public key:", err)
 			os.Exit(1)
 			return
 		}
-		rsaPubKey, ok := publicKeyInterface.(*rsa.PublicKey)
-		if !ok {
-			fmt.Println("Error casting public key to RSA public key")
-			os.Exit(1)
-			return
-		}
 
-		hashed := crypto.SHA256.New()
-		hashed.Write(payload)
-		hashedSum := hashed.Sum(nil)
+		hash := sha256.Sum256(payload)
 
 		signature, err := base64.StdEncoding.DecodeString(signatureBase64)
 		if err != nil {
@@ -233,7 +235,7 @@ func main() {
 			return
 		}
 
-		err = rsa.VerifyPKCS1v15(rsaPubKey, crypto.SHA256, hashedSum, signature[:])
+		err = rsa.VerifyPKCS1v15(rsaPublicKey, crypto.SHA256, hash[:], signature[:])
 		if err == nil {
 			fmt.Println("Signature is valid")
 		} else {

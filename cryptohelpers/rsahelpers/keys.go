@@ -74,7 +74,11 @@ func PublicKeyToPKIXString(key *rsa.PublicKey) (string, error) {
 //     }
 //     publicKey, err := x509.ParsePKIXPublicKey(block.Bytes)
 //     if err != nil {
-//       // Handle error
+//         // Handle error
+//     }
+//     rsaPubKey, ok := publicKeyInterface.(*rsa.PublicKey)
+//     if !ok {
+//         // Handle error
 //     }
 //
 // The signing logic is quite straightforward:

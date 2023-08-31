@@ -12,5 +12,5 @@ func JoinPath(u *url.URL, path string) possibleerror.PossibleError[*url.URL] {
 		return possibleerror.Error[*url.URL](err)
 	}
 	cloned.Path = p.Join(cloned.Path, path)
-	return possibleerror.Value(cloned)
+	return possibleerror.NotError(cloned)
 }

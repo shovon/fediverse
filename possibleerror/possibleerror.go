@@ -9,7 +9,7 @@ type PossibleError[T any] struct {
 
 var _ json.Marshaler = PossibleError[string]{}
 
-func Value[T any](value T) PossibleError[T] {
+func NotError[T any](value T) PossibleError[T] {
 	return PossibleError[T]{value: value}
 }
 
@@ -28,6 +28,14 @@ func Then[T any, V any](p PossibleError[T], fn func(T) PossibleError[V]) Possibl
 	return fn(p.value)
 }
 
+// MapToThen is like `Then`, but returns a function that in-turn returns a
+// PossibleError
+func MapToThen[T any, V any](fn func(t T) V) func(t T) PossibleError[V] {
+	return func(t T) PossibleError[V] {
+		return NotError[V](fn(t))
+	}
+}
+
 func (p PossibleError[T]) Value() (T, error) {
 	return p.value, p.err
 }
@@ -37,10 +45,4 @@ func (p PossibleError[T]) MarshalJSON() ([]byte, error) {
 		return nil, p.err
 	}
 	return json.Marshal(p.value)
-}
-
-func MapToThen[T any, V any](fn func(t T) V) func(t T) PossibleError[V] {
-	return func(t T) PossibleError[V] {
-		return Value[V](fn(t))
-	}
 }

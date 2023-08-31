@@ -10,5 +10,5 @@ func ResolvePath(baseURL *url.URL, path string) possibleerror.PossibleError[*url
 	if err != nil {
 		return possibleerror.Error[*url.URL](err)
 	}
-	return possibleerror.Value(baseURL.ResolveReference(ref))
+	return possibleerror.NotError(baseURL.ResolveReference(ref))
 }

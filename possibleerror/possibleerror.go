@@ -29,7 +29,11 @@ func Then[T any, V any](p PossibleError[T], fn func(T) PossibleError[V]) Possibl
 }
 
 // MapToThen is like `Then`, but returns a function that in-turn returns a
-// PossibleError
+// PossibleError.
+//
+// Usage:
+//
+//	possibleerror.Then(p, possibleerror.MapToThen(func(t T) V { return v }))
 func MapToThen[T any, V any](fn func(t T) V) func(t T) PossibleError[V] {
 	return func(t T) PossibleError[V] {
 		return NotError[V](fn(t))

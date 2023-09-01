@@ -1,6 +1,7 @@
 package httphelpers
 
 import (
+	"fediverse/httphelpers/httperrors"
 	"net/http"
 	"net/url"
 )
@@ -45,7 +46,7 @@ func Condition(predicate func(r BarebonesRequest) bool) Processor {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				reqCopy, err := copyRequest(r)
 				if err != nil {
-					middleware(next).ServeHTTP(w, r)
+					httperrors.InternalServerError().ServeHTTP(w, r)
 					return
 				}
 				if predicate(reqCopy) {

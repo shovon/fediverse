@@ -3,6 +3,7 @@ package orderedcollection
 import (
 	"fediverse/functional"
 	hh "fediverse/httphelpers"
+	"fediverse/httphelpers/httperrors"
 	"fediverse/httphelpers/requestbaseurl"
 	"fediverse/json/jsonhttp"
 	"fediverse/jsonld/jsonldkeywords"
@@ -57,8 +58,11 @@ func Middleware(route string, handler func(req *http.Request) OrderedCollection)
 				hh.Method("GET"),
 				hh.Route("/"),
 				hh.Condition(func(r hh.BarebonesRequest) bool {
-					return isNaturalNumber((r.URL.Query().Get("page")))
+					return strings.TrimSpace(r.URL.Query().Get("page")) != ""
 				}),
+				hh.ConditionMust(func(r hh.BarebonesRequest) bool {
+					return isNaturalNumber(r.URL.Query().Get("page"))
+				}, httperrors.BadRequest()),
 			}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
 				u := func(path string) possibleerror.PossibleError[*url.URL] {
 					u, err := requestbaseurl.GetRequestURL(r)
@@ -87,12 +91,9 @@ func Middleware(route string, handler func(req *http.Request) OrderedCollection)
 					"id":         id,
 					"type":       "OrderedCollectionPage",
 					"totalItems": meta.TotalItems,
-					"first": possibleerror.Then(u(""), possibleerror.MapToThen(func(s *url.URL) string {
-						fmt.Println(s)
-						v := s.Query()
-						v.Add("page", "1")
-						s.RawQuery = v.Encode()
-						return s.String()
+					"partOf": possibleerror.Then(u(""), possibleerror.MapToThen(func(u *url.URL) string {
+						u.RawQuery = ""
+						return u.String()
 					})),
 				}, nil
 			}))),

@@ -120,21 +120,26 @@ func Middleware(route string, handler func(req *http.Request) OrderedCollection)
 
 				id := a("")
 
-				return map[string]any{
+				document := map[string]any{
 					jsonldkeywords.Context: []interface{}{
 						"https://www.w3.org/ns/activitystreams",
 					},
 					"id":         id,
 					"type":       "OrderedCollection",
 					"totalItems": meta.TotalItems,
-					"first": possibleerror.Then(u(""), possibleerror.MapToThen(func(s *url.URL) string {
+				}
+
+				if meta.TotalItems > 0 {
+					document["first"] = possibleerror.Then(u(""), possibleerror.MapToThen(func(s *url.URL) string {
 						fmt.Println(s)
 						v := s.Query()
 						v.Add("page", "1")
 						s.RawQuery = v.Encode()
 						return s.String()
-					})),
-				}, nil
+					}))
+				}
+
+				return document, nil
 			}))),
 		}),
 	)

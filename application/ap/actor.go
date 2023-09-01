@@ -14,15 +14,6 @@ import (
 	"net/http"
 )
 
-type OrderedCollectionMeta struct {
-	TotalItems int
-}
-
-type OrderedCollectionRetriever interface {
-	Meta()
-	Page()
-}
-
 func actor() func(http.Handler) http.Handler {
 	return functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler){
 		func(next http.Handler) http.Handler {

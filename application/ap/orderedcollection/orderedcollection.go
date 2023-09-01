@@ -18,6 +18,11 @@ type OrderedCollection struct {
 	TotalItems int
 }
 
+type OrderedCollectionRetriever interface {
+	Meta()
+	Page()
+}
+
 func resolveURIToString(u *url.URL, path string) possibleerror.PossibleError[string] {
 	return possibleerror.Then(
 		urlhelpers.JoinPath(u, path), possibleerror.MapToThen(urlhelpers.ToString),

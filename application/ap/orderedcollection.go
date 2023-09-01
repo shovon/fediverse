@@ -7,12 +7,16 @@ import (
 	"fediverse/json/jsonhttp"
 	"fediverse/jsonld/jsonldkeywords"
 	"fediverse/possibleerror"
-	"fediverse/urlhelpers"
+	"fmt"
 	"net/http"
 	"net/url"
 )
 
-func OrderedCollection(route string, handler func()) func(http.Handler) http.Handler {
+type OrderedCollectionMeta struct {
+	TotalItems int
+}
+
+func OrderedCollection(route string, handler func(req *http.Request) OrderedCollectionMeta) func(http.Handler) http.Handler {
 	return httphelpers.Group(
 		route,
 		hh.Processors{
@@ -24,7 +28,7 @@ func OrderedCollection(route string, handler func()) func(http.Handler) http.Han
 				if err != nil {
 					return possibleerror.Error[*url.URL](err)
 				}
-				return urlhelpers.JoinPath(u, path)
+				return possibleerror.NotError(u.ResolveReference(r.URL).JoinPath(path))
 			}
 
 			a := func(path string) possibleerror.PossibleError[string] {
@@ -35,6 +39,8 @@ func OrderedCollection(route string, handler func()) func(http.Handler) http.Han
 				return resolveURIToString(u.ResolveReference(r.URL), path)
 			}
 
+			meta := handler(r)
+
 			id := a("")
 
 			return map[string]any{
@@ -43,11 +49,12 @@ func OrderedCollection(route string, handler func()) func(http.Handler) http.Han
 				},
 				"id":         id,
 				"type":       "OrderedCollection",
-				"totalItems": 0,
+				"totalItems": meta.TotalItems,
 				"first": possibleerror.Then(u(""), possibleerror.MapToThen(func(s *url.URL) string {
+					fmt.Println(s)
 					v := s.Query()
 					v.Add("page", "1")
-					s.RawFragment = v.Encode()
+					s.RawQuery = v.Encode()
 					return s.String()
 				})),
 			}, nil

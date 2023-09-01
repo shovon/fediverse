@@ -67,7 +67,11 @@ func actor() func(http.Handler) http.Handler {
 				},
 			}, nil
 		}))),
-		OrderedCollection("/following", func() {}),
+		OrderedCollection("/following", func(req *http.Request) OrderedCollectionMeta {
+			return OrderedCollectionMeta{
+				TotalItems: 0,
+			}
+		}),
 		hh.Processors{
 			hh.Method("GET"),
 			hh.Route("/followers"),

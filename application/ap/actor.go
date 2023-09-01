@@ -1,6 +1,7 @@
 package ap
 
 import (
+	"fediverse/application/ap/orderedcollection"
 	"fediverse/application/config"
 	"fediverse/application/lib"
 	"fediverse/functional"
@@ -12,6 +13,15 @@ import (
 	"fediverse/possibleerror"
 	"net/http"
 )
+
+type OrderedCollectionMeta struct {
+	TotalItems int
+}
+
+type OrderedCollectionRetriever interface {
+	Meta()
+	Page()
+}
 
 func actor() func(http.Handler) http.Handler {
 	return functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler){
@@ -67,11 +77,14 @@ func actor() func(http.Handler) http.Handler {
 				},
 			}, nil
 		}))),
-		OrderedCollection("/following", func(req *http.Request) OrderedCollectionMeta {
-			return OrderedCollectionMeta{
-				TotalItems: 0,
-			}
-		}),
+		orderedcollection.Middleware(
+			"/following",
+			func(req *http.Request) orderedcollection.OrderedCollection {
+				return orderedcollection.OrderedCollection{
+					TotalItems: 0,
+				}
+			},
+		),
 		hh.Processors{
 			hh.Method("GET"),
 			hh.Route("/followers"),

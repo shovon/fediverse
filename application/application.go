@@ -124,8 +124,7 @@ func Start() {
 		}
 	}))
 
-	m = append(m, ap.ActivityPub())
-
+	m = append(m, hh.Group("/activity", ap.ActivityPub()))
 	m = append(m, hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Just an article. Coming soon"))
 	})))

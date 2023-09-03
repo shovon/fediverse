@@ -41,11 +41,11 @@ func getPublicKeyPEMString(id string) (string, error) {
 func ActivityPub() func(http.Handler) http.Handler {
 	return hh.Processors{
 		hh.Accept([]string{"application/*+json"}),
-		hh.DefaultHeader("Content-Type", []string{"application/activity+json"}),
-	}.Process(hh.Group("/ap",
+		hh.DefaultResponseHeader("Content-Type", []string{"application/activity+json"}),
+	}.Process(
 		hh.Group(
 			"/users/:username",
 			actor(),
 		),
-	))
+	)
 }

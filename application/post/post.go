@@ -1,29 +1,11 @@
 package post
 
 import (
-	"bufio"
-	"encoding/json"
+	"database/sql"
 	"fediverse/application/config"
-	"fediverse/application/id"
-	"fmt"
-	"os"
 	"path"
-	"sync"
 	"time"
 )
-
-var writeMutext sync.Mutex
-
-var file *os.File
-
-func init() {
-	os.MkdirAll(config.OutputDir(), os.ModePerm)
-	f, err := os.OpenFile(path.Join(config.OutputDir(), "posts.jsonl"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-	if err != nil {
-		panic(err)
-	}
-	file = f
-}
 
 type Post struct {
 	ID          string    `json:"id"`
@@ -32,31 +14,12 @@ type Post struct {
 }
 
 func CreatePost(body string) error {
-	i, err := id.Generate()
+	// TODO: careful with race conditions!
+	db, err := sql.Open("sqlite3", path.Join(config.OutputDir(), "application.db"))
 	if err != nil {
 		return err
 	}
-
-	post := Post{
-		ID:          i,
-		WhenCreated: time.Now(),
-		Body:        body,
-	}
-	b, err := json.Marshal(post)
-	if err != nil {
-		return err
-	}
-	writeMutext.Lock()
-	defer writeMutext.Unlock()
-
-	writer := bufio.NewWriter(file)
-
-	_, err = fmt.Fprintln(writer, string(b))
-	if err != nil {
-		return err
-	}
-	err = writer.Flush()
-	if err != nil {
+	if _, err := db.Exec("INSERT INTO posts (body) VALUES (?)", body); err != nil {
 		return err
 	}
 	return nil

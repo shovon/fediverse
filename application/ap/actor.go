@@ -14,6 +14,9 @@ import (
 	"net/http"
 )
 
+type Following string
+type Follower string
+
 func actor() func(http.Handler) http.Handler {
 	return functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler){
 		func(next http.Handler) http.Handler {
@@ -70,16 +73,26 @@ func actor() func(http.Handler) http.Handler {
 		}))),
 		orderedcollection.Middleware(
 			"/following",
-			func(req *http.Request) orderedcollection.OrderedCollection {
-				return orderedcollection.OrderedCollection{
-					TotalItems: 0,
-				}
-			},
+			orderedcollection.NewOrderedCollection[Following](
+				func(hh.BarebonesRequest) uint64 {
+					return 0
+				},
+				func(hh.BarebonesRequest, orderedcollection.ItemsFunctionParams) []Following {
+					return []Following{}
+				},
+			),
 		),
-		hh.Processors{
-			hh.Method("GET"),
-			hh.Route("/followers"),
-		}.Process(hh.ToMiddleware(httperrors.NotImplemented())),
+		orderedcollection.Middleware(
+			"/followers",
+			orderedcollection.NewOrderedCollection[Follower](
+				func(hh.BarebonesRequest) uint64 {
+					return 0
+				},
+				func(hh.BarebonesRequest, orderedcollection.ItemsFunctionParams) []Follower {
+					return []Follower{}
+				},
+			),
+		),
 		hh.Processors{
 			hh.Method("POST"),
 			hh.Route("/inbox"),

@@ -15,13 +15,42 @@ import (
 	"strings"
 )
 
-type OrderedCollection struct {
-	TotalItems int
+type ItemsFunctionParams struct {
+	PageNumber uint64
+	MaxItems   uint64
 }
 
-type OrderedCollectionRetriever interface {
-	Meta()
-	Page()
+// OrderedCollectionRetriever represents a series of methods that will allow you
+// to get the total number of items in a collection, a subset of the list of
+// items in the collection, given a page number and a limit.
+type OrderedCollectionRetriever[V any] interface {
+	Count(hh.BarebonesRequest) uint64
+	Items(hh.BarebonesRequest, ItemsFunctionParams) []V
+}
+
+type orderedCollectionRetriever[V any] struct {
+	count func(hh.BarebonesRequest) uint64
+	items func(hh.BarebonesRequest, ItemsFunctionParams) []V
+}
+
+var _ OrderedCollectionRetriever[any] = orderedCollectionRetriever[any]{}
+
+func NewOrderedCollection[V any](
+	count func(hh.BarebonesRequest) uint64,
+	items func(hh.BarebonesRequest, ItemsFunctionParams) []V,
+) OrderedCollectionRetriever[V] {
+	return orderedCollectionRetriever[V]{count, items}
+}
+
+func (o orderedCollectionRetriever[V]) Count(req hh.BarebonesRequest) uint64 {
+	return o.count(req)
+}
+
+func (o orderedCollectionRetriever[V]) Items(
+	req hh.BarebonesRequest,
+	params ItemsFunctionParams,
+) []V {
+	return o.items(req, params)
 }
 
 func resolveURIToString(u *url.URL, path string) possibleerror.PossibleError[string] {
@@ -50,7 +79,7 @@ func isNaturalNumber(str string) bool {
 	return true
 }
 
-func Middleware(route string, handler func(req *http.Request) OrderedCollection) func(http.Handler) http.Handler {
+func Middleware[V any](route string, retriever OrderedCollectionRetriever[V]) func(http.Handler) http.Handler {
 	return hh.Group(
 		route,
 		functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler){
@@ -80,7 +109,11 @@ func Middleware(route string, handler func(req *http.Request) OrderedCollection)
 					return resolveURIToString(u.ResolveReference(r.URL), path)
 				}
 
-				meta := handler(r)
+				bbreq, err := hh.CopyRequest(r)
+				if err != nil {
+					return nil, err
+				}
+				count := retriever.Count(bbreq)
 
 				id := a("")
 
@@ -90,7 +123,7 @@ func Middleware(route string, handler func(req *http.Request) OrderedCollection)
 					},
 					"id":         id,
 					"type":       "OrderedCollectionPage",
-					"totalItems": meta.TotalItems,
+					"totalItems": count,
 					"partOf": possibleerror.Then(u(""), possibleerror.MapToThen(func(u *url.URL) string {
 						u.RawQuery = ""
 						return u.String()
@@ -117,7 +150,11 @@ func Middleware(route string, handler func(req *http.Request) OrderedCollection)
 					return resolveURIToString(u.ResolveReference(r.URL), path)
 				}
 
-				meta := handler(r)
+				bbreq, err := hh.CopyRequest(r)
+				if err != nil {
+					return nil, err
+				}
+				count := retriever.Count(bbreq)
 
 				id := a("")
 
@@ -127,10 +164,10 @@ func Middleware(route string, handler func(req *http.Request) OrderedCollection)
 					},
 					"id":         id,
 					"type":       "OrderedCollection",
-					"totalItems": meta.TotalItems,
+					"totalItems": count,
 				}
 
-				if meta.TotalItems > 0 {
+				if count > 0 {
 					document["first"] = possibleerror.Then(u(""), possibleerror.MapToThen(func(s *url.URL) string {
 						fmt.Println(s)
 						v := s.Query()

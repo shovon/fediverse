@@ -1,7 +1,6 @@
 package httphelpers
 
 import (
-	"fediverse/httphelpers/httperrors"
 	"net/http"
 	"net/url"
 )
@@ -20,7 +19,7 @@ type BarebonesRequest struct {
 	RequestURI       string
 }
 
-func copyRequest(req *http.Request) (BarebonesRequest, error) {
+func CopyRequest(req *http.Request) (BarebonesRequest, error) {
 	u, err := url.Parse(req.URL.String())
 	if err != nil {
 		return BarebonesRequest{}, err
@@ -44,9 +43,9 @@ func Condition(predicate func(r BarebonesRequest) bool) Processor {
 	return ProcessorFunc(func(middleware func(http.Handler) http.Handler) func(http.Handler) http.Handler {
 		return func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				reqCopy, err := copyRequest(r)
+				reqCopy, err := CopyRequest(r)
 				if err != nil {
-					httperrors.InternalServerError().ServeHTTP(w, r)
+					middleware(next).ServeHTTP(w, r)
 					return
 				}
 				if predicate(reqCopy) {

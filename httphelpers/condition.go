@@ -1,11 +1,13 @@
 package httphelpers
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 )
 
 type BarebonesRequest struct {
+	originalRequest  *http.Request
 	Method           string
 	URL              *url.URL
 	Proto            string
@@ -19,12 +21,17 @@ type BarebonesRequest struct {
 	RequestURI       string
 }
 
+func (r BarebonesRequest) Context() context.Context {
+	return r.originalRequest.Context()
+}
+
 func CopyRequest(req *http.Request) (BarebonesRequest, error) {
 	u, err := url.Parse(req.URL.String())
 	if err != nil {
 		return BarebonesRequest{}, err
 	}
 	return BarebonesRequest{
+		originalRequest:  req,
 		Method:           req.Method,
 		URL:              u,
 		Proto:            req.Proto,

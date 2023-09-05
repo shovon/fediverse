@@ -54,7 +54,7 @@ func parseURLResource(resource string) (UserHost, *url.URL, bool) {
 	return UserHost{params[usernameParamKey], urlQuery.Host}, urlQuery, true
 }
 
-func Start() {
+func Start() error {
 	m := [](func(http.Handler) http.Handler){}
 
 	// TODO: move away from Chi, and use some other logger library.
@@ -143,15 +143,13 @@ func Start() {
 		[](func(http.Handler) http.Handler)(m))
 
 	fmt.Printf("Listening on %d\n", config.LocalPort())
-	panic(
-		http.ListenAndServe(
-			fmt.Sprintf(":%d", config.LocalPort()),
-			finalMiddlware(
-				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(404)
-					w.Write([]byte("Not Found"))
-				}),
-			),
+	return http.ListenAndServe(
+		fmt.Sprintf(":%d", config.LocalPort()),
+		finalMiddlware(
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(404)
+				w.Write([]byte("Not Found"))
+			}),
 		),
 	)
 }

@@ -1,7 +1,14 @@
 package main
 
-import "fediverse/application"
+import (
+	"fediverse/application"
+	"fediverse/application/schema"
+)
 
 func main() {
-	application.Start()
+	err := schema.Initialize()
+	if err != nil {
+		panic(err)
+	}
+	panic(application.Start())
 }

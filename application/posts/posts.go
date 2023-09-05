@@ -7,6 +7,8 @@ import (
 	"path"
 	"sync"
 	"time"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var lock sync.RWMutex

@@ -1,10 +1,8 @@
 package posts
 
 import (
-	"database/sql"
-	"fediverse/application/config"
+	"fediverse/application/database"
 	"fmt"
-	"path"
 	"sync"
 	"time"
 
@@ -16,7 +14,7 @@ var lock sync.RWMutex
 func CreatePost(body string) error {
 	lock.Lock()
 	defer lock.Unlock()
-	db, err := sql.Open("sqlite3", path.Join(config.OutputDir(), "application.db"))
+	db, err := database.Open()
 	if err != nil {
 		return err
 	}
@@ -36,7 +34,7 @@ type Post struct {
 func GetAllPosts() ([]Post, error) {
 	lock.RLock()
 	defer lock.RUnlock()
-	db, err := sql.Open("sqlite3", path.Join(config.OutputDir(), "application.db"))
+	db, err := database.Open()
 	if err != nil {
 		return nil, err
 	}

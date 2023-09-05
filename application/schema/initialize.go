@@ -2,7 +2,7 @@ package schema
 
 import (
 	"database/sql"
-	"fediverse/application/config"
+	"fediverse/application/database"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -61,7 +61,7 @@ func runRevisions(db *sql.DB, revisions []string) error {
 }
 
 func Initialize() error {
-	db, err := sql.Open("sqlite3", config.OutputDir())
+	db, err := database.Open()
 	if err != nil {
 		return err
 	}

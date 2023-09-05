@@ -31,6 +31,34 @@ type Post struct {
 	Body        string    `json:"body"`
 }
 
+func GetPost(index string) (Post, error) {
+	lock.RLock()
+	defer lock.RUnlock()
+	db, err := database.Open()
+	if err != nil {
+		return Post{}, err
+	}
+	defer db.Close()
+	result, err := db.Query("SELECT id, when_created, body FROM posts WHERE id = ?", index)
+	if err != nil {
+		return Post{}, err
+	}
+	if !result.Next() {
+		return Post{}, fmt.Errorf("no such post")
+	}
+	var id string
+	var whenCreated time.Time
+	var body string
+	if err := result.Scan(&id, &whenCreated, &body); err != nil {
+		return Post{}, err
+	}
+	return Post{
+		ID:          id,
+		WhenCreated: whenCreated,
+		Body:        body,
+	}, nil
+}
+
 func GetAllPosts() ([]Post, error) {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -46,14 +74,14 @@ func GetAllPosts() ([]Post, error) {
 
 	posts := []Post{}
 	for result.Next() {
-		var id uint64
+		var id string
 		var whenCreated time.Time
 		var body string
 		if err := result.Scan(&id, &whenCreated, &body); err != nil {
 			return nil, err
 		}
 		posts = append(posts, Post{
-			ID:          fmt.Sprintf("%d", id),
+			ID:          id,
 			WhenCreated: whenCreated,
 			Body:        body,
 		})

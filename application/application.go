@@ -133,7 +133,17 @@ func Start() error {
 			hh.Route("/useless-api/posts"),
 		}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
 			return posts.GetAllPosts()
-		}))))
+		}))),
+	)
+	m = append(
+		m,
+		hh.Processors{
+			hh.Method("GET"),
+			hh.Route("/useless-api/posts/:id"),
+		}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
+			return posts.GetPost(hh.GetRouteParam(r, "id"))
+		}))),
+	)
 	m = append(m, hh.Group("/activity", ap.ActivityPub()))
 	m = append(m, hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Just an article. Coming soon"))

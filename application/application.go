@@ -130,7 +130,7 @@ func Start() error {
 		m,
 		hh.Processors{
 			hh.Method("GET"),
-			hh.Route("/"),
+			hh.Route("/useless-api/posts"),
 		}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
 			return posts.GetAllPosts()
 		}))))

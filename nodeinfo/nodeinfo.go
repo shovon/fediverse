@@ -51,7 +51,7 @@ type NodeInfoProps struct {
 //
 // If you want more flexibility, this library is not for you.
 //
-// That said, NodeInfo's purpose is qutie simple: tell other agents what a
+// That said, NodeInfo's purpose is quite simple: tell other agents what a
 // particular instance is all about. There shouldn't be much else to it,
 // honestly.
 //

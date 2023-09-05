@@ -66,6 +66,7 @@ func Initialize(options InitializerOptions) error {
 	if err != nil {
 		return err
 	}
+	defer db.Close()
 
 	if _, err := db.Exec(
 		`CREATE TABLE IF NOT EXISTS schema_revisions (revision INTEGER PRIMARY KEY AUTOINCREMENT);`,
@@ -89,7 +90,7 @@ func Initialize(options InitializerOptions) error {
 		if lastRevision >= int64(len(revisions)) {
 			return nil
 		}
-		if err := runRevisions(db, revisions[lastRevision+1:]); err != nil {
+		if err := runRevisions(db, revisions[lastRevision:]); err != nil {
 			return err
 		}
 	}

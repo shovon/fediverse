@@ -19,6 +19,7 @@ func CreatePost(body string) error {
 	if err != nil {
 		return err
 	}
+	defer db.Close()
 	if _, err := db.Exec("INSERT INTO posts (body) VALUES (?)", body); err != nil {
 		return err
 	}

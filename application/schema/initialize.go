@@ -8,11 +8,31 @@ import (
 
 var revisions = []string{
 	`
-	CREATE TABLE IF NOT EXISTS posts (
-		id INTEGER PRIMARY KEY,
-		whenCreated DATETIME DEFAULT CURRENT_TIMESTAMP,
+	CREATE TABLE posts (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		when_created DATETIME DEFAULT CURRENT_TIMESTAMP,
 		body TEXT
 	);
+
+	CREATE TABLE followers (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		when_followed DATETIME DEFAULT CURRENT_TIMESTAMP,
+		follower TEXT
+	);
+
+	CREATE TABLE following (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		when_followed DATETIME DEFAULT CURRENT_TIMESTAMP,
+		follower TEXT
+	);
+
+	CREATE TABLE inbox (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		when_received DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+		-- This is a JSON document, more specifically a JSON-LD document.
+		body TEXT
+	)
 	`,
 }
 

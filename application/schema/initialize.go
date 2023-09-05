@@ -2,8 +2,6 @@ package schema
 
 import (
 	"database/sql"
-	"fediverse/application/config"
-	"path"
 )
 
 var revisions = []string{
@@ -44,20 +42,33 @@ func runRevision(db *sql.DB, revision string) error {
 	if _, err := db.Exec(revision); err != nil {
 		return err
 	}
-	if _, err := db.Exec("INSERT INTO schema_revisions (revision) VALUES (?)", revision); err != nil {
+	if _, err := db.Exec("INSERT INTO schema_revisions DEFAULT VALUES", revision); err != nil {
 		return err
 	}
 	return tx.Commit()
 }
 
-func Initialize() error {
-	db, err := sql.Open("sqlite3", path.Join(config.OutputDir(), "application.db"))
+func runRevisions(db *sql.DB, revisions []string) error {
+	for _, revision := range revisions {
+		if err := runRevision(db, revision); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type InitializerOptions struct {
+	OutputDir string
+}
+
+func Initialize(options InitializerOptions) error {
+	db, err := sql.Open("sqlite3", options.OutputDir)
 	if err != nil {
 		return err
 	}
 
 	if _, err := db.Exec(
-		`CREATE TABLE IF NOT EXISTS schema_revisions (revision INTEGER PRIMARY KEY);`,
+		`CREATE TABLE IF NOT EXISTS schema_revisions (revision INTEGER PRIMARY KEY AUTOINCREMENT);`,
 	); err != nil {
 		return err
 	}
@@ -65,9 +76,23 @@ func Initialize() error {
 	if err != nil {
 		return err
 	}
-	var lastRevision int64
-	if err := result.Scan(&lastRevision); err != nil {
-		return err
+	hasNext := result.Next()
+	if !hasNext {
+		if err := runRevisions(db, revisions); err != nil {
+			return err
+		}
+	} else {
+		var lastRevision int64
+		if err := result.Scan(&lastRevision); err != nil {
+			return err
+		}
+		if lastRevision >= int64(len(revisions)) {
+			return nil
+		}
+		if err := runRevisions(db, revisions[lastRevision+1:]); err != nil {
+			return err
+		}
 	}
+
 	return nil
 }

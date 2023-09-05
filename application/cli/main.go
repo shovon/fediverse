@@ -8,7 +8,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
-	"fediverse/application/post"
+	"fediverse/application/posts"
 	"fediverse/cryptohelpers/rsahelpers"
 	"flag"
 	"fmt"
@@ -88,7 +88,7 @@ func main() {
 			os.Exit(1)
 			return
 		}
-		post.CreatePost(args[1])
+		posts.CreatePost(args[1])
 		fmt.Println("Post successfully created!")
 	case "genrsa":
 		// This command generates a new RSA key pair. It accepts a `--public` flag

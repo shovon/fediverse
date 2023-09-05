@@ -3,11 +3,13 @@ package application
 import (
 	"fediverse/acct"
 	"fediverse/application/config"
+	"fediverse/application/posts"
 	"fediverse/functional"
 	hh "fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
 	"fediverse/httphelpers/requestbaseurl"
 	"fediverse/jrd"
+	"fediverse/json/jsonhttp"
 	"fediverse/nodeinfo"
 	"fediverse/pathhelpers"
 	"fediverse/webfinger"
@@ -124,6 +126,14 @@ func Start() {
 		}
 	}))
 
+	m = append(
+		m,
+		hh.Processors{
+			hh.Method("GET"),
+			hh.Route("/"),
+		}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
+			return posts.GetAllPosts()
+		}))))
 	m = append(m, hh.Group("/activity", ap.ActivityPub()))
 	m = append(m, hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Just an article. Coming soon"))

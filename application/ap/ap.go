@@ -3,7 +3,9 @@ package ap
 import (
 	"crypto/rsa"
 	"fediverse/cryptohelpers/rsahelpers"
+	"fediverse/functional"
 	hh "fediverse/httphelpers"
+	"fediverse/httphelpers/httperrors"
 	"fediverse/possibleerror"
 	"fediverse/urlhelpers"
 	"net/http"
@@ -43,9 +45,15 @@ func ActivityPub() func(http.Handler) http.Handler {
 		hh.Accept([]string{"application/*+json"}),
 		hh.DefaultResponseHeader("Content-Type", []string{"application/activity+json"}),
 	}.Process(
-		hh.Group(
-			"/users/:username",
-			actor(),
-		),
+		functional.RecursiveApply([](func(http.Handler) http.Handler){
+			// TODO: implement
+			hh.Processors{
+				hh.Route("/sharedinbox"),
+			}.Process(hh.ToMiddleware(httperrors.NotImplemented())),
+			hh.Group(
+				"/users/:username",
+				actor(),
+			),
+		}),
 	)
 }

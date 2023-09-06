@@ -31,31 +31,31 @@ const (
 )
 
 func (ssi SigningStringInfo) ConstructSigningString() string {
-	result := slices.Map(ssi.ExpectedHeaders, func(s string) pair.Pair[string, string] {
+	result := slices.Map(ssi.ExpectedHeaders, func(s string, _ int) pair.Pair[string, string] {
 		switch s {
 		case requestTarget:
 			return pair.Pair[string, string]{
-				Key:   requestTarget,
-				Value: ssi.Method,
+				Left:  requestTarget,
+				Right: ssi.Method,
 			}
 		case created:
 			return pair.Pair[string, string]{
-				Key:   created,
-				Value: stringifyNullableTime(ssi.Created),
+				Left:  created,
+				Right: stringifyNullableTime(ssi.Created),
 			}
 		case expires:
 			return pair.Pair[string, string]{
-				Key:   expires,
-				Value: stringifyNullableTime(ssi.Created),
+				Left:  expires,
+				Right: stringifyNullableTime(ssi.Created),
 			}
 		}
 
-		return pair.Pair[string, string]{Key: s, Value: ssi.Headers.Get(s)}
+		return pair.Pair[string, string]{Left: s, Right: ssi.Headers.Get(s)}
 	})
 	return strings.Join(
 		slices.Map(
 			result,
-			func(p pair.Pair[string, string]) string { return p.Key + ": " + p.Value },
+			func(p pair.Pair[string, string], _ int) string { return p.Left + ": " + p.Right },
 		),
 		"\n",
 	)

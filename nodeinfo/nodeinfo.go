@@ -69,7 +69,7 @@ func CreateNodeInfoMiddleware(origin string, nodeInfoRoot string, handler func()
 		}, nil
 	}))
 
-	schema2p0 := httphelpers.Route(nodeInfoRoot + "/2.0").Process(httphelpers.ToMiddleware(httphelpers.ToHandlerFunc(httphelpers.ErrorHandler(func(w http.ResponseWriter, r *http.Request) error {
+	schema2p0 := httphelpers.Group("nodeInfoRoot", httphelpers.Route("/2.0").Process(httphelpers.ToMiddleware(httphelpers.ToHandlerFunc(httphelpers.ErrorHandler(func(w http.ResponseWriter, r *http.Request) error {
 		nodeInfoProps := handler()
 		schema := schema2p0.Schema{
 			Software: schema2p0.Software{
@@ -87,7 +87,7 @@ func CreateNodeInfoMiddleware(origin string, nodeInfoRoot string, handler func()
 			},
 		}
 		return httphelpers.WriteJSON(w, schema)
-	}))))
+	})))))
 
 	return func(next http.Handler) http.Handler {
 		return wellKnown(schema2p0(next))

@@ -1,6 +1,6 @@
 package pair
 
-type Pair[K any, V any] struct {
-	Key   K
-	Value V
+type Pair[L any, R any] struct {
+	Left  L
+	Right R
 }

@@ -24,5 +24,5 @@ func ParseHeadersList(headersList string) ([]string, error) {
 		return nil, errors.New("the headers list")
 	}
 
-	return slices.Wrapper[string](strings.Split(headersList, " \t")).Map(strings.TrimSpace), nil
+	return slices.Wrapper[string](strings.Split(headersList, " \t")).Map(slices.IgnoreIndex(strings.TrimSpace)), nil
 }

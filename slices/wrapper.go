@@ -20,6 +20,6 @@ func (w Wrapper[T]) Some(fn func(T) bool) bool {
 	return false
 }
 
-func (w Wrapper[T]) Map(fn func(T) T) Wrapper[T] {
+func (w Wrapper[T]) Map(fn func(T, int) T) Wrapper[T] {
 	return Map(w, fn)
 }

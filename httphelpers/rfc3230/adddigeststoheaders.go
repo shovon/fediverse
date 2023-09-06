@@ -15,7 +15,7 @@ func AddDigestsToHeaders(h http.Header, body []byte, digesters []Digester) error
 		}
 		digestParts = append(
 			digestParts,
-			pair.Pair[string, string]{Key: digester.Token(), Value: digest},
+			pair.Pair[string, string]{Left: digester.Token(), Right: digest},
 		)
 	}
 

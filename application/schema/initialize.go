@@ -18,13 +18,13 @@ var revisions = []string{
 	CREATE TABLE followers (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		when_followed DATETIME DEFAULT CURRENT_TIMESTAMP,
-		follower TEXT
+		actor_iri TEXT
 	);
 
 	CREATE TABLE following (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		when_followed DATETIME DEFAULT CURRENT_TIMESTAMP,
-		follower TEXT
+		actor_iri TEXT
 	);
 
 	CREATE TABLE inbox (

@@ -11,7 +11,9 @@ import (
 	"fediverse/json/jsonhttp"
 	"fediverse/jsonld/jsonldkeywords"
 	"fediverse/possibleerror"
+	"fediverse/urlhelpers"
 	"net/http"
+	"net/url"
 )
 
 type Following string
@@ -68,6 +70,13 @@ func actor() func(http.Handler) http.Handler {
 					"id":           a("#main-key"),
 					"owner":        a(""),
 					"publicKeyPem": key,
+				},
+				"endpoints": map[string]any{
+					"sharedInbox": possibleerror.Then(possibleerror.New(requestbaseurl.GetRequestURL(r)), func(u *url.URL) possibleerror.PossibleError[string] {
+						return possibleerror.NotError(urlhelpers.ToString(u.ResolveReference(&url.URL{
+							Path: "/sharedinbox",
+						})))
+					}),
 				},
 			}, nil
 		}))),

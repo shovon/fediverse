@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fediverse/application/posts"
+	"fediverse/application/schema"
 	"fediverse/cryptohelpers/rsahelpers"
 	"flag"
 	"fmt"
@@ -67,6 +68,12 @@ func parsePublicKey(payload []byte) (*rsa.PublicKey, error) {
 }
 
 func main() {
+	err := schema.Initialize()
+
+	if err != nil {
+		panic(err)
+	}
+
 	args := os.Args[1:]
 	if len(args) <= 0 {
 		fmt.Println("Please provide a command")

@@ -20,6 +20,10 @@ func (d SHA256Digest) Digest(body []byte) (string, error) {
 	return b64.URLEncoding.EncodeToString(hash[:]), nil
 }
 
+func VerifyDigest() func(http.Handler) http.Handler {
+	return rfc3230.VerifyDigest([]rfc3230.Digester{SHA256Digest{}})
+}
+
 func SendSigned(req *http.Request, key any, body string) (*http.Response, error) {
 	rfc3230.AddDigestsToHeaders(req.Header, []byte(body), []rfc3230.Digester{SHA256Digest{}})
 	client := &http.Client{}

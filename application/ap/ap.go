@@ -7,7 +7,6 @@ import (
 	"fediverse/functional"
 	hh "fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
-	"fediverse/httphelpers/rfc3230"
 	"fediverse/possibleerror"
 	"fediverse/urlhelpers"
 	"net/http"
@@ -52,9 +51,7 @@ func ActivityPub() func(http.Handler) http.Handler {
 				hh.Method("POST"),
 				hh.Route("/sharedinbox"),
 			}.Process(functional.RecursiveApply([](func(http.Handler) http.Handler){
-				rfc3230.VerifyDigest([]rfc3230.Digester{
-					apphttp.SHA256Digest{},
-				}),
+				apphttp.VerifyDigest(),
 
 				// TODO: implement
 				hh.ToMiddleware(httperrors.NotImplemented()),

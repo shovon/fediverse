@@ -7,8 +7,6 @@ import (
 	"strings"
 )
 
-// TODO: unit test this.
-
 func ParseHeadersList(headersList string) ([]string, error) {
 	reg, err := regexp.Compile("[\r\n]")
 	if err != nil {
@@ -24,5 +22,5 @@ func ParseHeadersList(headersList string) ([]string, error) {
 		return nil, errors.New("the headers list")
 	}
 
-	return slices.Wrapper[string](strings.Split(headersList, " \t")).Map(slices.IgnoreIndex(strings.TrimSpace)), nil
+	return slices.Map(strings.Split(headersList, "  "), slices.IgnoreIndex(strings.TrimSpace)), nil
 }

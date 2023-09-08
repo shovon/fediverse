@@ -69,25 +69,26 @@ func CreateNodeInfoMiddleware(origin string, nodeInfoRoot string, handler func()
 		}, nil
 	}))
 
-	schema2p0 := httphelpers.Group("nodeInfoRoot", httphelpers.Route("/2.0").Process(httphelpers.ToMiddleware(httphelpers.ToHandlerFunc(httphelpers.ErrorHandler(func(w http.ResponseWriter, r *http.Request) error {
-		nodeInfoProps := handler()
-		schema := schema2p0.Schema{
-			Software: schema2p0.Software{
-				Name:    nodeInfoProps.Software.Name,
-				Version: nodeInfoProps.Software.Version,
-			},
-			Usage: schema2p0.Usage{
-				Users: schema2p0.UsersStats{
-					Total:          nodeInfoProps.Usage.Users.Total,
-					ActiveHalfyear: nodeInfoProps.Usage.Users.ActiveHalfyear,
-					ActiveMonth:    nodeInfoProps.Usage.Users.ActiveMonth,
+	schema2p0 := httphelpers.Group(
+		nodeInfoRoot, httphelpers.Route("/2.0").Process(httphelpers.ToMiddleware(httphelpers.ToHandlerFunc(httphelpers.ErrorHandler(func(w http.ResponseWriter, r *http.Request) error {
+			nodeInfoProps := handler()
+			schema := schema2p0.Schema{
+				Software: schema2p0.Software{
+					Name:    nodeInfoProps.Software.Name,
+					Version: nodeInfoProps.Software.Version,
 				},
-				LocalPosts:    nodeInfoProps.Usage.LocalPosts,
-				LocalComments: nodeInfoProps.Usage.LocalComments,
-			},
-		}
-		return httphelpers.WriteJSON(w, schema)
-	})))))
+				Usage: schema2p0.Usage{
+					Users: schema2p0.UsersStats{
+						Total:          nodeInfoProps.Usage.Users.Total,
+						ActiveHalfyear: nodeInfoProps.Usage.Users.ActiveHalfyear,
+						ActiveMonth:    nodeInfoProps.Usage.Users.ActiveMonth,
+					},
+					LocalPosts:    nodeInfoProps.Usage.LocalPosts,
+					LocalComments: nodeInfoProps.Usage.LocalComments,
+				},
+			}
+			return httphelpers.WriteJSON(w, schema)
+		})))))
 
 	return func(next http.Handler) http.Handler {
 		return wellKnown(schema2p0(next))

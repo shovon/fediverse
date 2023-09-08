@@ -6,13 +6,13 @@ import (
 	"strings"
 )
 
-var malformedDigestError = errors.New("malformed digest")
+var errMalformedDigestError = errors.New("malformed digest")
 
 func MalformedDigestError() error {
-	return malformedDigestError
+	return errMalformedDigestError
 }
 
-func Parse(header string) ([]pair.Pair[string, string], error) {
+func ParseDigest(header string) ([]pair.Pair[string, string], error) {
 	digests := strings.Split(header, ",")
 	pairs := []pair.Pair[string, string]{}
 	for _, digest := range digests {

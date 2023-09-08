@@ -6,6 +6,7 @@ import (
 	"fediverse/functional"
 	hh "fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
+	"fediverse/httphelpers/rfc3230"
 	"fediverse/possibleerror"
 	"fediverse/urlhelpers"
 	"net/http"
@@ -46,10 +47,15 @@ func ActivityPub() func(http.Handler) http.Handler {
 		hh.DefaultResponseHeader("Content-Type", []string{"application/activity+json"}),
 	}.Process(
 		functional.RecursiveApply([](func(http.Handler) http.Handler){
-			// TODO: implement
 			hh.Processors{
+				hh.Method("POST"),
 				hh.Route("/sharedinbox"),
-			}.Process(hh.ToMiddleware(httperrors.NotImplemented())),
+			}.Process(functional.RecursiveApply([](func(http.Handler) http.Handler){
+				rfc3230.VerifyDigest([]rfc3230.Digester{}),
+
+				// TODO: implement
+				hh.ToMiddleware(httperrors.NotImplemented()),
+			})),
 			hh.Group(
 				"/users/:username",
 				actor(),

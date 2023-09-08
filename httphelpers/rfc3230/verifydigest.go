@@ -52,7 +52,7 @@ func deriveWantDigests(tokenQValuePairs []pair.Pair[string, decimal.Decimal]) st
 // Warning: this processor will buffer the entire request body in memory. So,
 // as an added precaution, it may be recommended to have something filter
 // requests by Content-Length.
-func VerifyDigest(digesters []Digester) hh.Processor {
+func VerifyDigest(digesters []Digester) func(http.Handler) http.Handler {
 	pairs := calculateTokensAndQValues(digesters)
 
 	mapping := map[string]func([]byte) (string, error){}
@@ -62,51 +62,49 @@ func VerifyDigest(digesters []Digester) hh.Processor {
 
 	// TODO: yeah this will really need to be thoroughly unit tested.
 
-	return hh.ProcessorFunc(func(middleware func(http.Handler) http.Handler) func(http.Handler) http.Handler {
-		return func(next http.Handler) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				body, err := hh.ProcessBody(r)
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			body, err := hh.ProcessBody(r)
+			if err != nil {
+				httperrors.InternalServerError().ServeHTTP(w, r)
+				return
+			}
+
+			clientDigests := []possibleerror.PossibleError[[]pair.Pair[string, string]]{}
+			for _, digestValue := range r.Header.Values("Digest") {
+				clientDigests = append(clientDigests, possibleerror.New(ParseDigest(digestValue)))
+			}
+
+			for _, pair := range clientDigests {
+				_, err := pair.Value()
 				if err != nil {
-					httperrors.InternalServerError().ServeHTTP(w, r)
+					httperrors.BadRequest().ServeHTTP(w, r)
 					return
 				}
+			}
 
-				clientDigests := []possibleerror.PossibleError[[]pair.Pair[string, string]]{}
-				for _, digestValue := range r.Header.Values("Digest") {
-					clientDigests = append(clientDigests, possibleerror.New(ParseDigest(digestValue)))
+			noErrors := slices.Map(clientDigests, slices.IgnoreIndex(assertNoError[[]pair.Pair[string, string]]))
+			allDigests := slices.Join(noErrors...)
+
+			for _, digest := range allDigests {
+				digestFn, ok := mapping[digest.Left]
+				if !ok {
+					p := append(pairs, pair.Pair[string, decimal.Decimal]{
+						Left:  digest.Left,
+						Right: decimal.NewFromInt(0),
+					})
+					r.Header.Add("Want-Digest", deriveWantDigests(p))
+					httperrors.Unauthorized().ServeHTTP(w, r)
+					return
 				}
-
-				for _, pair := range clientDigests {
-					_, err := pair.Value()
-					if err != nil {
-						httperrors.BadRequest().ServeHTTP(w, r)
-						return
-					}
+				result, err := digestFn(body)
+				if err != nil || digest.Right != result {
+					httperrors.Unauthorized().ServeHTTP(w, r)
+					return
 				}
+			}
 
-				noErrors := slices.Map(clientDigests, slices.IgnoreIndex(assertNoError[[]pair.Pair[string, string]]))
-				allDigests := slices.Join(noErrors...)
-
-				for _, digest := range allDigests {
-					digestFn, ok := mapping[digest.Left]
-					if !ok {
-						p := append(pairs, pair.Pair[string, decimal.Decimal]{
-							Left:  digest.Left,
-							Right: decimal.NewFromInt(0),
-						})
-						r.Header.Add("Want-Digest", deriveWantDigests(p))
-						httperrors.Unauthorized().ServeHTTP(w, r)
-						return
-					}
-					result, err := digestFn(body)
-					if err != nil || digest.Right != result {
-						httperrors.Unauthorized().ServeHTTP(w, r)
-						return
-					}
-				}
-
-				middleware(next).ServeHTTP(w, r)
-			})
-		}
-	})
+			next.ServeHTTP(w, r)
+		})
+	}
 }

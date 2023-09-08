@@ -2,6 +2,7 @@ package ap
 
 import (
 	"crypto/rsa"
+	"fediverse/application/apphttp"
 	"fediverse/cryptohelpers/rsahelpers"
 	"fediverse/functional"
 	hh "fediverse/httphelpers"
@@ -51,7 +52,9 @@ func ActivityPub() func(http.Handler) http.Handler {
 				hh.Method("POST"),
 				hh.Route("/sharedinbox"),
 			}.Process(functional.RecursiveApply([](func(http.Handler) http.Handler){
-				rfc3230.VerifyDigest([]rfc3230.Digester{}),
+				rfc3230.VerifyDigest([]rfc3230.Digester{
+					apphttp.SHA256Digest{},
+				}),
 
 				// TODO: implement
 				hh.ToMiddleware(httperrors.NotImplemented()),

@@ -22,8 +22,8 @@ func ParseDigest(header string) ([]pair.Pair[string, string], error) {
 		}
 		pairs = append(pairs, pair.Pair[string, string]{
 			Left:  arr[0],
-			Right: strings.Join(arr[1:], "")},
-		)
+			Right: digest[len(arr[0])+1:],
+		})
 	}
 	return pairs, nil
 }

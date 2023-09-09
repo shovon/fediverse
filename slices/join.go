@@ -5,12 +5,8 @@ func Join[V any](s ...[]V) []V {
 		return result + len(next)
 	})
 	arr := make([]V, 0, totalItems)
-	index := 0
 	for _, slice := range s {
-		for _, element := range slice {
-			arr[index] = element
-			index++
-		}
+		arr = append(arr, slice...)
 	}
 	return arr
 }

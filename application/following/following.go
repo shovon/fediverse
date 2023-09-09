@@ -44,7 +44,11 @@ func GetFollowing(offset int, limit int) ([]Following, error) {
 		return nil, err
 	}
 	defer db.Close()
-	result, err := db.Query("SELECT id, when_followed, actor_iri FROM following ORDER BY when_followed DESC LIMIT ? OFFSET ?", limit, offset)
+	result, err := db.Query(
+		"SELECT id, when_followed, actor_iri FROM following ORDER BY when_followed DESC LIMIT ? OFFSET ?",
+		limit,
+		offset,
+	)
 	if err != nil {
 		return nil, err
 	}

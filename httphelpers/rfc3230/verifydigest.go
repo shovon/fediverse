@@ -6,6 +6,7 @@ import (
 	"fediverse/pair"
 	"fediverse/possibleerror"
 	"fediverse/slices"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -46,8 +47,9 @@ func deriveWantDigests(tokenQValuePairs []pair.Pair[string, decimal.Decimal]) st
 	return strings.Join(slices.Map(tokenQValuePairs, slices.IgnoreIndex(deriveWantedDigest)), ", ")
 }
 
-// VerifyDigest handles HTTP requests that have rfc3230 Digest headers. If the
-// headers are missing, or the token is not supported, then respond with a 403.
+// VerifyDigest produces a middleware to handle HTTP requests that have rfc3230
+// Digest headers. If the headers are missing, or the token is not supported,
+// then respond with a 403.
 //
 // Warning: this processor will buffer the entire request body in memory. So,
 // as an added precaution, it may be recommended to have something filter
@@ -98,6 +100,7 @@ func VerifyDigest(digesters []Digester) func(http.Handler) http.Handler {
 					return
 				}
 				result, err := digestFn(body)
+				fmt.Printf("%s, %s\n", digest.Right, result)
 				if err != nil || digest.Right != result {
 					httperrors.Unauthorized().ServeHTTP(w, r)
 					return

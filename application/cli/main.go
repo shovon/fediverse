@@ -68,6 +68,7 @@ func parsePublicKey(payload []byte) (*rsa.PublicKey, error) {
 }
 
 func main() {
+	// TODO:
 	err := schema.Initialize()
 
 	if err != nil {

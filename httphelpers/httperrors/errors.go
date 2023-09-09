@@ -40,112 +40,112 @@ func (d dummy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func BadRequest() HTTPError {
 	return dummy{
-		status: 400,
+		status: http.StatusBadRequest,
 		err:    "Bad Request",
 	}
 }
 
 func Unauthorized() HTTPError {
 	return dummy{
-		status: 401,
+		status: http.StatusUnauthorized,
 		err:    "Unauthorized",
 	}
 }
 
 func Forbidden() HTTPError {
 	return dummy{
-		status: 403,
+		status: http.StatusForbidden,
 		err:    "Forbidden",
 	}
 }
 
 func NotFound() HTTPError {
 	return dummy{
-		status: 404,
+		status: http.StatusNotFound,
 		err:    "Not Found",
 	}
 }
 
 func NotAcceptable() HTTPError {
 	return dummy{
-		status: 406,
+		status: http.StatusNotAcceptable,
 		err:    "Not Acceptable",
 	}
 }
 
 func ProxyAuthenticationRequired() HTTPError {
 	return dummy{
-		status: 407,
+		status: http.StatusProxyAuthRequired,
 		err:    "Proxy Authentication Required",
 	}
 }
 
 func RequestTimeout() HTTPError {
 	return dummy{
-		status: 408,
+		status: http.StatusRequestTimeout,
 		err:    "Request Timeout",
 	}
 }
 
 func Conflict() HTTPError {
 	return dummy{
-		status: 409,
+		status: http.StatusConflict,
 		err:    "Conflict",
 	}
 }
 
 func Gone() HTTPError {
 	return dummy{
-		status: 410,
+		status: http.StatusGone,
 		err:    "Gone",
 	}
 }
 
 func LengthRequired() HTTPError {
 	return dummy{
-		status: 411,
+		status: http.StatusLengthRequired,
 		err:    "Length Required",
 	}
 }
 
 func PreconditionFailed() HTTPError {
 	return dummy{
-		status: 412,
+		status: http.StatusPreconditionFailed,
 		err:    "Precondition Failed",
 	}
 }
 
 func RequestEntityTooLarge() HTTPError {
 	return dummy{
-		status: 413,
+		status: http.StatusRequestEntityTooLarge,
 		err:    "Request Entity Too Large",
 	}
 }
 
 func RequestURITooLong() HTTPError {
 	return dummy{
-		status: 414,
+		status: http.StatusRequestURITooLong,
 		err:    "Request URI Too Long",
 	}
 }
 
 func UnsupportedMediaType() HTTPError {
 	return dummy{
-		status: 415,
+		status: http.StatusUnsupportedMediaType,
 		err:    "Unsupported Media Type",
 	}
 }
 
 func RequestedRangeNotSatisfiable() HTTPError {
 	return dummy{
-		status: 416,
+		status: http.StatusRequestedRangeNotSatisfiable,
 		err:    "Requested Range Not Satisfiable",
 	}
 }
 
 func ExpectationFailed() HTTPError {
 	return dummy{
-		status: 417,
+		status: http.StatusExpectationFailed,
 		err:    "Expectation Failed",
 	}
 }
@@ -159,147 +159,147 @@ func ImATeapot() HTTPError {
 
 func MisdirectedRequest() HTTPError {
 	return dummy{
-		status: 421,
+		status: http.StatusMisdirectedRequest,
 		err:    "Misdirected Request",
 	}
 }
 
 func UnprocessableEntity() HTTPError {
 	return dummy{
-		status: 422,
+		status: http.StatusUnprocessableEntity,
 		err:    "Unprocessable Entity",
 	}
 }
 
 func Locked() HTTPError {
 	return dummy{
-		status: 423,
+		status: http.StatusLocked,
 		err:    "Locked",
 	}
 }
 
 func FailedDependency() HTTPError {
 	return dummy{
-		status: 424,
+		status: http.StatusFailedDependency,
 		err:    "Failed Dependency",
 	}
 }
 
 func TooEarly() HTTPError {
 	return dummy{
-		status: 425,
+		status: http.StatusTooEarly,
 		err:    "Too Early",
 	}
 }
 
 func UpgradeRequired() HTTPError {
 	return dummy{
-		status: 426,
+		status: http.StatusUpgradeRequired,
 		err:    "Upgrade Required",
 	}
 }
 
 func PreconditionRequired() HTTPError {
 	return dummy{
-		status: 428,
+		status: http.StatusPreconditionRequired,
 		err:    "Precondition Required",
 	}
 }
 
 func TooManyRequests() HTTPError {
 	return dummy{
-		status: 429,
+		status: http.StatusTooManyRequests,
 		err:    "Too Many Requests",
 	}
 }
 
 func RequestHeaderFieldsTooLarge() HTTPError {
 	return dummy{
-		status: 431,
+		status: http.StatusRequestHeaderFieldsTooLarge,
 		err:    "Request Header Fields Too Large",
 	}
 }
 
 func UnavailableForLegalReasons() HTTPError {
 	return dummy{
-		status: 451,
+		status: http.StatusUnavailableForLegalReasons,
 		err:    "Unavailable For Legal Reasons",
 	}
 }
 
 func InternalServerError() HTTPError {
 	return dummy{
-		status: 500,
+		status: http.StatusInternalServerError,
 		err:    "Internal Server Error",
 	}
 }
 
 func NotImplemented() HTTPError {
 	return dummy{
-		status: 501,
+		status: http.StatusNotImplemented,
 		err:    "Not Implemented",
 	}
 }
 
 func BadGateway() HTTPError {
 	return dummy{
-		status: 502,
+		status: http.StatusBadGateway,
 		err:    "Bad Gateway",
 	}
 }
 
 func ServiceUnavailable() HTTPError {
 	return dummy{
-		status: 503,
+		status: http.StatusServiceUnavailable,
 		err:    "Service Unavailable",
 	}
 }
 
 func GatewayTimeout() HTTPError {
 	return dummy{
-		status: 504,
+		status: http.StatusGatewayTimeout,
 		err:    "Gateway Timeout",
 	}
 }
 
 func HTTPVersionNotSupported() HTTPError {
 	return dummy{
-		status: 505,
+		status: http.StatusHTTPVersionNotSupported,
 		err:    "HTTP Version Not Supported",
 	}
 }
 
 func VariantAlsoNegotiates() HTTPError {
 	return dummy{
-		status: 506,
+		status: http.StatusVariantAlsoNegotiates,
 		err:    "Variant Also Negotiates",
 	}
 }
 
 func InsufficientStorage() HTTPError {
 	return dummy{
-		status: 507,
+		status: http.StatusInsufficientStorage,
 		err:    "Insufficient Storage",
 	}
 }
 
 func LoopDetected() HTTPError {
 	return dummy{
-		status: 508,
+		status: http.StatusLoopDetected,
 		err:    "Loop Detected",
 	}
 }
 
 func NotExtended() HTTPError {
 	return dummy{
-		status: 510,
+		status: http.StatusNotExtended,
 		err:    "Not Extended",
 	}
 }
 
 func NetworkAuthenticationRequired() HTTPError {
 	return dummy{
-		status: 511,
+		status: http.StatusNetworkAuthenticationRequired,
 		err:    "Network Authentication Required",
 	}
 }

@@ -48,7 +48,7 @@ func TestVerifyDigest(t *testing.T) {
 	}
 }
 
-func TestBadVerifyDigest(t *testing.T) {
+func TestVerifyDigestBad(t *testing.T) {
 	req, err := http.NewRequest("POST", "http://localhost", strings.NewReader("hello\n"))
 	if err != nil {
 		panic(err)
@@ -69,7 +69,33 @@ func TestBadVerifyDigest(t *testing.T) {
 
 	handler.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusOK {
+	if rr.Code != http.StatusUnauthorized {
+		t.Errorf("handler returned wrong status code: got %v want %v", rr.Code, http.StatusOK)
+	}
+}
+
+func TestVerifyUnknownDigest(t *testing.T) {
+	req, err := http.NewRequest("POST", "http://localhost", strings.NewReader("hello\n"))
+	if err != nil {
+		panic(err)
+	}
+
+	req.Header.Set("Digest", "ha-256=WJG1tSLV3whtD/CxEPvZ0hu0/HFjryTQgoai6Eb2vgM=")
+
+	digesters := []Digester{SHA256Digest{}}
+
+	rr := httptest.NewRecorder()
+
+	middleware := VerifyDigest(digesters)
+
+	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("hello\n"))
+	}))
+
+	handler.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusUnauthorized {
 		t.Errorf("handler returned wrong status code: got %v want %v", rr.Code, http.StatusOK)
 	}
 }

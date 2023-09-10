@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/shopspring/decimal"
 )
 
 type SHA256Digest struct{}
@@ -97,5 +99,21 @@ func TestVerifyUnknownDigest(t *testing.T) {
 
 	if rr.Code != http.StatusUnauthorized {
 		t.Errorf("handler returned wrong status code: got %v want %v", rr.Code, http.StatusOK)
+	}
+
+	digest := rr.Header().Get("Want-Digest")
+	pair, err := ParseWantedDigest(digest)
+	if err != nil {
+		t.Error("unexpected error")
+	}
+	if len(pair) != 1 {
+		t.Error("expected 1 digest")
+		t.FailNow()
+	}
+	if pair[0].Left != "sha-256" {
+		t.Errorf("Expected sha-256, but got %s", pair[0].Left)
+	}
+	if !pair[0].Right.Equal(decimal.NewFromInt(1)) {
+		t.Error("Expected q=1")
 	}
 }

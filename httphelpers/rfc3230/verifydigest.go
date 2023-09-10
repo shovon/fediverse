@@ -6,6 +6,7 @@ import (
 	"fediverse/pair"
 	"fediverse/possibleerror"
 	"fediverse/slices"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -27,6 +28,7 @@ func calculateTokensAndQValues(digesters []Digester) []pair.Pair[string, decimal
 	factor := numerator.Div(denominator)
 
 	return slices.Map(digesters, func(digester Digester, index int) pair.Pair[string, decimal.Decimal] {
+		fmt.Println(digester.Token())
 		return pair.Pair[string, decimal.Decimal]{
 			Left:  digester.Token(),
 			Right: factor.Mul(decimal.NewFromInt(int64(index + 1))),
@@ -36,13 +38,13 @@ func calculateTokensAndQValues(digesters []Digester) []pair.Pair[string, decimal
 
 func deriveWantedDigest(tokenQValuePair pair.Pair[string, decimal.Decimal]) string {
 	token, qValue := tokenQValuePair.Left, tokenQValuePair.Right
-	if qValue == decimal.NewFromInt(1) {
+	if qValue.Equal(decimal.NewFromInt(1)) {
 		return token
 	}
 	return token + ";q=" + qValue.String()
 }
 
-func deriveWantDigests(tokenQValuePairs []pair.Pair[string, decimal.Decimal]) string {
+func DeriveWantDigests(tokenQValuePairs []pair.Pair[string, decimal.Decimal]) string {
 	return strings.Join(slices.Map(tokenQValuePairs, slices.IgnoreIndex(deriveWantedDigest)), ", ")
 }
 
@@ -94,7 +96,7 @@ func VerifyDigest(digesters []Digester) func(http.Handler) http.Handler {
 						Left:  digest.Left,
 						Right: decimal.NewFromInt(0),
 					})
-					r.Header.Add("Want-Digest", deriveWantDigests(p))
+					r.Header.Add("Want-Digest", DeriveWantDigests(p))
 					httperrors.Unauthorized().ServeHTTP(w, r)
 					return
 				}

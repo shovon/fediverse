@@ -12,6 +12,9 @@ func ParseWantedDigest(wantedDigest string) ([]pair.Pair[string, decimal.Decimal
 	list := slices.Map(strings.Split(wantedDigest, ","), func(str string, _ int) string {
 		return strings.TrimSpace(str)
 	})
+	list = slices.Filter(list, func(str string, _ int) bool {
+		return str != ""
+	})
 
 	pairs := []pair.Pair[string, decimal.Decimal]{}
 	for _, str := range list {

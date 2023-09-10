@@ -9,9 +9,12 @@ import (
 func TestParseWantedDigest(t *testing.T) {
 	{
 		t.Run("empty", func(t *testing.T) {
-			_, err := ParseWantedDigest("")
+			digests, err := ParseWantedDigest("")
 			if err != nil {
 				t.Error("unexpected error")
+			}
+			if len(digests) != 0 {
+				t.Error("expected no digests")
 			}
 		})
 		t.Run("single", func(t *testing.T) {

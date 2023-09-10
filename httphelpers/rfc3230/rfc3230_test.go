@@ -3,12 +3,15 @@ package rfc3230
 import (
 	"crypto/sha256"
 	b64 "encoding/base64"
+	"fediverse/pair"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/shopspring/decimal"
+
+	goslices "slices"
 )
 
 type SHA256Digest struct{}
@@ -102,18 +105,40 @@ func TestVerifyUnknownDigest(t *testing.T) {
 	}
 
 	digest := rr.Header().Get("Want-Digest")
-	pair, err := ParseWantedDigest(digest)
+	pairs, err := ParseWantedDigest(digest)
 	if err != nil {
 		t.Error("unexpected error")
 	}
-	if len(pair) != 1 {
-		t.Error("expected 1 digest")
+	if len(pairs) != 2 {
+		t.Error("expected 2 digests")
 		t.FailNow()
 	}
-	if pair[0].Left != "sha-256" {
-		t.Errorf("Expected sha-256, but got %s", pair[0].Left)
+
+	{
+		validIndex :=
+			goslices.IndexFunc(pairs, func(p pair.Pair[string, decimal.Decimal]) bool {
+				return p.Right.Equal(decimal.NewFromInt(1))
+			})
+
+		if pairs[validIndex].Left != "sha-256" {
+			t.Errorf("Expected sha-256, but got %s", pairs[validIndex].Left)
+		}
+		if !pairs[validIndex].Right.Equal(decimal.NewFromInt(1)) {
+			t.Error("Expected q=1")
+		}
 	}
-	if !pair[0].Right.Equal(decimal.NewFromInt(1)) {
-		t.Error("Expected q=1")
+
+	{
+		invalidIndex :=
+			goslices.IndexFunc(pairs, func(p pair.Pair[string, decimal.Decimal]) bool {
+				return p.Right.Equal(decimal.NewFromInt(0))
+			})
+
+		if pairs[invalidIndex].Left != "ha-256" {
+			t.Errorf("Expected sha-256, but got %s", pairs[invalidIndex].Left)
+		}
+		if !pairs[invalidIndex].Right.Equal(decimal.NewFromInt(0)) {
+			t.Error("Expected q=0")
+		}
 	}
 }

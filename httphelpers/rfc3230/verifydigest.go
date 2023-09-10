@@ -6,7 +6,6 @@ import (
 	"fediverse/pair"
 	"fediverse/possibleerror"
 	"fediverse/slices"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -28,7 +27,6 @@ func calculateTokensAndQValues(digesters []Digester) []pair.Pair[string, decimal
 	factor := numerator.Div(denominator)
 
 	return slices.Map(digesters, func(digester Digester, index int) pair.Pair[string, decimal.Decimal] {
-		fmt.Println(digester.Token())
 		return pair.Pair[string, decimal.Decimal]{
 			Left:  digester.Token(),
 			Right: factor.Mul(decimal.NewFromInt(int64(index + 1))),
@@ -96,7 +94,7 @@ func VerifyDigest(digesters []Digester) func(http.Handler) http.Handler {
 						Left:  digest.Left,
 						Right: decimal.NewFromInt(0),
 					})
-					r.Header.Add("Want-Digest", DeriveWantDigests(p))
+					w.Header().Add("Want-Digest", DeriveWantDigests(p))
 					httperrors.Unauthorized().ServeHTTP(w, r)
 					return
 				}

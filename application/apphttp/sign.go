@@ -17,7 +17,7 @@ func (d SHA256Digest) Token() string {
 
 func (d SHA256Digest) Digest(body []byte) (string, error) {
 	hash := sha256.Sum256(body)
-	return b64.URLEncoding.EncodeToString(hash[:]), nil
+	return b64.StdEncoding.EncodeToString(hash[:]), nil
 }
 
 func VerifyDigest() func(http.Handler) http.Handler {

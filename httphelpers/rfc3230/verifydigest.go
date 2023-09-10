@@ -6,7 +6,6 @@ import (
 	"fediverse/pair"
 	"fediverse/possibleerror"
 	"fediverse/slices"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -100,7 +99,6 @@ func VerifyDigest(digesters []Digester) func(http.Handler) http.Handler {
 					return
 				}
 				result, err := digestFn(body)
-				fmt.Printf("%s, %s\n", digest.Right, result)
 				if err != nil || digest.Right != result {
 					httperrors.Unauthorized().ServeHTTP(w, r)
 					return

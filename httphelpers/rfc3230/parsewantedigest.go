@@ -18,6 +18,7 @@ func ParseWantedDigest(wantedDigest string) ([]pair.Pair[string, decimal.Decimal
 		parts := strings.Split(str, ";")
 		if len(parts) == 1 {
 			pairs = append(pairs, pair.Pair[string, decimal.Decimal]{Left: parts[0], Right: decimal.NewFromInt(1)})
+			continue
 		}
 		if len(parts) != 2 {
 			return nil, MalformedDigestError()

@@ -24,7 +24,7 @@ func VerifyDigest() func(http.Handler) http.Handler {
 	return rfc3230.VerifyDigest([]rfc3230.Digester{SHA256Digest{}})
 }
 
-func SendSigned(req *http.Request, key any, body string) (*http.Response, error) {
+func SendWithDigest(req *http.Request, key any, body string) (*http.Response, error) {
 	rfc3230.AddDigestsToHeaders(req.Header, []byte(body), []rfc3230.Digester{SHA256Digest{}})
 	client := &http.Client{}
 	return client.Do(req)

@@ -22,35 +22,39 @@ const (
 	Headers   = "headers"
 )
 
-type SignatureParams struct {
+type Params struct {
 	KeyID     nullable.Nullable[string]
-	Signature string
 	Algorithm nullable.Nullable[string]
 	Created   nullable.Nullable[string]
 	Expires   nullable.Nullable[string]
 	Headers   nullable.Nullable[string]
 }
 
-var _ fmt.Stringer = SignatureParams{}
+type ParamsWithSignature struct {
+	Params
+	Signature string
+}
+
+var _ fmt.Stringer = ParamsWithSignature{}
 
 func simpleQuotes(str string) string {
 	return "\"" + str + "\""
 }
 
-func (sp SignatureParams) String() string {
+func (sp ParamsWithSignature) String() string {
 	result := []string{}
 	if sp.KeyID.HasValue() {
 		result = append(result, KeyID+"="+simpleQuotes(sp.KeyID.ValueOrDefault("")))
 	}
-	result = append(result, Signature+"="+sp.Signature)
+	result = append(result, Signature+"="+simpleQuotes(sp.Signature))
 	if sp.Algorithm.HasValue() {
 		result = append(result, Algorithm+"="+simpleQuotes(sp.Algorithm.ValueOrDefault("")))
 	}
 	if sp.Created.HasValue() {
-		result = append(result, Created+"="+simpleQuotes(sp.Created.ValueOrDefault("")))
+		result = append(result, Created+"="+sp.Created.ValueOrDefault(""))
 	}
 	if sp.Expires.HasValue() {
-		result = append(result, Expires+"="+simpleQuotes(sp.Expires.ValueOrDefault("")))
+		result = append(result, Expires+"="+sp.Expires.ValueOrDefault(""))
 	}
 	if sp.Headers.HasValue() {
 		result = append(result, Headers+"="+simpleQuotes(sp.Headers.ValueOrDefault("")))
@@ -58,8 +62,8 @@ func (sp SignatureParams) String() string {
 	return strings.Join(result, ", ")
 }
 
-func ParseSignatureParams(params string) SignatureParams {
-	result := SignatureParams{}
+func ParseSignatureParams(params string) ParamsWithSignature {
+	result := ParamsWithSignature{}
 	for _, param := range strings.Split(params, ",") {
 		parts := strings.SplitN(param, "=", 2)
 		if len(parts) != 2 {

@@ -19,7 +19,7 @@ func ParseHeadersList(headersList string) ([]string, error) {
 	// is undefined behaviour, according to the spec, and so, just return an
 	// error.
 	if reg.Match([]byte(headersList)) {
-		return nil, errors.New("the headers list")
+		return nil, errors.New("unexpected newline character in headers list")
 	}
 
 	return slices.Map(strings.Split(headersList, "  "), slices.IgnoreIndex(strings.TrimSpace)), nil

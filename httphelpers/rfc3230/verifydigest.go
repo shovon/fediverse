@@ -52,7 +52,8 @@ func DeriveWantDigests(tokenQValuePairs []pair.Pair[string, decimal.Decimal]) st
 //
 // Warning: this processor will buffer the entire request body in memory. So,
 // as an added precaution, it may be recommended to have something filter
-// requests by Content-Length.
+// requests by Content-Length. Could be at the reverse-proxy level or at the
+// .
 func VerifyDigest(digesters []Digester) func(http.Handler) http.Handler {
 	pairs := calculateTokensAndQValues(digesters)
 

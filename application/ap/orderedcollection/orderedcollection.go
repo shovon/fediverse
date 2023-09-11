@@ -24,30 +24,30 @@ type ItemsFunctionParams struct {
 // to get the total number of items in a collection, a subset of the list of
 // items in the collection, given a page number and a limit.
 type OrderedCollectionRetriever[V any] interface {
-	Count(hh.BarebonesRequest) uint64
-	Items(hh.BarebonesRequest, ItemsFunctionParams) []V
+	Count(hh.ReadOnlyRequest) uint64
+	Items(hh.ReadOnlyRequest, ItemsFunctionParams) []V
 }
 
 type orderedCollectionRetriever[V any] struct {
-	count func(hh.BarebonesRequest) uint64
-	items func(hh.BarebonesRequest, ItemsFunctionParams) []V
+	count func(hh.ReadOnlyRequest) uint64
+	items func(hh.ReadOnlyRequest, ItemsFunctionParams) []V
 }
 
 var _ OrderedCollectionRetriever[any] = orderedCollectionRetriever[any]{}
 
 func NewOrderedCollection[V any](
-	count func(hh.BarebonesRequest) uint64,
-	items func(hh.BarebonesRequest, ItemsFunctionParams) []V,
+	count func(hh.ReadOnlyRequest) uint64,
+	items func(hh.ReadOnlyRequest, ItemsFunctionParams) []V,
 ) OrderedCollectionRetriever[V] {
 	return orderedCollectionRetriever[V]{count, items}
 }
 
-func (o orderedCollectionRetriever[V]) Count(req hh.BarebonesRequest) uint64 {
+func (o orderedCollectionRetriever[V]) Count(req hh.ReadOnlyRequest) uint64 {
 	return o.count(req)
 }
 
 func (o orderedCollectionRetriever[V]) Items(
-	req hh.BarebonesRequest,
+	req hh.ReadOnlyRequest,
 	params ItemsFunctionParams,
 ) []V {
 	return o.items(req, params)
@@ -86,10 +86,10 @@ func Middleware[V any](route string, retriever OrderedCollectionRetriever[V]) fu
 			hh.Processors{
 				hh.Method("GET"),
 				hh.Route("/"),
-				hh.Condition(func(r hh.BarebonesRequest) bool {
+				hh.Condition(func(r hh.ReadOnlyRequest) bool {
 					return strings.TrimSpace(r.URL.Query().Get("page")) != ""
 				}),
-				hh.ConditionMust(func(r hh.BarebonesRequest) bool {
+				hh.ConditionMust(func(r hh.ReadOnlyRequest) bool {
 					return isNaturalNumber(r.URL.Query().Get("page"))
 				}, httperrors.BadRequest()),
 			}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
@@ -109,7 +109,7 @@ func Middleware[V any](route string, retriever OrderedCollectionRetriever[V]) fu
 					return resolveURIToString(u.ResolveReference(r.URL), path)
 				}
 
-				bbreq, err := hh.CopyRequest(r)
+				bbreq, err := hh.ToReadOnlyRequest(r)
 				if err != nil {
 					return nil, err
 				}
@@ -150,7 +150,7 @@ func Middleware[V any](route string, retriever OrderedCollectionRetriever[V]) fu
 					return resolveURIToString(u.ResolveReference(r.URL), path)
 				}
 
-				bbreq, err := hh.CopyRequest(r)
+				bbreq, err := hh.ToReadOnlyRequest(r)
 				if err != nil {
 					return nil, err
 				}

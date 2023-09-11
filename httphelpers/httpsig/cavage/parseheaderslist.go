@@ -7,6 +7,12 @@ import (
 	"strings"
 )
 
+// ParseHeadersList parses a headers list, as defined in the spec, into a slice
+// of strings.
+//
+// The headers list is just a comma-separated value of HTTP headers and other
+// HTTP signature parameters. These are the "keys" to which values to look up,
+// and are used to reconstruct the signature string.
 func ParseHeadersList(headersList string) ([]string, error) {
 	reg, err := regexp.Compile("[\r\n]")
 	if err != nil {
@@ -22,5 +28,5 @@ func ParseHeadersList(headersList string) ([]string, error) {
 		return nil, errors.New("unexpected newline character in headers list")
 	}
 
-	return slices.Map(strings.Split(headersList, "  "), slices.IgnoreIndex(strings.TrimSpace)), nil
+	return slices.Map(strings.Split(headersList, " "), slices.IgnoreIndex(strings.TrimSpace)), nil
 }

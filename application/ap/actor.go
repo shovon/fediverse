@@ -83,10 +83,10 @@ func actor() func(http.Handler) http.Handler {
 		orderedcollection.Middleware(
 			"/following",
 			orderedcollection.NewOrderedCollection[Following](
-				func(hh.BarebonesRequest) uint64 {
+				func(hh.ReadOnlyRequest) uint64 {
 					return 0
 				},
-				func(hh.BarebonesRequest, orderedcollection.ItemsFunctionParams) []Following {
+				func(hh.ReadOnlyRequest, orderedcollection.ItemsFunctionParams) []Following {
 					return []Following{}
 				},
 			),
@@ -94,10 +94,10 @@ func actor() func(http.Handler) http.Handler {
 		orderedcollection.Middleware(
 			"/followers",
 			orderedcollection.NewOrderedCollection[Follower](
-				func(hh.BarebonesRequest) uint64 {
+				func(hh.ReadOnlyRequest) uint64 {
 					return 0
 				},
-				func(hh.BarebonesRequest, orderedcollection.ItemsFunctionParams) []Follower {
+				func(hh.ReadOnlyRequest, orderedcollection.ItemsFunctionParams) []Follower {
 					return []Follower{}
 				},
 			),

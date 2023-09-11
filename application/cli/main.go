@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto"
-	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
@@ -11,6 +10,7 @@ import (
 	"fediverse/application/posts"
 	"fediverse/application/schema"
 	"fediverse/cryptohelpers/rsahelpers"
+	"fediverse/security/rsassapkcsv115sha256"
 	"flag"
 	"fmt"
 	"os"
@@ -186,14 +186,13 @@ func main() {
 			return
 		}
 
-		hash := sha256.Sum256(payload)
-		signature, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, hash[:])
+		sig, err := rsassapkcsv115sha256.Base64(privateKey).Sign(payload)
 		if err != nil {
 			fmt.Println("Error signing payload:", err)
 			os.Exit(1)
 		}
 
-		fmt.Print(string(base64.StdEncoding.EncodeToString(signature)))
+		fmt.Print(sig)
 	case "verify":
 		// I need the public key, the signature, and the payload
 

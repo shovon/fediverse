@@ -8,7 +8,6 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fediverse/application/posts"
-	"fediverse/application/schema"
 	"fediverse/cryptohelpers/rsahelpers"
 	"fediverse/security/rsassapkcsv115sha256"
 	"flag"
@@ -68,12 +67,12 @@ func parsePublicKey(payload []byte) (*rsa.PublicKey, error) {
 }
 
 func main() {
-	// TODO:
-	err := schema.Initialize()
+	fmt.Println("Cool")
+	// err := schema.Initialize()
 
-	if err != nil {
-		panic(err)
-	}
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	args := os.Args[1:]
 	if len(args) <= 0 {

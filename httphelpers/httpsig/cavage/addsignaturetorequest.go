@@ -9,7 +9,11 @@ import (
 
 // AddSignatureToRequest is an opinionated function that adds a signature to an
 // HTTP request, ideally to be sent out to a server.
-func AddSignatureToRequest(req *http.Request, params Params, signer security.ToStringSigner) error {
+func AddSignatureToRequest(
+	req *http.Request,
+	params Params,
+	signer security.ToStringSigner,
+) error {
 	slice, err := io.ReadAll(req.Body)
 	if err != nil {
 		return err

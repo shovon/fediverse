@@ -1,11 +1,8 @@
 package main
 
 import (
-	"crypto"
 	"crypto/rsa"
-	"crypto/sha256"
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/pem"
 	"fediverse/application/posts"
 	"fediverse/application/schema"
@@ -185,7 +182,7 @@ func main() {
 			return
 		}
 
-		sig, err := rsassapkcsv115sha256.Base64(privateKey).Sign(payload)
+		sig, err := rsassapkcsv115sha256.Base64Signer(privateKey).Sign(payload)
 		if err != nil {
 			fmt.Println("Error signing payload:", err)
 			os.Exit(1)
@@ -232,17 +229,7 @@ func main() {
 			return
 		}
 
-		hash := sha256.Sum256(payload)
-
-		signature, err := base64.StdEncoding.DecodeString(signatureBase64)
-		if err != nil {
-			fmt.Println("Error decoding signature:", err)
-			os.Exit(1)
-			return
-		}
-
-		err = rsa.VerifyPKCS1v15(rsaPublicKey, crypto.SHA256, hash[:], signature[:])
-		if err == nil {
+		if err := rsassapkcsv115sha256.Base64Verifier(rsaPublicKey).Verify(payload, signatureBase64); err == nil {
 			fmt.Println("Signature is valid")
 		} else {
 			fmt.Println("Signature verification failed:", err)

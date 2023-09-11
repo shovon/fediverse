@@ -10,17 +10,17 @@ import (
 
 // Pakcage rsassapkcsv115sha256 holds an implementation of
 
-type base64 struct {
+type base64Signer struct {
 	privateKey *rsa.PrivateKey
 }
 
-func Base64(privateKey *rsa.PrivateKey) security.ToStringSigner {
-	return base64{privateKey: privateKey}
+func Base64Signer(privateKey *rsa.PrivateKey) security.ToStringSigner {
+	return base64Signer{privateKey: privateKey}
 }
 
-var _ security.ToStringSigner = base64{}
+var _ security.ToStringSigner = base64Signer{}
 
-func (b base64) Sign(payload []byte) (string, error) {
+func (b base64Signer) Sign(payload []byte) (string, error) {
 	hash := sha256.Sum256(payload)
 	signature, err := rsa.SignPKCS1v15(nil, b.privateKey, crypto.SHA256, hash[:])
 	if err != nil {
@@ -28,4 +28,25 @@ func (b base64) Sign(payload []byte) (string, error) {
 	}
 
 	return b64.StdEncoding.EncodeToString(signature), nil
+}
+
+type base64Verifier struct {
+	publicKey *rsa.PublicKey
+}
+
+var _ security.FromStringVerifier = base64Verifier{}
+
+func Base64Verifier(publicKey *rsa.PublicKey) security.FromStringVerifier {
+	return base64Verifier{publicKey: publicKey}
+}
+
+func (b base64Verifier) Verify(payload []byte, signature string) error {
+	hash := sha256.Sum256(payload)
+
+	sig, err := b64.StdEncoding.DecodeString(signature)
+	if err != nil {
+		return err
+	}
+
+	return rsa.VerifyPKCS1v15(b.publicKey, crypto.SHA256, hash[:], sig)
 }

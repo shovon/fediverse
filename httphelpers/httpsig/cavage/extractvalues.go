@@ -1,10 +1,10 @@
 package cavage
 
 import (
-	"fediverse/httphelpers"
+	"net/http"
 )
 
-func DeriveSignatureString(req httphelpers.ReadOnlyRequest) (SigningStringInfo, error) {
+func DeriveSignatureString(req http.Header) (SigningStringInfo, error) {
 	// signature := req.Header.Get("Signature")
 	// params := ParseSignatureParams(signature)
 	// value := params.Headers.ValueOrDefault("")

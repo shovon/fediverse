@@ -17,8 +17,6 @@ func VerifySignature(getverifier func(httphelpers.ReadOnlyRequest) security.From
 				return
 			}
 
-			params := ParseSignatureParams(signatureHeader)
-
 			req, err := httphelpers.ToReadOnlyRequest(r)
 			if err != nil {
 				httperrors.InternalServerError().ServeHTTP(w, r)

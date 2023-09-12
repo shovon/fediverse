@@ -6,7 +6,7 @@ import (
 	"encoding/pem"
 	"fediverse/application/posts"
 	"fediverse/application/schema"
-	"fediverse/cryptohelpers/rsahelpers"
+	"fediverse/security/rsahelpers"
 	"fediverse/security/rsassapkcsv115sha256"
 	"flag"
 	"fmt"
@@ -190,8 +190,6 @@ func main() {
 
 		fmt.Print(sig)
 	case "verify":
-		// I need the public key, the signature, and the payload
-
 		fs := flag.NewFlagSet("verify", flag.ExitOnError)
 
 		var publicKey string
@@ -217,7 +215,7 @@ func main() {
 
 		var payload []byte
 		if content == "" {
-			payload = []byte(readFromStdin())
+			payload = readFromStdin()
 		} else {
 			payload = []byte(content)
 		}

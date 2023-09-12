@@ -51,9 +51,9 @@ func PublicKeyToPKIXString(key *rsa.PublicKey) (string, error) {
 }
 
 // So this library does not provide a way to parse neither the PKCS1 PEM private
-// key, nor the PKIX PEM public key. This is because parsing has to places where
-// it can fail: the PEM decoding, and the PKCS1 or PKIX parsing. Probably a good
-// idea to force the client code to handle that.
+// key, nor the PKIX PEM public key. This is because parsing has too many places
+// where it can fail: the PEM decoding, and the PKCS1 or PKIX parsing. Probably
+// a good idea to force the client code to handle that.
 //
 // To parse the private key:
 //

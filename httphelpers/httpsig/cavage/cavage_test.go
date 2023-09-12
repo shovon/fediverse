@@ -21,7 +21,7 @@ func TestSigningVerification(t *testing.T) {
 		}
 
 		req.Header.Set("Cool", "hello")
-		req.Header.Set("Signature", "headers=\"cool\" signature=\"CqH5cyhaTEARs8y/ueIIae0sT24FugeKkXliLQaI1uKeJDXoH16fHolLdya41oTFzK3+uAHN++rVEHIHFXGXlTYEm0AEaqsZzqOSCEcVW7IFzlYKXlTjR36q+vXozpM76aaxN3phljNGi8stV8gAM3TOPVM6lXBFP2isfgVzRD5gEtBxMLsySpPqMGeYZqtUhaiZxCWW5EOi7KtVf9Yp5f+MJ9mJqzNc9j7oerxP31dpQhS0XDu5VDtGHqIOsHxtylWqK52RBNjkfVSm4ajPQugeUd9OyNOBlTrvZZFcPiUlNnQduVk9SneqavXP//mwJyP8d7N0gtcUbFw/YeXTiw==\"")
+		req.Header.Set("Signature", "headers=\"cool\", signature=\"SNVXJUc7YuaHk9e+Hu6lWQF1TNOOHnCRfdxQX5O+H7qrB4wTZvvbxLVSj7fkzIKmZ97UR0tiNtFGxT1DMIjpTnGfYAuzop2lZQljHmHOm29RvZKe62LoE8M1mjiQciBhRlsVmhmWbcqfIGpHF0m4SW7KmvJDOdxY6K6wPrPYIxTQ+bKEbBVUpVjosAJ2B3kTsLdKqXbU5oml0zczadPG2qriDfzUj5xjY3Oibh4wleoGQlXce0RwXr+0H3AK7wXRuKZjq2wTA5YHQHRDl8QOzTU+JDU42D2529I8XJ7wcOAYgHqz5LBBCGuB2uUq7OUxhmybLZZnOet7qagq+ns39Q==\"")
 
 		publicKeyPEM := "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAs94w7ycdUeF54NzOc1WQ\n+Oy47dRwagFxdPmyvxnqD2FkAGBF3dcRb6ty0fph6DH5mGa8oV7pRozbYuXg0QYp\nhfdXewT27/IIxRfNJUVGHBgBfyjVy4KQ5S8fvHxaOq5Y5xDrgLDVsf1Xgb8Qz6Cd\nA0xGiUnzH/bbpCmm1H3IvlcWXOAy6fXH2Ghr4curlYAiT7kvsckh+bv0gHAzGAu3\nG6wZA2W68hWIuhSz4jPVv8sIuKMM3OlC3EbbFC6+nwSuI4t/qJhmTzDEeexX816x\nfi+xoAg83tmKZ0w+cywYS/1UVDrtaD77fb8Nrlv7CWwrJ2cl040mKW/OwujqADaO\n8QIDAQAB\n-----END PUBLIC KEY-----\n"
 

@@ -73,7 +73,7 @@ func main() {
 
 	args := os.Args[1:]
 	if len(args) <= 0 {
-		fmt.Println("Please provide a command")
+		fmt.Fprintf(os.Stderr, "Please provide a command\n")
 		os.Exit(1)
 		return
 	}
@@ -88,12 +88,20 @@ func main() {
 		// TODO: accept content from stdin, and check if the content is UTF-8.
 
 		if len(args) <= 1 {
-			fmt.Println("Please provide some content")
+			fmt.Fprintf(os.Stderr, "Please provide some content\n")
 			os.Exit(1)
 			return
 		}
 		posts.CreatePost(args[1])
 		fmt.Println("Post successfully created!")
+	case "follow":
+		if len(args) <= 1 {
+			fmt.Fprintf(os.Stderr, "Please provide a account address to follow\n")
+			os.Exit(1)
+			return
+		}
+
+		os.Exit(1)
 	case "genrsa":
 		// This command generates a new RSA key pair. It accepts a `--public` flag
 		// to show the public key.
@@ -127,14 +135,14 @@ func main() {
 		// standard out (console, on your terminal).
 
 		if len(os.Args) < 3 {
-			fmt.Println("Please provide a private key")
+			fmt.Fprintf(os.Stderr, "Please provide a private key\n")
 			os.Exit(1)
 			return
 		}
 		content := os.Args[2]
 		privateKey, err := parsePrivateKey([]byte(content))
 		if err != nil {
-			fmt.Println("Error parsing private key:", err)
+			fmt.Fprintf(os.Stderr, "Error parsing private key: %s\n", err.Error())
 			os.Exit(1)
 			return
 		}
@@ -142,7 +150,7 @@ func main() {
 			&privateKey.PublicKey,
 		)
 		if err != nil {
-			fmt.Println("Error marshaling public key:", err)
+			fmt.Fprintf(os.Stderr, "Error marshaling public key: %s\n", err)
 			return
 		}
 		fmt.Print(string(publicKeyPEM))
@@ -152,7 +160,7 @@ func main() {
 		// can either type into the console, or pipe in from another application.
 
 		if len(os.Args) < 3 {
-			fmt.Println("Please provide a private key")
+			fmt.Fprintf(os.Stderr, "Please provide a private key\n")
 			os.Exit(1)
 			return
 		}
@@ -177,14 +185,14 @@ func main() {
 
 		privateKey, err := parsePrivateKey([]byte(pemPrivateKey))
 		if err != nil {
-			fmt.Println("Invalid private key")
+			fmt.Fprintf(os.Stderr, "Invalid private key\n")
 			os.Exit(1)
 			return
 		}
 
 		sig, err := rsassapkcsv115sha256.Base64Signer(privateKey).Sign(payload)
 		if err != nil {
-			fmt.Println("Error signing payload:", err)
+			fmt.Fprintf(os.Stderr, "Error signing payload: %s\n", err)
 			os.Exit(1)
 		}
 
@@ -201,13 +209,13 @@ func main() {
 		fs.Parse(os.Args[2:])
 
 		if publicKey == "" {
-			fmt.Println("Please provide a public key")
+			fmt.Fprintf(os.Stderr, "Please provide a public key\n")
 			fs.Usage()
 			os.Exit(1)
 			return
 		}
 		if signatureBase64 == "" {
-			fmt.Println("Please provide a signature")
+			fmt.Fprintf(os.Stderr, "Please provide a signature\n")
 			fs.Usage()
 			os.Exit(1)
 			return
@@ -222,7 +230,7 @@ func main() {
 
 		rsaPublicKey, err := parsePublicKey([]byte(publicKey))
 		if err != nil {
-			fmt.Println("Error parsing public key:", err)
+			fmt.Fprintf(os.Stderr, "Error parsing public key: %s\n", err.Error())
 			os.Exit(1)
 			return
 		}
@@ -234,6 +242,6 @@ func main() {
 			os.Exit(1)
 		}
 	default:
-		fmt.Printf("Unknown command %s.", command)
+		fmt.Fprintf(os.Stderr, "Unknown command %s.", command)
 	}
 }

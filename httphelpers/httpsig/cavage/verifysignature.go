@@ -17,6 +17,13 @@ func VerifySignature(getverifier func(httphelpers.ReadOnlyRequest) security.From
 				return
 			}
 
+			params, err := ParseSignatureParams(signatureHeader)
+			sigString, err := DeriveSignatureString(params, r.Header.Clone())
+			if err != nil {
+				httperrors.Unauthorized().ServeHTTP(w, r)
+				return
+			}
+
 			req, err := httphelpers.ToReadOnlyRequest(r)
 			if err != nil {
 				httperrors.InternalServerError().ServeHTTP(w, r)
@@ -24,7 +31,7 @@ func VerifySignature(getverifier func(httphelpers.ReadOnlyRequest) security.From
 			}
 			verifier := getverifier(req)
 
-			if err := verifier.Verify([]byte(params.String()), params.Signature); err != nil {
+			if err := verifier.Verify([]byte(sigString), params.Signature); err != nil {
 				httperrors.Unauthorized().ServeHTTP(w, r)
 				return
 			}

@@ -3,6 +3,7 @@ package cavage
 import (
 	"errors"
 	"fediverse/nullable"
+	"fediverse/slices"
 	"fmt"
 	"strconv"
 	"strings"
@@ -30,7 +31,7 @@ type Params struct {
 	Algorithm nullable.Nullable[string]
 	Created   time.Time
 	Expires   nullable.Nullable[time.Time]
-	Headers   nullable.Nullable[string]
+	Headers   nullable.Nullable[[]string]
 }
 
 type ParamsWithSignature struct {
@@ -58,7 +59,7 @@ func (sp ParamsWithSignature) String() string {
 		result = append(result, Expires+"="+strconv.FormatInt(t.Unix(), 10))
 	}
 	if sp.Headers.HasValue() {
-		result = append(result, Headers+"="+simpleQuotes(sp.Headers.ValueOrDefault("")))
+		result = append(result, Headers+"="+simpleQuotes(strings.Join(sp.Headers.ValueOrDefault([]string{}), " ")))
 	}
 	return strings.Join(result, ", ")
 }
@@ -74,6 +75,12 @@ func ErrInvalidExpiresField() error {
 	return errInvalidExpiresField
 }
 
+// OK, so here's the deal:
+//
+//   - if either the `created` or the `expires` key is not a valid integer, then
+//     the signature param is overall invalid
+//   - all errors returned by the function is a client error. If it is a server
+//     error, then this is bad, and must absolutely be investigated
 func ParseSignatureParams(params string) (ParamsWithSignature, error) {
 	result := ParamsWithSignature{}
 	for _, param := range strings.Split(params, ",") {
@@ -103,7 +110,7 @@ func ParseSignatureParams(params string) (ParamsWithSignature, error) {
 			}
 			result.Expires = nullable.Just(time.Unix(value, 0))
 		case Headers:
-			result.Headers = nullable.Just(fieldValue)
+			result.Headers = nullable.Just(slices.Map(strings.Split(fieldValue, " "), slices.IgnoreIndex(strings.TrimSpace)))
 		}
 	}
 	return result, nil

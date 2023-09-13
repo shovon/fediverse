@@ -1,9 +1,12 @@
 package cavage
 
 import (
+	"errors"
 	"fediverse/nullable"
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // Section 2.1
@@ -25,8 +28,8 @@ const (
 type Params struct {
 	KeyID     nullable.Nullable[string]
 	Algorithm nullable.Nullable[string]
-	Created   nullable.Nullable[string]
-	Expires   nullable.Nullable[string]
+	Created   time.Time
+	Expires   nullable.Nullable[time.Time]
 	Headers   nullable.Nullable[string]
 }
 
@@ -50,11 +53,9 @@ func (sp ParamsWithSignature) String() string {
 	if sp.Algorithm.HasValue() {
 		result = append(result, Algorithm+"="+simpleQuotes(sp.Algorithm.ValueOrDefault("")))
 	}
-	if sp.Created.HasValue() {
-		result = append(result, Created+"="+sp.Created.ValueOrDefault(""))
-	}
-	if sp.Expires.HasValue() {
-		result = append(result, Expires+"="+sp.Expires.ValueOrDefault(""))
+	result = append(result, Created+"="+strconv.FormatInt(sp.Created.Unix(), 10))
+	if t, ok := sp.Expires.Value(); ok {
+		result = append(result, Expires+"="+strconv.FormatInt(t.Unix(), 10))
 	}
 	if sp.Headers.HasValue() {
 		result = append(result, Headers+"="+simpleQuotes(sp.Headers.ValueOrDefault("")))
@@ -62,7 +63,18 @@ func (sp ParamsWithSignature) String() string {
 	return strings.Join(result, ", ")
 }
 
-func ParseSignatureParams(params string) ParamsWithSignature {
+var errInvalidCreatedField = errors.New("the \"created\" field is not a valid Unix timestamp")
+var errInvalidExpiresField = errors.New("the \"expires\" field is not a valid Unix timestamp")
+
+func ErrInvalidCreatedField() error {
+	return errInvalidCreatedField
+}
+
+func ErrInvalidExpiresField() error {
+	return errInvalidExpiresField
+}
+
+func ParseSignatureParams(params string) (ParamsWithSignature, error) {
 	result := ParamsWithSignature{}
 	for _, param := range strings.Split(params, ",") {
 		parts := strings.SplitN(param, "=", 2)
@@ -79,12 +91,20 @@ func ParseSignatureParams(params string) ParamsWithSignature {
 		case Algorithm:
 			result.Algorithm = nullable.Just(fieldValue)
 		case Created:
-			result.Created = nullable.Just(fieldValue)
+			value, err := strconv.ParseInt(fieldValue, 10, 64)
+			if err != nil {
+				return ParamsWithSignature{}, errInvalidCreatedField
+			}
+			result.Created = time.Unix(value, 0)
 		case Expires:
-			result.Expires = nullable.Just(fieldValue)
+			value, err := strconv.ParseInt(fieldValue, 10, 0)
+			if err != nil {
+				return ParamsWithSignature{}, errInvalidExpiresField
+			}
+			result.Expires = nullable.Just(time.Unix(value, 0))
 		case Headers:
 			result.Headers = nullable.Just(fieldValue)
 		}
 	}
-	return result
+	return result, nil
 }

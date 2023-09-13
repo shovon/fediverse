@@ -2,7 +2,6 @@ package nullable
 
 import (
 	"encoding/json"
-	"errors"
 )
 
 type Nullable[T any] struct {
@@ -29,12 +28,12 @@ func (n Nullable[T]) HasValue() bool {
 	return n.hasValue
 }
 
-func (n Nullable[T]) Value() (T, error) {
+func (n Nullable[T]) Value() (T, bool) {
 	if !n.hasValue {
-		return n.value, errors.New("no value")
+		return n.value, false
 	}
 
-	return n.value, nil
+	return n.value, true
 }
 
 func (n Nullable[T]) ValueOrDefault(d T) T {
@@ -42,6 +41,13 @@ func (n Nullable[T]) ValueOrDefault(d T) T {
 		return d
 	}
 
+	return n.value
+}
+
+func (n Nullable[T]) AssertValue() T {
+	if !n.hasValue {
+		panic("null dereference error")
+	}
 	return n.value
 }
 

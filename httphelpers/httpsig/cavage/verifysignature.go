@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func VerifySignature(getverifier func(httphelpers.ReadOnlyRequest) security.FromStringVerifier) func(http.Handler) http.Handler {
+func VerifySignature(getverifier func(httphelpers.ReadOnlyRequest) (security.FromStringVerifier, error)) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			signatureHeader := r.Header.Get("signature")
@@ -37,8 +37,11 @@ func VerifySignature(getverifier func(httphelpers.ReadOnlyRequest) security.From
 				httperrors.InternalServerError().ServeHTTP(w, r)
 				return
 			}
-			verifier := getverifier(req)
-
+			verifier, err := getverifier(req)
+			if err != nil {
+				httperrors.InternalServerError().ServeHTTP(w, r)
+				return
+			}
 			if err := verifier.Verify([]byte(sigString), params.Signature); err != nil {
 				httperrors.Unauthorized().ServeHTTP(w, r)
 				return

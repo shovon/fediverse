@@ -1,6 +1,7 @@
 package cavage
 
 import (
+	"fediverse/httphelpers"
 	"fediverse/nullable"
 	"fediverse/pair"
 	"fediverse/slices"
@@ -16,6 +17,22 @@ type SigningStringInfo struct {
 	Created, Expires nullable.Nullable[time.Time]
 	Headers          http.Header
 	ExpectedHeaders  []string
+}
+
+func SigningStringInfoFromRequest(
+	params Params,
+	requests httphelpers.ReadOnlyRequest,
+) SigningStringInfo {
+	var ssi SigningStringInfo
+
+	expectedHeaders := params.Headers.ValueOrDefault([]string{"(created)"})
+
+	ssi.Created = nullable.Just(params.Created)
+	ssi.Expires = params.Expires
+	ssi.Headers = requests.Header.Clone()
+	ssi.ExpectedHeaders = expectedHeaders
+
+	return ssi
 }
 
 func stringifyNullableTime(nt nullable.Nullable[time.Time]) string {

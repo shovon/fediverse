@@ -59,11 +59,8 @@ func WebFinger(queryHandler WebFingerQueryHandler) func(http.Handler) http.Handl
 				return j, err
 			}
 
-			{
-				subject, err := j.Subject.Value()
-				if err != nil || subject == "" {
-					return j, httperrors.InternalServerError()
-				}
+			if subject, ok := j.Subject.Value(); !ok || subject == "" {
+				return j, httperrors.InternalServerError()
 			}
 
 			j = HandleRel(j, r)

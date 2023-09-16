@@ -59,7 +59,7 @@ func (sp ParamsWithSignature) String() string {
 		result = append(result, Expires+"="+strconv.FormatInt(t.Unix(), 10))
 	}
 	if sp.Headers.HasValue() {
-		result = append(result, Headers+"="+simpleQuotes(strings.Join(sp.Headers.ValueOrDefault([]string{}), " ")))
+		result = append(result, Headers+"="+simpleQuotes(strings.Join(slices.Map(sp.Headers.ValueOrDefault([]string{}), slices.IgnoreIndex(strings.ToLower)), " ")))
 	}
 	return strings.Join(result, ", ")
 }

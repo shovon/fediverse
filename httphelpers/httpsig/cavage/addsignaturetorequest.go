@@ -1,10 +1,9 @@
 package cavage
 
 import (
+	"fediverse/nullable"
 	"fediverse/security"
-	"io"
 	"net/http"
-	"strings"
 )
 
 // AddSignatureToRequest is an opinionated function that adds a signature to an
@@ -14,12 +13,14 @@ func AddSignatureToRequest(
 	params Params,
 	signer security.ToStringSigner,
 ) error {
-	slice, err := io.ReadAll(req.Body)
-	if err != nil {
-		return err
+	ssi := SigningStringInfo{
+		Method:          req.Method,
+		Path:            req.URL.Path,
+		Created:         nullable.Just(params.Created),
+		Headers:         req.Header.Clone(),
+		ExpectedHeaders: params.Headers.ValueOrDefault([]string{created}),
 	}
-	req.Body = io.NopCloser(strings.NewReader(string(slice)))
-	signature, err := signer.Sign(slice)
+	signature, err := signer.Sign([]byte(ssi.ConstructSigningString()))
 	if err != nil {
 		return err
 	}

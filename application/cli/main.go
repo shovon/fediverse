@@ -159,17 +159,11 @@ func main() {
 		// argumemt, and the payload coming in via Standard Input (stdin), that you
 		// can either type into the console, or pipe in from another application.
 
-		if len(os.Args) < 3 {
-			fmt.Fprintf(os.Stderr, "Please provide a private key\n")
-			os.Exit(1)
-			return
-		}
-
 		fs := flag.NewFlagSet("sign", flag.ExitOnError)
 
 		var content string
 		fs.StringVar(&content, "content", "", "Content to sign")
-		fs.Parse(os.Args[2:])
+		fs.Parse(os.Args[4:])
 
 		var payload []byte
 		if content == "" {

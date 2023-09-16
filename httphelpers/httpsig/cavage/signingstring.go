@@ -72,7 +72,7 @@ func (ssi SigningStringInfo) ConstructSigningString() string {
 	return strings.Join(
 		slices.Map(
 			result,
-			func(p pair.Pair[string, string], _ int) string { return p.Left + ": " + p.Right },
+			func(p pair.Pair[string, string], _ int) string { return strings.ToLower(p.Left) + ": " + p.Right },
 		),
 		"\n",
 	)

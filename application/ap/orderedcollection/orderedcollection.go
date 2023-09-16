@@ -9,7 +9,6 @@ import (
 	"fediverse/jsonld/jsonldkeywords"
 	"fediverse/possibleerror"
 	"fediverse/urlhelpers"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -169,7 +168,6 @@ func Middleware[V any](route string, retriever OrderedCollectionRetriever[V]) fu
 
 				if count > 0 {
 					document["first"] = possibleerror.Then(u(""), possibleerror.MapToThen(func(s *url.URL) string {
-						fmt.Println(s)
 						v := s.Query()
 						v.Add("page", "1")
 						s.RawQuery = v.Encode()

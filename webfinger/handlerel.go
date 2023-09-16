@@ -9,8 +9,8 @@ import (
 func HandleRel(j jrd.JRD, r *http.Request) jrd.JRD {
 	rel := r.URL.Query().Get("rel")
 	if rel != "" {
-		currentLinks, err := j.Links.Value()
-		if err != nil {
+		currentLinks, ok := j.Links.Value()
+		if ok {
 			links := []jrd.Link{}
 			for _, link := range currentLinks {
 				if link.Rel == rel {

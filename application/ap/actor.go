@@ -47,6 +47,10 @@ func actor() func(http.Handler) http.Handler {
 			// username := hh.GetRouteParam(r, "username")
 
 			key := keymanager.GetPrivateKey()
+			pubKeyString, err := rsahelpers.PublicKeyToPKIXString(&key.PublicKey)
+			if err != nil {
+				return nil, httperrors.InternalServerError()
+			}
 
 			id := a("")
 
@@ -69,7 +73,7 @@ func actor() func(http.Handler) http.Handler {
 				"publicKey": map[string]any{
 					"id":           a("#main-key"),
 					"owner":        a(""),
-					"publicKeyPem": rsahelpers.PrivateKeyToPKCS1PEMString(key),
+					"publicKeyPem": pubKeyString,
 				},
 				"endpoints": map[string]any{
 					"sharedInbox": possibleerror.Then(possibleerror.New(requestbaseurl.GetRequestURL(r)), func(u *url.URL) possibleerror.PossibleError[string] {

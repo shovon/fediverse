@@ -3,6 +3,7 @@ package ap
 import (
 	"fediverse/application/ap/orderedcollection"
 	"fediverse/application/config"
+	"fediverse/application/keymanager"
 	"fediverse/application/lib"
 	"fediverse/functional"
 	hh "fediverse/httphelpers"
@@ -11,6 +12,7 @@ import (
 	"fediverse/json/jsonhttp"
 	"fediverse/jsonld/jsonldkeywords"
 	"fediverse/possibleerror"
+	"fediverse/security/rsahelpers"
 	"fediverse/urlhelpers"
 	"net/http"
 	"net/url"
@@ -42,11 +44,9 @@ func actor() func(http.Handler) http.Handler {
 				return resolveURIToString(u.ResolveReference(r.URL), path)
 			}
 
-			username := hh.GetRouteParam(r, "username")
-			key, err := getPublicKeyPEMString(username)
-			if err != nil {
-				return nil, err
-			}
+			// username := hh.GetRouteParam(r, "username")
+
+			key := keymanager.GetPrivateKey()
 
 			id := a("")
 
@@ -69,7 +69,7 @@ func actor() func(http.Handler) http.Handler {
 				"publicKey": map[string]any{
 					"id":           a("#main-key"),
 					"owner":        a(""),
-					"publicKeyPem": key,
+					"publicKeyPem": rsahelpers.PrivateKeyToPKCS1PEMString(key),
 				},
 				"endpoints": map[string]any{
 					"sharedInbox": possibleerror.Then(possibleerror.New(requestbaseurl.GetRequestURL(r)), func(u *url.URL) possibleerror.PossibleError[string] {

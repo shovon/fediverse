@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
 )
 
 const (
@@ -48,6 +49,20 @@ func PublicKeyToPKIXString(key *rsa.PublicKey) (string, error) {
 		return "", err
 	}
 	return string(pem.EncodeToMemory(publicKeyPEMBlock)), nil
+}
+
+var errFailedToDecodePrivatePEM = errors.New("failed to decode private key PEM")
+
+func ErrFailedToDecodePrivateKeyPEM() error {
+	return errFailedToDecodePrivatePEM
+}
+
+func ParsePKCS1PrivateKeyString(pemString string) (*rsa.PrivateKey, error) {
+	block, _ := pem.Decode([]byte(pemString))
+	if block == nil || block.Type != "RSA PRIVATE KEY" {
+		return nil, ErrFailedToDecodePrivateKeyPEM()
+	}
+	return x509.ParsePKCS1PrivateKey(block.Bytes)
 }
 
 // So this library does not provide a way to parse neither the PKCS1 PEM private

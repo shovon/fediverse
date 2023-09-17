@@ -2,6 +2,7 @@ package application
 
 import (
 	"fediverse/acct"
+	"fediverse/application/activity"
 	"fediverse/application/config"
 	"fediverse/application/posts"
 	"fediverse/functional"
@@ -18,7 +19,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"fediverse/application/ap"
 	"fediverse/application/common"
 )
 
@@ -147,7 +147,7 @@ func Start() error {
 			return posts.GetPost(hh.GetRouteParam(r, "id"))
 		}))),
 	)
-	m = append(m, hh.Group("/activity", ap.ActivityPub()))
+	m = append(m, hh.Group("/activity", activity.ActivityPub()))
 	m = append(m, hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Just an article. Coming soon"))
 	})))

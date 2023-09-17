@@ -1,7 +1,7 @@
-package ap
+package activity
 
 import (
-	"fediverse/application/ap/orderedcollection"
+	"fediverse/application/activity/orderedcollection"
 	"fediverse/application/config"
 	"fediverse/application/keymanager"
 	"fediverse/application/lib"

@@ -36,7 +36,7 @@ type Following struct {
 //
 // This function does not do any paging. You have to calculate the offset,
 // by multiplying the page number by your desired page size.
-func GetFollowing(offset int, limit int) ([]Following, error) {
+func GetFollowing(offset int, limit int) (_ []Following, err error) {
 	lock.RLock()
 	defer lock.RUnlock()
 	db, err := database.Open()
@@ -52,7 +52,9 @@ func GetFollowing(offset int, limit int) ([]Following, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	defer func() {
+		err = result.Close()
+	}()
 	followings := []Following{}
 	for result.Next() {
 		var following Following

@@ -11,7 +11,7 @@ import (
 
 var lock sync.RWMutex
 
-func CreatePost(body string) error {
+func CreatePost(body string) (err error) {
 	lock.Lock()
 	defer lock.Unlock()
 	db, err := database.Open()
@@ -43,6 +43,9 @@ func GetPost(index string) (Post, error) {
 	if err != nil {
 		return Post{}, err
 	}
+	defer func() {
+		err = result.Close()
+	}()
 	if !result.Next() {
 		return Post{}, fmt.Errorf("no such post")
 	}
@@ -59,7 +62,7 @@ func GetPost(index string) (Post, error) {
 	}, nil
 }
 
-func GetAllPosts() ([]Post, error) {
+func GetAllPosts() (_ []Post, err error) {
 	lock.RLock()
 	defer lock.RUnlock()
 	db, err := database.Open()
@@ -71,7 +74,9 @@ func GetAllPosts() ([]Post, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	defer func() {
+		err = result.Close()
+	}()
 	posts := []Post{}
 	for result.Next() {
 		var id string
@@ -89,7 +94,7 @@ func GetAllPosts() ([]Post, error) {
 	return posts, nil
 }
 
-func GetPostCount() (uint64, error) {
+func GetPostCount() (_ uint64, err error) {
 	lock.RLock()
 	defer lock.RUnlock()
 	db, err := database.Open()
@@ -101,6 +106,9 @@ func GetPostCount() (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
+	defer func() {
+		err = result.Close()
+	}()
 	if !result.Next() {
 		return 0, fmt.Errorf("fatal error")
 	}

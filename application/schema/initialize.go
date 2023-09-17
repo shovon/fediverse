@@ -60,7 +60,7 @@ func runRevisions(db *sql.DB, revisions []string) error {
 	return nil
 }
 
-func Initialize() error {
+func Initialize() (err error) {
 	db, err := database.Open()
 	if err != nil {
 		return err
@@ -76,6 +76,9 @@ func Initialize() error {
 	if err != nil {
 		return err
 	}
+	defer func() {
+		err = result.Close()
+	}()
 	hasNext := result.Next()
 	if !hasNext {
 		if err := runRevisions(db, revisions); err != nil {
@@ -93,6 +96,5 @@ func Initialize() error {
 			return err
 		}
 	}
-
 	return nil
 }

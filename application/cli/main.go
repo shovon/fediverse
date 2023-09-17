@@ -92,7 +92,10 @@ func main() {
 			os.Exit(1)
 			return
 		}
-		posts.CreatePost(args[1])
+		err := posts.CreatePost(args[1])
+		if err != nil {
+			panic(err)
+		}
 		fmt.Println("Post successfully created!")
 	case "follow":
 		if len(args) <= 1 {

@@ -8,6 +8,7 @@ import (
 	hh "fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
 	"fediverse/httphelpers/requestbaseurl"
+	"fediverse/httplogger"
 	"fediverse/jrd"
 	"fediverse/json/jsonhttp"
 	"fediverse/nodeinfo"
@@ -19,8 +20,6 @@ import (
 
 	"fediverse/application/ap"
 	"fediverse/application/common"
-
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 type UserHost struct {
@@ -58,7 +57,7 @@ func Start() error {
 	m := [](func(http.Handler) http.Handler){}
 
 	// TODO: move away from Chi, and use some other logger library.
-	m = append(m, middleware.Logger)
+	m = append(m, httplogger.Middleware)
 	m = append(m, requestbaseurl.Override(common.BaseURL()))
 
 	m = append(m, webfinger.WebFinger(func(resource string) (jrd.JRD, httperrors.HTTPError) {
@@ -103,7 +102,11 @@ func Start() error {
 		return webFingerJRD(UserHost{user, host}), nil
 	}))
 
-	m = append(m, nodeinfo.CreateNodeInfoMiddleware(common.Origin(), "/nodinfo", func() nodeinfo.NodeInfoProps {
+	m = append(m, nodeinfo.CreateNodeInfoMiddleware(common.Origin(), "/nodinfo", func() (nodeinfo.NodeInfoProps, error) {
+		count, err := posts.GetPostCount()
+		if err != nil {
+			return nodeinfo.NodeInfoProps{}, err
+		}
 		return nodeinfo.NodeInfoProps{
 			Software: nodeinfo.SoftwareInfo{
 				Name:    "fediverse",
@@ -120,10 +123,10 @@ func Start() error {
 					// TODO: actually get all activie users in the last 30 days
 					ActiveMonth: 0,
 				},
-				LocalPosts:    0, // TODO: actually get all local posts
-				LocalComments: 0, // TODO: actually get all local comments
+				LocalPosts:    count, // TODO: actually get all local posts
+				LocalComments: 0,     // TODO: actually get all local comments
 			},
-		}
+		}, nil
 	}))
 
 	m = append(

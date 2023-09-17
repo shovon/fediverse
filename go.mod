@@ -3,7 +3,6 @@ module fediverse
 go 1.21
 
 require (
-	github.com/go-chi/chi/v5 v5.0.10
 	github.com/shopspring/decimal v1.3.1
 	gitlab.com/jamietanna/content-negotiation-go v0.2.0
 )

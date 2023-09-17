@@ -26,8 +26,8 @@ type UsersStats struct {
 
 type Usage struct {
 	Users         UsersStats `json:"users"`
-	LocalPosts    uint       `json:"localPosts"`
-	LocalComments uint       `json:"localComments"`
+	LocalPosts    uint64     `json:"localPosts"`
+	LocalComments uint64     `json:"localComments"`
 }
 
 type NodeInfoProps struct {
@@ -57,7 +57,7 @@ type NodeInfoProps struct {
 //
 // But it is understandable that in rare occasions, that there may be situations
 // where this library may be a bit too restrictive.
-func CreateNodeInfoMiddleware(origin string, nodeInfoRoot string, handler func() NodeInfoProps) func(http.Handler) http.Handler {
+func CreateNodeInfoMiddleware(origin string, nodeInfoRoot string, handler func() (NodeInfoProps, error)) func(http.Handler) http.Handler {
 	wellKnown := wellknown.WellKnown("nodeinfo", jrdhttp.CreateJRDHandler(func(r *http.Request) (jrd.JRD, httperrors.HTTPError) {
 		return jrd.JRD{
 			Links: nullable.Just([]jrd.Link{
@@ -71,7 +71,10 @@ func CreateNodeInfoMiddleware(origin string, nodeInfoRoot string, handler func()
 
 	schema2p0 := httphelpers.Group(
 		nodeInfoRoot, httphelpers.Route("/2.0").Process(httphelpers.ToMiddleware(httphelpers.ToHandlerFunc(httphelpers.ErrorHandler(func(w http.ResponseWriter, r *http.Request) error {
-			nodeInfoProps := handler()
+			nodeInfoProps, err := handler()
+			if err != nil {
+				return err
+			}
 			schema := schema2p0.Schema{
 				Software: schema2p0.Software{
 					Name:    nodeInfoProps.Software.Name,

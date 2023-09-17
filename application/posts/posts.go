@@ -88,3 +88,25 @@ func GetAllPosts() ([]Post, error) {
 	}
 	return posts, nil
 }
+
+func GetPostCount() (uint64, error) {
+	lock.RLock()
+	defer lock.RUnlock()
+	db, err := database.Open()
+	if err != nil {
+		return 0, err
+	}
+	defer db.Close()
+	result, err := db.Query("SELECT COUNT(*) FROM posts")
+	if err != nil {
+		return 0, err
+	}
+	if !result.Next() {
+		return 0, fmt.Errorf("fatal error")
+	}
+	var count uint64
+	if err := result.Scan(&count); err != nil {
+		return 0, err
+	}
+	return count, nil
+}

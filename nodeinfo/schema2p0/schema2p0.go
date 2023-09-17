@@ -17,8 +17,8 @@ type UsersStats struct {
 
 type Usage struct {
 	Users         UsersStats `json:"users"`
-	LocalPosts    uint       `json:"localPosts"`
-	LocalComments uint       `json:"localComments"`
+	LocalPosts    uint64     `json:"localPosts"`
+	LocalComments uint64     `json:"localComments"`
 }
 
 type Services struct {

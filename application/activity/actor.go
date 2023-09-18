@@ -5,6 +5,7 @@ import (
 	"fediverse/application/config"
 	"fediverse/application/keymanager"
 	"fediverse/application/lib"
+	"fediverse/application/printbody"
 	"fediverse/functional"
 	hh "fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
@@ -16,6 +17,7 @@ import (
 	"fediverse/urlhelpers"
 	"net/http"
 	"net/url"
+	"os"
 )
 
 type Following string
@@ -109,6 +111,6 @@ func actor() func(http.Handler) http.Handler {
 		hh.Processors{
 			hh.Method("POST"),
 			hh.Route("/inbox"),
-		}.Process(hh.ToMiddleware(httperrors.NotImplemented())),
+		}.Process(printbody.Middleware(os.Stdout)),
 	})
 }

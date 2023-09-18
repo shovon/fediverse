@@ -4,3 +4,4 @@ __debug_bin
 *.pem
 payload.txt
 signature.base64
+tmp

@@ -1,6 +1,7 @@
 package httphelpers
 
 import (
+	"fediverse/httphelpers/httperrors"
 	"net/http"
 )
 
@@ -10,14 +11,14 @@ func Condition(predicate func(r ReadOnlyRequest) bool) Processor {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				reqCopy, err := ToReadOnlyRequest(r)
 				if err != nil {
-					middleware(next).ServeHTTP(w, r)
+					httperrors.InternalServerError().ServeHTTP(w, r)
 					return
 				}
 				if predicate(reqCopy) {
 					middleware(next).ServeHTTP(w, r)
-					return
+				} else {
+					next.ServeHTTP(w, r)
 				}
-				next.ServeHTTP(w, r)
 			})
 		}
 	})

@@ -57,12 +57,13 @@ func Middleware(h http.Handler) http.Handler {
 		}
 
 		fmt.Printf(
-			"%s \u001b[35m%s \u001b[36m%s://%s%s %s \033[39m from %s - \033[32m%d \u001b[38;5;14m%s in \033[39m%v\n",
+			"%s \u001b[35m%s \u001b[36m%s://%s%s %s %s \033[39m from %s - \033[32m%d \u001b[38;5;14m%s \033[39min %v\n",
 			time.Now().Format("2006-10-11 15:04:05"),
 			r.Method,
 			protocol,
 			r.Host,
 			r.URL.String(),
+			r.Header.Get("Accept"),
 			r.Proto,
 			r.RemoteAddr,
 			lrw.statusCode,

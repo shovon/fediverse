@@ -109,7 +109,6 @@ func actor() func(http.Handler) http.Handler {
 			),
 		),
 		hh.Processors{
-			hh.Method("POST"),
 			hh.Route("/inbox"),
 		}.Process(printbody.Middleware(os.Stdout)),
 	})

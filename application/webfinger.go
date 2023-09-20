@@ -11,7 +11,9 @@ func webFingerJRD(userHost UserHost) jrd.JRD {
 	user, host := userHost.Username, userHost.Host
 
 	htmlAddress := common.Origin() + "/@" + user
-	jsonLDAddress := common.Origin() + "/users/" + user
+
+	// TODO: ideally we should be soft-coding the "/activity/users" part
+	jsonLDAddress := common.Origin() + "/activity/users/" + user
 
 	return jrd.JRD{
 		Subject: nullable.Just("acct:" + user + "@" + url.QueryEscape(host)),

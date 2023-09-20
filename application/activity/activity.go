@@ -2,15 +2,15 @@ package activity
 
 import (
 	"crypto/rsa"
-	"fediverse/application/apphttp"
+	"fediverse/application/printbody"
 	"fediverse/functional"
 	hh "fediverse/httphelpers"
-	"fediverse/httphelpers/httperrors"
 	"fediverse/possibleerror"
 	"fediverse/security/rsahelpers"
 	"fediverse/urlhelpers"
 	"net/http"
 	"net/url"
+	"os"
 )
 
 func resolveURIToString(u *url.URL, path string) possibleerror.PossibleError[string] {
@@ -43,19 +43,14 @@ func getPublicKeyPEMString(id string) (string, error) {
 
 func ActivityPub() func(http.Handler) http.Handler {
 	return hh.Processors{
-		hh.Accept([]string{"application/*+json"}),
+		hh.Condition(hh.IsAcceptable([]string{"application/*+json"})),
 		hh.DefaultResponseHeader("Content-Type", []string{"application/activity+json"}),
 	}.Process(
 		functional.RecursiveApply([](func(http.Handler) http.Handler){
 			hh.Processors{
 				hh.Method("POST"),
 				hh.Route("/sharedinbox"),
-			}.Process(functional.RecursiveApply([](func(http.Handler) http.Handler){
-				apphttp.VerifyDigest(),
-
-				// TODO: implement
-				hh.ToMiddleware(httperrors.NotImplemented()),
-			})),
+			}.Process(printbody.Middleware(os.Stdout)),
 			hh.Group(
 				"/users/:username",
 				actor(),

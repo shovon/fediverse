@@ -1,4 +1,4 @@
-package activity
+package server
 
 import (
 	"crypto/rsa"

@@ -1,12 +1,16 @@
 package webfinger
 
 import (
+	"encoding/json"
 	"fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
 	"fediverse/jrd"
 	"fediverse/jrd/jrdhttp"
 	"fediverse/wellknown"
+	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 )
 
 // Notes from rfc7033:
@@ -67,4 +71,35 @@ func WebFinger(queryHandler WebFingerQueryHandler) func(http.Handler) http.Handl
 			return j, nil
 		})),
 	))
+}
+
+func Lookup(host string, resource string, rel []string) (jrd.JRD, error) {
+	u, err := url.Parse(fmt.Sprintf("https://%s", host))
+	if err != nil {
+		return jrd.JRD{}, err
+	}
+	u.Path = ".well-known/webfinger"
+	q := u.Query()
+	q.Set("resource", resource)
+	for _, r := range rel {
+		q.Add("rel", r)
+	}
+	u.RawQuery = q.Encode()
+
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return jrd.JRD{}, err
+	}
+
+	b, err := io.ReadAll(req.Body)
+	if err != nil {
+		return jrd.JRD{}, err
+	}
+
+	var j jrd.JRD
+	err = json.Unmarshal(b, &j)
+	if err != nil {
+		return jrd.JRD{}, err
+	}
+	return j, nil
 }

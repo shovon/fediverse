@@ -18,6 +18,10 @@ type Acct struct {
 	Host string
 }
 
+func (a Acct) String() string {
+	return "acct:" + url.QueryEscape(a.User) + "@" + url.QueryEscape(a.Host)
+}
+
 // TODO: unit test this
 
 func ParseUserHost(s string) (Acct, error) {

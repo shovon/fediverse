@@ -19,3 +19,7 @@ func (a Activity) PartialRoute() string {
 func (a Activity) SharedInbox() SharedInbox {
 	return SharedInbox{a.FullRoute()}
 }
+
+func (a Activity) Users() Actors {
+	return Actors{a.FullRoute()}
+}

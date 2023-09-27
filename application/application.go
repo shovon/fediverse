@@ -2,6 +2,7 @@ package application
 
 import (
 	"fediverse/acct"
+	"fediverse/application/activity/routes"
 	"fediverse/application/activity/server"
 	"fediverse/application/config"
 	"fediverse/application/posts"
@@ -147,7 +148,7 @@ func Start() error {
 			return posts.GetPost(hh.GetRouteParam(r, "id"))
 		}))),
 	)
-	m = append(m, hh.Group("/activity", server.ActivityPub()))
+	m = append(m, hh.Group(routes.Root{}.Activity().PartialRoute(), server.ActivityPub()))
 	m = append(m, hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Just an article. Coming soon"))
 	})))

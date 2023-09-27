@@ -2,6 +2,7 @@ package server
 
 import (
 	"crypto/rsa"
+	"fediverse/application/activity/routes"
 	"fediverse/application/printbody"
 	"fediverse/functional"
 	hh "fediverse/httphelpers"
@@ -49,12 +50,9 @@ func ActivityPub() func(http.Handler) http.Handler {
 		functional.RecursiveApply([](func(http.Handler) http.Handler){
 			hh.Processors{
 				hh.Method("POST"),
-				hh.Route("/sharedinbox"),
+				hh.Route(routes.SharedInbox{}.PartialRoute()),
 			}.Process(printbody.Middleware(os.Stdout)),
-			hh.Group(
-				"/users/:username",
-				actor(),
-			),
+			hh.Group(routes.Actors{}.Actor().PartialRoute(), actor()),
 		}),
 	)
 }

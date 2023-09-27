@@ -1,13 +1,10 @@
 package routes
 
-type Partial interface {
-	PartialRoute() string
-}
-
-type Full interface {
+type Route interface {
 	FullRoute() string
 }
 
 type Parameterized interface {
-	FullRoute(string) string
+	ParameterName() string
+	RouteSubbed(string) string
 }

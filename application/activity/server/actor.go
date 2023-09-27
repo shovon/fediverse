@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fediverse/application/activity/routes"
 	"fediverse/application/activity/server/orderedcollection"
 	"fediverse/application/config"
 	"fediverse/application/keymanager"
@@ -27,7 +28,7 @@ func actor() func(http.Handler) http.Handler {
 	return functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler){
 		func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if !lib.UserExists(hh.GetRouteParam(r, "username")) {
+				if !lib.UserExists(hh.GetRouteParam(r, routes.Actor{}.ParameterName())) {
 					httperrors.NotFound().ServeHTTP(w, r)
 					return
 				}
@@ -74,7 +75,7 @@ func actor() func(http.Handler) http.Handler {
 				"manuallyApprovesFollowers": false,
 				"publicKey": map[string]any{
 					"id":           a("#main-key"),
-					"owner":        a(""),
+					"owner":        id,
 					"publicKeyPem": pubKeyString,
 				},
 				"endpoints": map[string]any{

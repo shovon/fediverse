@@ -4,12 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fediverse/acct"
-	"fediverse/activitystreams/asvocab"
 	"fediverse/webfinger"
 	"io"
 	"net/http"
-
-	"github.com/piprate/json-gold/ld"
 )
 
 type Account struct {
@@ -57,22 +54,22 @@ func GetActorInboxes(actor map[string]any) (string, error) {
 	// JSON-LD form, we should first expand the document, and ensure that the
 	// document has only one "entry" or "root" node. Then we
 
-	proc := ld.NewJsonLdProcessor()
-	options := ld.NewJsonLdOptions("")
+	// proc := ld.NewJsonLdProcessor()
+	// options := ld.NewJsonLdOptions("")
 
-	expanded, err := proc.Expand(actor, options)
-	if err != nil {
-		if inboxID, ok := actor[asvocab.Inbox]; ok {
-			if str, ok := inboxID.(string); ok {
-				return str, nil
-			}
-			return "", errors.New("inbox ID is not a string")
-		} else {
-			return "", errors.New("no inbox ID found")
-		}
-	}
-	for _, obj := range expanded {
+	// expanded, err := proc.Expand(actor, options)
+	// if err != nil {
+	// 	if inboxID, ok := actor[asvocab.Inbox]; ok {
+	// 		if str, ok := inboxID.(string); ok {
+	// 			return str, nil
+	// 		}
+	// 		return "", errors.New("inbox ID is not a string")
+	// 	} else {
+	// 		return "", errors.New("no inbox ID found")
+	// 	}
+	// }
+	// for _, obj := range expanded {
 
-	}
+	// }
 	return "", errors.New("no inbox ID found")
 }

@@ -6,8 +6,7 @@ type SharedInbox struct {
 	root string
 }
 
-var _ Full = SharedInbox{}
-var _ Partial = SharedInbox{}
+var _ Route = SharedInbox{}
 
 func (s SharedInbox) FullRoute() string {
 	return s.root + "/" + SharedInboxRoute

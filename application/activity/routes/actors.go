@@ -1,22 +1,17 @@
 package routes
 
 const (
-	UsersRoute = "actors"
+	ActorsRoute = "actors"
 )
 
 type Actors struct {
 	root string
 }
 
-var _ Partial = Actors{}
-var _ Full = Actors{}
-
-func (u Actors) PartialRoute() string {
-	return u.root + "/:" + UsersRoute
-}
+var _ Route = Actors{}
 
 func (u Actors) FullRoute() string {
-	return u.root + "/" + UsersRoute
+	return u.root + "/" + ActorsRoute
 }
 
 func (u Actors) Actor() Actor {

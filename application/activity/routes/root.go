@@ -2,7 +2,7 @@ package routes
 
 type Root struct{}
 
-var _ Full = Root{}
+var _ Route = Root{}
 
 func (r Root) Activity() Activity {
 	return Activity{r.FullRoute()}

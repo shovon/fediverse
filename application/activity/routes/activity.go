@@ -9,7 +9,7 @@ type Activity struct {
 }
 
 func (a Activity) FullRoute() string {
-	return "/" + ActivityRoute + a.root
+	return a.root + ActivityRoute
 }
 
 func (a Activity) PartialRoute() string {
@@ -20,6 +20,6 @@ func (a Activity) SharedInbox() SharedInbox {
 	return SharedInbox{a.FullRoute()}
 }
 
-func (a Activity) Users() Actors {
+func (a Activity) Actors() Actors {
 	return Actors{a.FullRoute()}
 }

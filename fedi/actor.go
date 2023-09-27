@@ -52,7 +52,7 @@ func FetchActorDocument(account Account) (map[string]any, error) {
 	return nil, errors.New("no self links found")
 }
 
-func GetInboxIRI(actor map[string]any) (string, error) {
+func GetActorInboxes(actor map[string]any) (string, error) {
 	// General idea is this, given the actor document, that is hopefully in
 	// JSON-LD form, we should first expand the document, and ensure that the
 	// document has only one "entry" or "root" node. Then we
@@ -75,12 +75,4 @@ func GetInboxIRI(actor map[string]any) (string, error) {
 
 	}
 	return "", errors.New("no inbox ID found")
-}
-
-func Send(recipient Account, message map[string]string) error {
-	actor, err := FetchActorDocument(recipient)
-	if err != nil {
-		return err
-	}
-
 }

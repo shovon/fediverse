@@ -78,7 +78,7 @@ func Lookup(host string, resource string, rel []string) (jrd.JRD, error) {
 	if err != nil {
 		return jrd.JRD{}, err
 	}
-	u.Path = ".well-known/webfinger"
+	u.Path = "/.well-known/webfinger"
 	q := u.Query()
 	q.Set("resource", resource)
 	for _, r := range rel {

@@ -25,7 +25,7 @@ func actor() func(http.Handler) http.Handler {
 	return functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler){
 		func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if !lib.UserExists(hh.GetRouteParam(r, routes.ActorParam{}.ParameterName())) {
+				if !lib.UserExists(hh.GetRouteParam(r, routes.Actor{}.Route().ParameterName())) {
 					httperrors.NotFound().ServeHTTP(w, r)
 					return
 				}
@@ -45,10 +45,6 @@ func actor() func(http.Handler) http.Handler {
 
 			actorRoot := requestbaseurl.GetRequestOrigin(r) + r.URL.Path
 
-			// Root: requestbaseurl.GetRequestOrigin(r)
-
-			// id := a("")
-
 			return map[string]any{
 				jsonldkeywords.Context: []interface{}{
 					"https://www.w3.org/ns/activitystreams",
@@ -59,11 +55,11 @@ func actor() func(http.Handler) http.Handler {
 				"preferredUsername":         config.Username(),
 				"name":                      config.DisplayName(),
 				"summary":                   "This person doesn't have a bio yet.",
-				"following":                 actorRoot + routes.Following{}.FullRoute(),
-				"followers":                 actorRoot + "/followers",
-				"inbox":                     actorRoot + "/inbox",
-				"outbox":                    actorRoot + "/outbox",
-				"liked":                     actorRoot + "/liked",
+				"following":                 actorRoot + routes.Following{}.Route().FullRoute(),
+				"followers":                 actorRoot + routes.Followers{}.Route().FullRoute(),
+				"inbox":                     actorRoot + routes.Inbox{}.Route().FullRoute(),
+				"outbox":                    actorRoot + routes.Outbox{}.Route().FullRoute(),
+				"liked":                     actorRoot + routes.Liked{}.Route().FullRoute(),
 				"manuallyApprovesFollowers": false,
 				"publicKey": map[string]any{
 					"id":           actorRoot + "#main-key",
@@ -71,7 +67,7 @@ func actor() func(http.Handler) http.Handler {
 					"publicKeyPem": pubKeyString,
 				},
 				"endpoints": map[string]any{
-					"sharedInbox": actorRoot + "/" + routes.Root{}.Activity().SharedInbox().FullRoute(),
+					"sharedInbox": requestbaseurl.GetRequestOrigin(r) + "/" + routes.Activity{}.SharedInbox().Route().FullRoute(),
 				},
 			}, nil
 		}))),

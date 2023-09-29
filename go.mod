@@ -7,9 +7,6 @@ require (
 	gitlab.com/jamietanna/content-negotiation-go v0.2.0
 )
 
-require (
-	github.com/mattn/go-sqlite3 v1.14.17
-	github.com/piprate/json-gold v0.5.0
-)
+require github.com/mattn/go-sqlite3 v1.14.17
 
-require github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
+require github.com/stretchr/testify v1.8.1 // indirect

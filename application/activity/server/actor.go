@@ -13,11 +13,8 @@ import (
 	"fediverse/httphelpers/requestbaseurl"
 	"fediverse/json/jsonhttp"
 	"fediverse/jsonld/jsonldkeywords"
-	"fediverse/possibleerror"
 	"fediverse/security/rsahelpers"
-	"fediverse/urlhelpers"
 	"net/http"
-	"net/url"
 	"os"
 )
 
@@ -28,7 +25,7 @@ func actor() func(http.Handler) http.Handler {
 	return functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler){
 		func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if !lib.UserExists(hh.GetRouteParam(r, routes.Actor{}.ParameterName())) {
+				if !lib.UserExists(hh.GetRouteParam(r, routes.ActorParam{}.ParameterName())) {
 					httperrors.NotFound().ServeHTTP(w, r)
 					return
 				}
@@ -39,15 +36,6 @@ func actor() func(http.Handler) http.Handler {
 			hh.Method("GET"),
 			hh.Route("/"),
 		}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
-			a := func(path string) possibleerror.PossibleError[string] {
-				u, err := requestbaseurl.GetRequestURL(r)
-				if err != nil {
-					return possibleerror.Error[string](err)
-				}
-				return resolveURIToString(u.ResolveReference(r.URL), path)
-			}
-
-			// username := hh.GetRouteParam(r, "username")
 
 			key := keymanager.GetPrivateKey()
 			pubKeyString, err := rsahelpers.PublicKeyToPKIXString(&key.PublicKey)
@@ -55,35 +43,35 @@ func actor() func(http.Handler) http.Handler {
 				return nil, httperrors.InternalServerError()
 			}
 
-			id := a("")
+			actorRoot := requestbaseurl.GetRequestOrigin(r) + r.URL.Path
+
+			// Root: requestbaseurl.GetRequestOrigin(r)
+
+			// id := a("")
 
 			return map[string]any{
 				jsonldkeywords.Context: []interface{}{
 					"https://www.w3.org/ns/activitystreams",
 					"https://w3id.org/security/v1",
 				},
-				"id":                        id,
+				"id":                        actorRoot,
 				"type":                      "Person",
 				"preferredUsername":         config.Username(),
 				"name":                      config.DisplayName(),
 				"summary":                   "This person doesn't have a bio yet.",
-				"following":                 a("following"),
-				"followers":                 a("followers"),
-				"inbox":                     a("inbox"),
-				"outbox":                    a("outbox"),
-				"liked":                     a("liked"),
+				"following":                 actorRoot + routes.Following{}.FullRoute(),
+				"followers":                 actorRoot + "/followers",
+				"inbox":                     actorRoot + "/inbox",
+				"outbox":                    actorRoot + "/outbox",
+				"liked":                     actorRoot + "/liked",
 				"manuallyApprovesFollowers": false,
 				"publicKey": map[string]any{
-					"id":           a("#main-key"),
-					"owner":        id,
+					"id":           actorRoot + "#main-key",
+					"owner":        actorRoot,
 					"publicKeyPem": pubKeyString,
 				},
 				"endpoints": map[string]any{
-					"sharedInbox": possibleerror.Then(possibleerror.New(requestbaseurl.GetRequestURL(r)), func(u *url.URL) possibleerror.PossibleError[string] {
-						return possibleerror.NotError(urlhelpers.ToString(u.ResolveReference(&url.URL{
-							Path: "/sharedinbox",
-						})))
-					}),
+					"sharedInbox": actorRoot + "/" + routes.Root{}.Activity().SharedInbox().FullRoute(),
 				},
 			}, nil
 		}))),

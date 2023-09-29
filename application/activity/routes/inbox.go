@@ -1,15 +1,9 @@
 package routes
 
-const (
-	InboxRoute = "inbox"
-)
-
 type Inbox struct {
 	root string
 }
 
-var _ Route = Inbox{}
-
-func (i Inbox) FullRoute() string {
-	return i.root + "/" + InboxRoute
+func (r Inbox) Route() Route {
+	return Route{root: r.root, routeName: "inbox"}
 }

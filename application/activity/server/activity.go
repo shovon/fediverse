@@ -50,9 +50,9 @@ func ActivityPub() func(http.Handler) http.Handler {
 		functional.RecursiveApply([](func(http.Handler) http.Handler){
 			hh.Processors{
 				hh.Method("POST"),
-				hh.Route(routes.SharedInbox{}.PartialRoute()),
+				hh.Route(routes.SharedInbox{}.Route().FullRoute()),
 			}.Process(printbody.Middleware(os.Stdout)),
-			hh.Group(routes.Actors{}.Actor().FullRoute(), actor()),
+			hh.Group(routes.Actors{}.Actor().Route().ParameterizedRoute(), actor()),
 		}),
 	)
 }

@@ -92,82 +92,49 @@ func Middleware[V any](route string, retriever OrderedCollectionRetriever[V]) fu
 					return isNaturalNumber(r.URL.Query().Get("page"))
 				}, httperrors.BadRequest()),
 			}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
-				u := func(path string) possibleerror.PossibleError[*url.URL] {
-					u, err := requestbaseurl.GetRequestURL(r)
-					if err != nil {
-						return possibleerror.Error[*url.URL](err)
-					}
-					return possibleerror.NotError(u.ResolveReference(r.URL).JoinPath(path))
-				}
-
-				a := func(path string) possibleerror.PossibleError[string] {
-					u, err := requestbaseurl.GetRequestURL(r)
-					if err != nil {
-						return possibleerror.Error[string](err)
-					}
-					return resolveURIToString(u.ResolveReference(r.URL), path)
-				}
-
 				bbreq, err := hh.ToReadOnlyRequest(r)
 				if err != nil {
 					return nil, err
 				}
 				count := retriever.Count(bbreq)
 
-				id := a("")
+				root := requestbaseurl.GetRequestOrigin(r) + r.URL.Path
 
 				return map[string]any{
 					jsonldkeywords.Context: []interface{}{
 						"https://www.w3.org/ns/activitystreams",
 					},
-					"id":         id,
+					"id":         root,
 					"type":       "OrderedCollectionPage",
 					"totalItems": count,
-					"partOf": possibleerror.Then(u(""), possibleerror.MapToThen(func(u *url.URL) string {
-						u.RawQuery = ""
-						return u.String()
-					})),
+					"partOf":     root,
+
+					// TODO: stuff here.
 				}, nil
 			}))),
 			hh.Processors{
 				hh.Method("GET"),
 				hh.Route("/"),
 			}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
-				u := func(path string) possibleerror.PossibleError[*url.URL] {
-					u, err := requestbaseurl.GetRequestURL(r)
-					if err != nil {
-						return possibleerror.Error[*url.URL](err)
-					}
-					return possibleerror.NotError(u.ResolveReference(r.URL).JoinPath(path))
-				}
-
-				a := func(path string) possibleerror.PossibleError[string] {
-					u, err := requestbaseurl.GetRequestURL(r)
-					if err != nil {
-						return possibleerror.Error[string](err)
-					}
-					return resolveURIToString(u.ResolveReference(r.URL), path)
-				}
-
 				bbreq, err := hh.ToReadOnlyRequest(r)
 				if err != nil {
 					return nil, err
 				}
 				count := retriever.Count(bbreq)
 
-				id := a("")
+				root := requestbaseurl.GetRequestOrigin(r) + r.URL.Path
 
 				document := map[string]any{
 					jsonldkeywords.Context: []interface{}{
 						"https://www.w3.org/ns/activitystreams",
 					},
-					"id":         id,
+					"id":         root,
 					"type":       "OrderedCollection",
 					"totalItems": count,
 				}
 
 				if count > 0 {
-					document["first"] = possibleerror.Then(u(""), possibleerror.MapToThen(func(s *url.URL) string {
+					document["first"] = possibleerror.Then(possibleerror.New(url.Parse(root)), possibleerror.MapToThen(func(s *url.URL) string {
 						v := s.Query()
 						v.Add("page", "1")
 						s.RawQuery = v.Encode()

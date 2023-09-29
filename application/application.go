@@ -59,7 +59,7 @@ func Start() error {
 
 	// TODO: move away from Chi, and use some other logger library.
 	m = append(m, httplogger.Middleware)
-	m = append(m, requestbaseurl.Override(common.BaseURL()))
+	m = append(m, requestbaseurl.Override(common.Origin()))
 
 	m = append(m, webfinger.WebFinger(func(resource string) (jrd.JRD, httperrors.HTTPError) {
 		acct, acctErr := acct.ParseAcct(resource)
@@ -148,7 +148,7 @@ func Start() error {
 			return posts.GetPost(hh.GetRouteParam(r, "id"))
 		}))),
 	)
-	m = append(m, hh.Group(routes.Root{}.Activity().PartialRoute(), server.ActivityPub()))
+	m = append(m, hh.Group(routes.Activity{}.Route().FullRoute(), server.ActivityPub()))
 	m = append(m, hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Just an article. Coming soon"))
 	})))

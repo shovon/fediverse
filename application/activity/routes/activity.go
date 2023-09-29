@@ -1,25 +1,17 @@
 package routes
 
-const (
-	ActivityRoute = "activity"
-)
-
 type Activity struct {
 	root string
 }
 
-func (a Activity) FullRoute() string {
-	return a.root + ActivityRoute
+func (r Activity) Route() Route {
+	return Route{root: r.root, routeName: "activity"}
 }
 
-func (a Activity) PartialRoute() string {
-	return "/" + ActivityRoute
+func (r Activity) SharedInbox() SharedInbox {
+	return SharedInbox{root: r.Route().FullRoute()}
 }
 
-func (a Activity) SharedInbox() SharedInbox {
-	return SharedInbox{a.FullRoute()}
-}
-
-func (a Activity) Actors() Actors {
-	return Actors{a.FullRoute()}
+func (r Activity) Actors() Actors {
+	return Actors{root: r.Route().FullRoute()}
 }

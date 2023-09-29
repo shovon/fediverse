@@ -1,19 +1,13 @@
 package routes
 
-const (
-	ActorsRoute = "actors"
-)
-
 type Actors struct {
 	root string
 }
 
-var _ Route = Actors{}
-
-func (u Actors) FullRoute() string {
-	return u.root + "/" + ActorsRoute
+func (r Actors) Route() Route {
+	return Route{root: r.root, routeName: "actors"}
 }
 
-func (u Actors) Actor() Actor {
-	return Actor{u.FullRoute()}
+func (r Actors) Actor() Actor {
+	return Actor{root: r.Route().FullRoute()}
 }

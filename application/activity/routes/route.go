@@ -1,10 +1,14 @@
 package routes
 
-type Route interface {
-	FullRoute() string
+type RouteGetter interface {
+	Route() Route
 }
 
-type Parameterized interface {
-	ParameterName() string
-	RouteSubbed(string) string
+type Route struct {
+	root      string
+	routeName string
+}
+
+func (r Route) FullRoute() string {
+	return r.root + "/" + r.routeName
 }

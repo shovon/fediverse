@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-func getStringVeifier(key string) (security.FromStringVerifier, error) {
+func getStringVerifier(key string) (security.FromStringVerifier, error) {
 	block, _ := pem.Decode([]byte(key))
 	if block == nil || block.Type != "PUBLIC KEY" {
 		return nil, errors.New("failed to decode public key")
@@ -71,7 +71,7 @@ func TestSigningVerification(t *testing.T) {
 		}
 		publicKeyPEM := "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAs94w7ycdUeF54NzOc1WQ\n+Oy47dRwagFxdPmyvxnqD2FkAGBF3dcRb6ty0fph6DH5mGa8oV7pRozbYuXg0QYp\nhfdXewT27/IIxRfNJUVGHBgBfyjVy4KQ5S8fvHxaOq5Y5xDrgLDVsf1Xgb8Qz6Cd\nA0xGiUnzH/bbpCmm1H3IvlcWXOAy6fXH2Ghr4curlYAiT7kvsckh+bv0gHAzGAu3\nG6wZA2W68hWIuhSz4jPVv8sIuKMM3OlC3EbbFC6+nwSuI4t/qJhmTzDEeexX816x\nfi+xoAg83tmKZ0w+cywYS/1UVDrtaD77fb8Nrlv7CWwrJ2cl040mKW/OwujqADaO\n8QIDAQAB\n-----END PUBLIC KEY-----\n"
 		middleware := VerifySignature(func(httphelpers.ReadOnlyRequest) (security.FromStringVerifier, error) {
-			return getStringVeifier(publicKeyPEM)
+			return getStringVerifier(publicKeyPEM)
 		})
 		handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
@@ -98,7 +98,7 @@ func TestVerification(t *testing.T) {
 		publicKeyPEM := "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAs94w7ycdUeF54NzOc1WQ\n+Oy47dRwagFxdPmyvxnqD2FkAGBF3dcRb6ty0fph6DH5mGa8oV7pRozbYuXg0QYp\nhfdXewT27/IIxRfNJUVGHBgBfyjVy4KQ5S8fvHxaOq5Y5xDrgLDVsf1Xgb8Qz6Cd\nA0xGiUnzH/bbpCmm1H3IvlcWXOAy6fXH2Ghr4curlYAiT7kvsckh+bv0gHAzGAu3\nG6wZA2W68hWIuhSz4jPVv8sIuKMM3OlC3EbbFC6+nwSuI4t/qJhmTzDEeexX816x\nfi+xoAg83tmKZ0w+cywYS/1UVDrtaD77fb8Nrlv7CWwrJ2cl040mKW/OwujqADaO\n8QIDAQAB\n-----END PUBLIC KEY-----\n"
 
 		middleware := VerifySignature(func(httphelpers.ReadOnlyRequest) (security.FromStringVerifier, error) {
-			return getStringVeifier(publicKeyPEM)
+			return getStringVerifier(publicKeyPEM)
 		})
 
 		handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -36,8 +36,9 @@ func actor() func(http.Handler) http.Handler {
 			hh.Method("GET"),
 			hh.Route("/"),
 		}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
-
 			key := keymanager.GetPrivateKey()
+
+			// TODO: this should ideally be cached.
 			pubKeyString, err := rsahelpers.PublicKeyToPKIXString(&key.PublicKey)
 			if err != nil {
 				return nil, httperrors.InternalServerError()

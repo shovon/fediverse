@@ -8,9 +8,11 @@ import (
 	"errors"
 	"fediverse/accountaddress"
 	"fediverse/acct"
+	activityclient "fediverse/application/activity/client"
 	"fediverse/application/activity/routes"
 	"fediverse/application/common"
 	"fediverse/application/config"
+	"fediverse/application/following"
 	"fediverse/application/keymanager"
 	"fediverse/application/posts"
 	"fediverse/application/schema"
@@ -22,6 +24,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/piprate/json-gold/ld"
@@ -216,12 +219,36 @@ func main() {
 			os.Exit(1)
 		}
 
+		id, err := following.AddFollowing(address)
+		if err != nil {
+			// TODO: this also fails if the user is already following the account.
+			//   just silently ignore the error, and return
+			panic(err)
+		}
+
 		privateKey := keymanager.GetPrivateKey()
 		signingKeyIRI := common.Origin() + routes.Activity{}.Actors().Actor().Route().FullRoute(config.Username())
+		followActivityIRI := common.Origin() + routes.Activity{}.Actors().Actor().Following().FullRoute(config.Username()).Route().FullRoute() + strconv.FormatInt(id, 10)
+		senderIRI := common.Origin() + routes.Activity{}.Actors().Actor().Route().FullRoute(config.Username())
+		recipientID := selfLink
+		inboxURL := inboxID
+
+		err = activityclient.Follow(
+			privateKey,
+			activityclient.SigningKeyIRI(signingKeyIRI),
+			activityclient.FollowActivityIRI(followActivityIRI),
+			activityclient.SenderIRI(senderIRI),
+			activityclient.ObjectIRI(recipientID),
+			activityclient.InboxURL(inboxURL),
+		)
+
+		if err != nil {
+			panic(err)
+		}
 	case "genrsa":
 		// This command generates a new RSA key pair. It accepts a `--public` flag
 		// to show the public key.
-		//
+
 		// But the typical use case for this would be to generate only the private
 		// key, and then use the `getrsapublic` command to get the public key.
 

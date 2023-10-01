@@ -69,7 +69,7 @@ func CreateNodeInfoMiddleware(origin string, nodeInfoRoot string, handler func()
 		}, nil
 	}))
 
-	schema2p0 := httphelpers.Group(
+	schema2p0 := httphelpers.PartialRoute(
 		nodeInfoRoot, httphelpers.Route("/2.0").Process(httphelpers.ToMiddleware(httphelpers.ToHandlerFunc(httphelpers.ErrorHandler(func(w http.ResponseWriter, r *http.Request) error {
 			nodeInfoProps, err := handler()
 			if err != nil {

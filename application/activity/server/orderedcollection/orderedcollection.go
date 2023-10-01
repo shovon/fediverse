@@ -78,7 +78,7 @@ func isNaturalNumber(str string) bool {
 }
 
 func Middleware[V any](route string, retriever OrderedCollectionRetriever[V]) func(http.Handler) http.Handler {
-	return hh.Group(
+	return hh.PartialRoute(
 		route,
 		functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler){
 			hh.Processors{

@@ -6,8 +6,8 @@ import (
 )
 
 func WellKnown(path string, handler http.Handler) func(http.Handler) http.Handler {
-	return httphelpers.Group(
+	return httphelpers.PartialRoute(
 		"/.well-known",
-		httphelpers.Group("/"+path, httphelpers.ToMiddleware(handler)),
+		httphelpers.PartialRoute("/"+path, httphelpers.ToMiddleware(handler)),
 	)
 }

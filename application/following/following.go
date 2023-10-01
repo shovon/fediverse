@@ -1,30 +1,13 @@
 package following
 
 import (
+	"fediverse/accountaddress"
 	"fediverse/application/database"
 	"sync"
 	"time"
 )
 
 var lock sync.RWMutex
-
-// AddFollwing adds a following to the database.
-//
-// Not sure what the implication is for just interpreting the IRI as a string,
-// but it will be so much simpler to work with, for now.
-func AddFollwing(i string) error {
-	lock.Lock()
-	defer lock.Unlock()
-	db, err := database.Open()
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-	if _, err := db.Exec("INSERT INTO following (following) VALUES (?)", i); err != nil {
-		return err
-	}
-	return nil
-}
 
 type Following struct {
 	ID           string    `json:"id"`
@@ -66,13 +49,47 @@ func GetFollowing(offset int, limit int) (_ []Following, err error) {
 	return followings, nil
 }
 
-func AddFollowing(offset int, limit int) (_ []Following, err error) {
+// AddFollowing adds a following to the database.
+//
+// Not sure what the implication is for just interpreting the IRI as a string,
+// but it will be so much simpler to work with, for now.
+func AddFollowing(address accountaddress.AccountAddress) (int64, error) {
 	lock.RLock()
 	defer lock.RUnlock()
 	db, err := database.Open()
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	defer db.Close()
-	result, err := db.Exec("INSERT INTO following (following) VALUES (?)", i)
+
+	result, err := db.Exec(
+		"INSERT INTO following (account_address_user, account_address_host) VALUES (?, ?)",
+		address.User,
+		address.Host,
+	)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return result.LastInsertId()
+}
+
+func FollowRequestAccepted(address accountaddress.AccountAddress) error {
+	lock.RLock()
+	defer lock.RUnlock()
+
+	db, err := database.Open()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	if _, err := db.Exec(
+		"UPDATE following SET accepted = 1 WHERE account_address_user = ? AND account_address_host = ?", address.User, address.Host,
+	); err != nil {
+		return err
+	}
+
+	return nil
 }

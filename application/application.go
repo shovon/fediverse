@@ -148,7 +148,7 @@ func Start() error {
 			return posts.GetPost(hh.GetRouteParam(r, "id"))
 		}))),
 	)
-	m = append(m, hh.Group(routes.Activity{}.Route().FullRoute(), server.ActivityPub()))
+	m = append(m, hh.PartialRoute(routes.Activity{}.Route().FullRoute(), server.ActivityPub()))
 	m = append(m, hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Just an article. Coming soon"))
 	})))

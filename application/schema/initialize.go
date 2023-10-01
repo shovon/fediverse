@@ -18,13 +18,23 @@ var revisions = []string{
 	CREATE TABLE followers (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		when_followed DATETIME DEFAULT CURRENT_TIMESTAMP,
-		actor_iri TEXT
+		
+		account_address_user TEXT,
+		account_address_host TEXT,
+
+		UNIQUE(account_address_user, account_address_host)
 	);
 
 	CREATE TABLE following (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		when_followed DATETIME DEFAULT CURRENT_TIMESTAMP,
-		actor_iri TEXT
+
+		account_address_user TEXT,
+		account_address_host TEXT,
+
+		has_accepted_follow_request INT DEFAULT 0,
+
+		UNIQUE(account_address_user, account_address_host)
 	);
 
 	CREATE TABLE inbox (
@@ -35,6 +45,8 @@ var revisions = []string{
 		body TEXT
 	)
 	`,
+
+	// In the future, we may want to add a cache to hold the actor's IRI
 }
 
 func runRevision(db *sql.DB, revision string) error {

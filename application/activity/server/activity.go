@@ -52,7 +52,7 @@ func ActivityPub() func(http.Handler) http.Handler {
 				hh.Method("POST"),
 				hh.Route(routes.SharedInbox{}.Route().FullRoute()),
 			}.Process(printbody.Middleware(os.Stdout)),
-			hh.Group(routes.Actors{}.Actor().Route().ParameterizedRoute(), actor()),
+			hh.PartialRoute(routes.Actors{}.Actor().Route().ParameterizedRoute(), actor()),
 		}),
 	)
 }

@@ -6,7 +6,6 @@ import (
 	"fediverse/httphelpers/httperrors"
 	"fediverse/httphelpers/requestbaseurl"
 	"fediverse/json/jsonhttp"
-	"fediverse/jsonld/jsonldkeywords"
 	"fediverse/possibleerror"
 	"fediverse/urlhelpers"
 	"net/http"
@@ -101,7 +100,7 @@ func Middleware[V any](route string, retriever OrderedCollectionRetriever[V]) fu
 				root := requestbaseurl.GetRequestOrigin(r) + r.URL.Path
 
 				return map[string]any{
-					jsonldkeywords.Context: []interface{}{
+					"@context": []interface{}{
 						"https://www.w3.org/ns/activitystreams",
 					},
 					"id":         root,
@@ -125,7 +124,7 @@ func Middleware[V any](route string, retriever OrderedCollectionRetriever[V]) fu
 				root := requestbaseurl.GetRequestOrigin(r) + r.URL.Path
 
 				document := map[string]any{
-					jsonldkeywords.Context: []interface{}{
+					"@context": []interface{}{
 						"https://www.w3.org/ns/activitystreams",
 					},
 					"id":         root,

@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func MarshalJSONWithMaybe(v any) ([]byte, error) {
+func MarshalJSONWithNilable(v any) ([]byte, error) {
 	rv := reflect.ValueOf(v)
 
 	var sb strings.Builder

@@ -14,7 +14,7 @@ import (
 
 type SigningStringInfo struct {
 	Method, Path     string
-	Created, Expires nullable.Nullable[time.Time]
+	Created, Expires nullable.Nilable[time.Time]
 	Headers          http.Header
 	ExpectedHeaders  []string
 }
@@ -35,8 +35,8 @@ func SigningStringInfoFromRequest(
 	return ssi
 }
 
-func stringifyNullableTime(nt nullable.Nullable[time.Time]) string {
-	return fmt.Sprintf("(created): %s", nullable.Then(nt, func(t time.Time) nullable.Nullable[string] {
+func stringifyNullableTime(nt nullable.Nilable[time.Time]) string {
+	return fmt.Sprintf("(created): %s", nullable.Then(nt, func(t time.Time) nullable.Nilable[string] {
 		return nullable.Just(strconv.FormatInt(t.Unix(), 10))
 	}).ValueOrDefault(""))
 }

@@ -3,15 +3,25 @@ package main
 import (
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
+	"errors"
+	"fediverse/accountaddress"
+	"fediverse/acct"
+	"fediverse/application/keymanager"
 	"fediverse/application/posts"
 	"fediverse/application/schema"
 	"fediverse/security/rsahelpers"
 	"fediverse/security/rsassapkcsv115sha256"
+	"fediverse/webfinger"
 	"flag"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"time"
+
+	"github.com/piprate/json-gold/ld"
 )
 
 func readFromStdin() []byte {
@@ -104,7 +114,107 @@ func main() {
 			return
 		}
 
-		os.Exit(1)
+		// Perform a WebFinger lookup.
+		address, err := accountaddress.ParseAccountAddress(args[1])
+		if err != nil && errors.Is(err, accountaddress.ErrInvalidAccountAddress()) {
+			fmt.Fprintf(os.Stderr, "Invalid account address\n")
+			os.Exit(1)
+			return
+		}
+
+		j, err := webfinger.Lookup(address.Host, acct.Acct(address).String(), []string{"self"})
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error looking up account: %s\n", err.Error())
+			os.Exit(1)
+			return
+		}
+
+		// fmt.Printf("j: %+v\n", j)
+
+		links, ok := j.Links.Value()
+		if !ok {
+			fmt.Fprint(os.Stderr, "No properties found\n")
+			os.Exit(1)
+			return
+		}
+
+		var selfLink string
+		ok = false
+		for _, link := range links {
+			if link.Rel == "self" {
+				selfLink = link.Href
+				ok = true
+				break
+			}
+		}
+		if !ok {
+			fmt.Fprint(os.Stderr, "self link not found in WebFinger lookup\n")
+			os.Exit(1)
+		}
+		if selfLink == "" {
+			fmt.Fprint(os.Stderr, "self link is empty\n")
+			os.Exit(1)
+		}
+
+		req, err := http.NewRequest("GET", selfLink, nil)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error creating request: %s\n", err.Error())
+			os.Exit(1)
+		}
+		req.Header.Set("Accept", "application/activity+json")
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Response failed %s\n", err.Error())
+			os.Exit(1)
+		}
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to read response body: %s\n", err.Error())
+			os.Exit(1)
+		}
+		var parsed any
+		err = json.Unmarshal(body, &parsed)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to parse response body: %s\n", err.Error())
+			os.Exit(1)
+		}
+
+		proc := ld.NewJsonLdProcessor()
+		options := ld.NewJsonLdOptions("")
+
+		expanded, err := proc.Expand(parsed, options)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to expand JSON-LD document: %s\n", err.Error())
+		}
+		var inboxID string
+		gotInbox := false
+		for _, node := range expanded {
+			predicateObjectMap, ok := node.(map[string]any)
+			if !ok {
+				continue
+			}
+			inbox, ok := predicateObjectMap["http://www.w3.org/ns/ldp#inbox"].([]any)
+			if !ok {
+				continue
+			}
+			value, ok := inbox[0].(map[string]any)
+			if !ok {
+				continue
+			}
+			inboxID, ok = value["@id"].(string)
+			if !ok {
+				continue
+			}
+			gotInbox = true
+		}
+		if !gotInbox {
+			fmt.Fprintf(os.Stderr, "No inbox found\n")
+			os.Exit(1)
+		}
+
+		privateKey := keymanager.GetPrivateKey()
+		signingKeyIRI := "https://example.com/actor#main-key"
 	case "genrsa":
 		// This command generates a new RSA key pair. It accepts a `--public` flag
 		// to show the public key.

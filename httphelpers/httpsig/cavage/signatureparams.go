@@ -27,11 +27,11 @@ const (
 )
 
 type Params struct {
-	KeyID     nullable.Nullable[string]
-	Algorithm nullable.Nullable[string]
+	KeyID     nullable.Nilable[string]
+	Algorithm nullable.Nilable[string]
 	Created   time.Time
-	Expires   nullable.Nullable[time.Time]
-	Headers   nullable.Nullable[[]string]
+	Expires   nullable.Nilable[time.Time]
+	Headers   nullable.Nilable[[]string]
 }
 
 type ParamsWithSignature struct {

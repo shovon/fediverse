@@ -91,7 +91,16 @@ func Lookup(host string, resource string, rel []string) (jrd.JRD, error) {
 		return jrd.JRD{}, err
 	}
 
-	b, err := io.ReadAll(req.Body)
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return jrd.JRD{}, err
+	}
+
+	// TODO: look at response code.
+
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return jrd.JRD{}, err
 	}

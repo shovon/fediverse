@@ -7,15 +7,15 @@ import (
 )
 
 type JRD struct {
-	Expires    nullable.Nullable[time.Time]                            `json:"expires,omitempty"`
-	Subject    nullable.Nullable[string]                               `json:"subject,omitempty"`
-	Aliases    nullable.Nullable[[]string]                             `json:"aliases,omitempty"`
-	Properties nullable.Nullable[map[string]nullable.Nullable[string]] `json:"properties,omitempty"`
-	Links      nullable.Nullable[[]Link]                               `json:"links,omitempty"`
+	Expires    nullable.Nilable[time.Time]                           `json:"expires,omitempty"`
+	Subject    nullable.Nilable[string]                              `json:"subject,omitempty"`
+	Aliases    nullable.Nilable[[]string]                            `json:"aliases,omitempty"`
+	Properties nullable.Nilable[map[string]nullable.Nilable[string]] `json:"properties,omitempty"`
+	Links      nullable.Nilable[[]Link]                              `json:"links,omitempty"`
 }
 
 var _ json.Marshaler = JRD{}
 
 func (j JRD) MarshalJSON() ([]byte, error) {
-	return nullable.MarshalJSONWithMaybe(j)
+	return nullable.MarshalJSONWithNilable(j)
 }

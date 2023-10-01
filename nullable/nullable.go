@@ -4,31 +4,31 @@ import (
 	"encoding/json"
 )
 
-type Nullable[T any] struct {
+type Nilable[T any] struct {
 	hasValue bool
 	value    T
 }
 
-func Just[T any](v T) Nullable[T] {
-	return Nullable[T]{
+func Just[T any](v T) Nilable[T] {
+	return Nilable[T]{
 		hasValue: true,
 		value:    v,
 	}
 }
 
-func Null[T any]() Nullable[T] {
+func Null[T any]() Nilable[T] {
 	var t T
-	return Nullable[T]{
+	return Nilable[T]{
 		hasValue: false,
 		value:    t,
 	}
 }
 
-func (n Nullable[T]) HasValue() bool {
+func (n Nilable[T]) HasValue() bool {
 	return n.hasValue
 }
 
-func (n Nullable[T]) Value() (T, bool) {
+func (n Nilable[T]) Value() (T, bool) {
 	if !n.hasValue {
 		return n.value, false
 	}
@@ -36,7 +36,7 @@ func (n Nullable[T]) Value() (T, bool) {
 	return n.value, true
 }
 
-func (n Nullable[T]) ValueOrDefault(d T) T {
+func (n Nilable[T]) ValueOrDefault(d T) T {
 	if !n.hasValue {
 		return d
 	}
@@ -44,14 +44,14 @@ func (n Nullable[T]) ValueOrDefault(d T) T {
 	return n.value
 }
 
-func (n Nullable[T]) AssertValue() T {
+func (n Nilable[T]) AssertValue() T {
 	if !n.hasValue {
 		panic("null dereference error")
 	}
 	return n.value
 }
 
-func (n Nullable[T]) MarshalJSON() ([]byte, error) {
+func (n Nilable[T]) MarshalJSON() ([]byte, error) {
 	if !n.hasValue {
 		return []byte("null"), nil
 	}
@@ -59,7 +59,7 @@ func (n Nullable[T]) MarshalJSON() ([]byte, error) {
 	return json.Marshal(n.value)
 }
 
-func (n *Nullable[T]) UnmarshalJSON(data []byte) error {
+func (n *Nilable[T]) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
 		n.hasValue = false
 		var t T
@@ -78,7 +78,7 @@ func (n *Nullable[T]) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func Then[T any, V any](n Nullable[T], fn func(T) Nullable[V]) Nullable[V] {
+func Then[T any, V any](n Nilable[T], fn func(T) Nilable[V]) Nilable[V] {
 	if !n.hasValue {
 		return Null[V]()
 	}

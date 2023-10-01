@@ -6,14 +6,14 @@ import (
 
 func TestMarshal(t *testing.T) {
 	type testStruct struct {
-		Number Nullable[int]    `json:"number"`
-		String Nullable[string] `json:"string"`
+		Number Nilable[int]    `json:"number"`
+		String Nilable[string] `json:"string"`
 	}
 	test := testStruct{
 		Number: Just[int](5),
 		String: Just[string]("Hello"),
 	}
-	data, err := MarshalJSONWithMaybe(test)
+	data, err := MarshalJSONWithNilable(test)
 	if err != nil {
 		t.Error(err)
 	}
@@ -25,14 +25,14 @@ func TestMarshal(t *testing.T) {
 
 func TestNull(t *testing.T) {
 	type testStruct struct {
-		Number Nullable[int]    `json:"number"`
-		String Nullable[string] `json:"string"`
+		Number Nilable[int]    `json:"number"`
+		String Nilable[string] `json:"string"`
 	}
 	test := testStruct{
 		Number: Null[int](),
 		String: Null[string](),
 	}
-	data, err := MarshalJSONWithMaybe(test)
+	data, err := MarshalJSONWithNilable(test)
 	if err != nil {
 		t.Error(err)
 	}
@@ -45,14 +45,14 @@ func TestNull(t *testing.T) {
 
 func TestMissing(t *testing.T) {
 	type testStruct struct {
-		Number Nullable[int]    `json:"number,omitempty"`
-		String Nullable[string] `json:"string,omitempty"`
+		Number Nilable[int]    `json:"number,omitempty"`
+		String Nilable[string] `json:"string,omitempty"`
 	}
 	test := testStruct{
 		Number: Null[int](),
 		String: Null[string](),
 	}
-	data, err := MarshalJSONWithMaybe(test)
+	data, err := MarshalJSONWithNilable(test)
 	if err != nil {
 		t.Error(err)
 	}

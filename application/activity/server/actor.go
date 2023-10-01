@@ -12,7 +12,6 @@ import (
 	"fediverse/httphelpers/httperrors"
 	"fediverse/httphelpers/requestbaseurl"
 	"fediverse/json/jsonhttp"
-	"fediverse/jsonld/jsonldkeywords"
 	"fediverse/security/rsahelpers"
 	"net/http"
 	"os"
@@ -47,7 +46,7 @@ func actor() func(http.Handler) http.Handler {
 			actorRoot := requestbaseurl.GetRequestOrigin(r) + r.URL.Path
 
 			return map[string]any{
-				jsonldkeywords.Context: []interface{}{
+				"@context": []interface{}{
 					"https://www.w3.org/ns/activitystreams",
 					"https://w3id.org/security/v1",
 				},

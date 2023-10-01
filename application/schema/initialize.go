@@ -35,9 +35,6 @@ var revisions = []string{
 		body TEXT
 	)
 	`,
-	`
-	
-	`,
 }
 
 func runRevision(db *sql.DB, revision string) error {

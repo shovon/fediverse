@@ -65,3 +65,14 @@ func GetFollowing(offset int, limit int) (_ []Following, err error) {
 	}
 	return followings, nil
 }
+
+func AddFollowing(offset int, limit int) (_ []Following, err error) {
+	lock.RLock()
+	defer lock.RUnlock()
+	db, err := database.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+	result, err := db.Exec("INSERT INTO following (following) VALUES (?)", i)
+}

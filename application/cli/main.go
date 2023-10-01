@@ -8,6 +8,9 @@ import (
 	"errors"
 	"fediverse/accountaddress"
 	"fediverse/acct"
+	"fediverse/application/activity/routes"
+	"fediverse/application/common"
+	"fediverse/application/config"
 	"fediverse/application/keymanager"
 	"fediverse/application/posts"
 	"fediverse/application/schema"
@@ -214,7 +217,7 @@ func main() {
 		}
 
 		privateKey := keymanager.GetPrivateKey()
-		signingKeyIRI := "https://example.com/actor#main-key"
+		signingKeyIRI := common.Origin() + routes.Activity{}.Actors().Actor().Route().FullRoute(config.Username())
 	case "genrsa":
 		// This command generates a new RSA key pair. It accepts a `--public` flag
 		// to show the public key.

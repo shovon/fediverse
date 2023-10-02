@@ -59,6 +59,8 @@ func Follow(
 		return err
 	}
 
+	fmt.Println(req.Header.Get("Digest"))
+
 	signer := rsassapkcsv115sha256.Base64Signer(signingKey)
 
 	if err := cavage.AddSignatureToRequest(req, cavage.Params{
@@ -70,6 +72,8 @@ func Follow(
 	}, signer); err != nil {
 		return err
 	}
+
+	fmt.Println(req.Header.Get("Signature"))
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

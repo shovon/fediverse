@@ -3,6 +3,7 @@ package cavage
 import (
 	"fediverse/nullable"
 	"fediverse/security"
+	"fmt"
 	"net/http"
 )
 
@@ -20,6 +21,7 @@ func AddSignatureToRequest(
 		Headers:         req.Header.Clone(),
 		ExpectedHeaders: params.Headers.ValueOrDefault([]string{created}),
 	}
+	fmt.Println(ssi.ConstructSigningString())
 	signature, err := signer.Sign([]byte(ssi.ConstructSigningString()))
 	if err != nil {
 		return err

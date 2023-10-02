@@ -36,9 +36,9 @@ func SigningStringInfoFromRequest(
 }
 
 func stringifyNullableTime(nt nullable.Nilable[time.Time]) string {
-	return fmt.Sprintf("(created): %s", nullable.Then(nt, func(t time.Time) nullable.Nilable[string] {
+	return nullable.Then(nt, func(t time.Time) nullable.Nilable[string] {
 		return nullable.Just(strconv.FormatInt(t.Unix(), 10))
-	}).ValueOrDefault(""))
+	}).ValueOrDefault("")
 }
 
 const (
@@ -53,7 +53,7 @@ func (ssi SigningStringInfo) ConstructSigningString() string {
 		case requestTarget:
 			return pair.Pair[string, string]{
 				Left:  requestTarget,
-				Right: ssi.Method,
+				Right: fmt.Sprintf("%s %s", strings.ToLower(ssi.Method), ssi.Path),
 			}
 		case created:
 			return pair.Pair[string, string]{
@@ -63,7 +63,7 @@ func (ssi SigningStringInfo) ConstructSigningString() string {
 		case expires:
 			return pair.Pair[string, string]{
 				Left:  expires,
-				Right: stringifyNullableTime(ssi.Created),
+				Right: stringifyNullableTime(ssi.Expires),
 			}
 		}
 

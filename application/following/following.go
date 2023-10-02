@@ -1,6 +1,7 @@
 package following
 
 import (
+	"database/sql"
 	"fediverse/accountaddress"
 	"fediverse/application/database"
 	"sync"
@@ -62,17 +63,25 @@ func AddFollowing(address accountaddress.AccountAddress) (int64, error) {
 	}
 	defer db.Close()
 
-	result, err := db.Exec(
-		"INSERT INTO following (account_address_user, account_address_host) VALUES (?, ?)",
-		address.User,
-		address.Host,
-	)
+	var existingID int64
+	err = db.QueryRow("SELECT id FROM following WHERE account_address_user = ? AND account_address_host = ?", address.User, address.Host).Scan(&existingID)
 
-	if err != nil {
+	switch {
+	case err == sql.ErrNoRows:
+		result, err := db.Exec(
+			"INSERT INTO following (account_address_user, account_address_host) VALUES (?, ?)",
+			address.User,
+			address.Host,
+		)
+		if err != nil {
+			return 0, err
+		}
+		return result.LastInsertId()
+	case err != nil:
 		return 0, err
 	}
 
-	return result.LastInsertId()
+	return existingID, nil
 }
 
 func FollowRequestAccepted(address accountaddress.AccountAddress) error {

@@ -120,7 +120,6 @@ func main() {
 			return
 		}
 
-		// Perform a WebFinger lookup.
 		address, err := accountaddress.ParseAccountAddress(args[1])
 		if err != nil && errors.Is(err, accountaddress.ErrInvalidAccountAddress()) {
 			fmt.Fprintf(os.Stderr, "Invalid account address\n")
@@ -128,14 +127,14 @@ func main() {
 			return
 		}
 
+		// Perform a WebFinger lookup.
+		fmt.Printf("Performing WebFinger lookup for %s...\n", acct.Acct(address).String())
 		j, err := webfinger.Lookup(address.Host, acct.Acct(address).String(), []string{"self"})
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error looking up account: %s\n", err.Error())
-			os.Exit(1)
+			os.Exit(2)
 			return
 		}
-
-		// fmt.Printf("j: %+v\n", j)
 
 		links, ok := j.Links.Value()
 		if !ok {
@@ -162,12 +161,17 @@ func main() {
 			os.Exit(1)
 		}
 
+		fmt.Println("Got self link:", selfLink)
+
 		req, err := http.NewRequest("GET", selfLink, nil)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error creating request: %s\n", err.Error())
 			os.Exit(1)
 		}
 		req.Header.Set("Accept", "application/activity+json")
+
+		fmt.Println("Looking up the ActivityPub actor using the self link")
+
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
@@ -219,6 +223,8 @@ func main() {
 			os.Exit(1)
 		}
 
+		fmt.Println("The URL to the inbox:", inboxID)
+
 		id, err := following.AddFollowing(address)
 		if err != nil {
 			// TODO: this also fails if the user is already following the account.
@@ -233,6 +239,7 @@ func main() {
 		recipientID := selfLink
 		inboxURL := inboxID
 
+		fmt.Println("Sending follow activity...")
 		err = activityclient.Follow(
 			privateKey,
 			activityclient.SigningKeyIRI(signingKeyIRI),

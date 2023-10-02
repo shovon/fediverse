@@ -64,7 +64,7 @@ func Follow(
 	if err := cavage.AddSignatureToRequest(req, cavage.Params{
 		KeyID:     nullable.Just(string(signingKeyIRI)),
 		Algorithm: nullable.Just("hs2019"),
-		Headers:   nullable.Just([]string{"Signature"}),
+		Headers:   nullable.Just([]string{"digest", "(created)", "(request-target)"}),
 		Created:   time.Now(),
 		// TODO: consider adding an expries field
 	}, signer); err != nil {
@@ -82,7 +82,11 @@ func Follow(
 	if err != nil {
 		return err
 	}
-	fmt.Println(body)
+	fmt.Println(string(body))
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
 
 	return nil
 }

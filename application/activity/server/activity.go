@@ -43,6 +43,24 @@ func getPublicKeyPEMString(id string) (string, error) {
 }
 
 func ActivityPub() func(http.Handler) http.Handler {
+	// TODO: be able to handle `Accept` activities, in response to a `Follow`
+	//   activity.
+	//
+	// Here is an example payload:
+	//
+	// {
+	//   "@context": "https://www.w3.org/ns/activitystreams",
+	//   "id": "https://techhub.social/users/manlycoffee#accepts/follows/1129830",
+	//   "type": "Accept",
+	//   "actor": "https://techhub.social/users/manlycoffee",
+	//   "object": {
+	//     "id": "https://feditest.salrahman.com/activity/actors/johndoe/following1",
+	//     "type": "Follow",
+	//     "actor": "https://feditest.salrahman.com/activity/actors/johndoe",
+	//     "object": "https://techhub.social/users/manlycoffee"
+	//   }
+	// }
+
 	return hh.Processors{
 		hh.Condition(hh.IsAcceptable([]string{"application/*+json"})),
 		hh.DefaultResponseHeader("Content-Type", []string{"application/activity+json"}),

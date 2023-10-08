@@ -57,10 +57,12 @@ func parseURLResource(resource string) (UserHost, *url.URL, bool) {
 func Start() error {
 	m := [](func(http.Handler) http.Handler){}
 
-	// TODO: move away from Chi, and use some other logger library.
 	m = append(m, httplogger.Middleware)
+
+	// TODO: this is really a bad idea. Gotta remove it.
 	m = append(m, requestbaseurl.Override(common.Origin()))
 
+	// WebFinger
 	m = append(m, webfinger.WebFinger(func(resource string) (jrd.JRD, httperrors.HTTPError) {
 		acct, acctErr := acct.ParseAcct(resource)
 		userHost, urlQuery, urlIsValid := parseURLResource(resource)
@@ -103,6 +105,7 @@ func Start() error {
 		return webFingerJRD(UserHost{user, host}), nil
 	}))
 
+	// NodeInfo
 	m = append(m, nodeinfo.CreateNodeInfoMiddleware(common.Origin(), "/nodinfo", func() (nodeinfo.NodeInfoProps, error) {
 		count, err := posts.GetPostCount()
 		if err != nil {
@@ -116,16 +119,17 @@ func Start() error {
 			OpenRegistrations: false,
 			Usage: nodeinfo.Usage{
 				Users: nodeinfo.UsersStats{
+					// TODO: this is where we get a list of all users.
 					Total: 1,
 
-					// TODO: actually get all activie users in the last 6 months
+					// TODO: actually get all active users in the last 6 months
 					ActiveHalfyear: 0,
 
 					// TODO: actually get all activie users in the last 30 days
 					ActiveMonth: 0,
 				},
-				LocalPosts:    count, // TODO: actually get all local posts
-				LocalComments: 0,     // TODO: actually get all local comments
+				LocalPosts:    count,
+				LocalComments: 0, // TODO: actually get all local comments
 			},
 		}, nil
 	}))
@@ -139,6 +143,7 @@ func Start() error {
 			return posts.GetAllPosts()
 		}))),
 	)
+
 	m = append(
 		m,
 		hh.Processors{
@@ -148,6 +153,7 @@ func Start() error {
 			return posts.GetPost(hh.GetRouteParam(r, "id"))
 		}))),
 	)
+
 	m = append(m, hh.PartialRoute(routes.Activity{}.Route().FullRoute(), server.ActivityPub()))
 	m = append(m, hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Just an article. Coming soon"))

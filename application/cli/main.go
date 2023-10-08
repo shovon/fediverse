@@ -233,7 +233,7 @@ func main() {
 		}
 
 		privateKey := keymanager.GetPrivateKey()
-		signingKeyIRI := common.Origin() + routes.Activity{}.Actors().Actor().Route().FullRoute(config.Username())
+		signingKeyIRI := common.Origin() + routes.Activity{}.Actors().Actor().Route().FullRoute(config.Username()) + "#main-key"
 		followActivityIRI := common.Origin() + routes.Activity{}.Actors().Actor().Following().FullRoute(config.Username()).Route().FullRoute() + strconv.FormatInt(id, 10)
 		senderIRI := common.Origin() + routes.Activity{}.Actors().Actor().Route().FullRoute(config.Username())
 		recipientID := selfLink

@@ -6,8 +6,19 @@ This is all just one big WIP.
 
 Stay tuned.
 
-Running:
+Development (requires [Air](https://github.com/cosmtrek/air)):
 
 ```
-env -S "`cat ./.example.env`" go run ./application/cli* create 'Testing this once more'
+env -S "`cat ./.example.env`" air .
 ```
+
+Following (planned to be deprecated):
+
+```
+env -S "`cat ./.example.env`" go r
+```
+
+Create a post (planned to be deprecated):
+
+```
+env -S "`cat ./.example.env`" go run ./application/cli* create "$POST"

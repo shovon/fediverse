@@ -45,7 +45,7 @@ func MarshalJSONWithNilable(v any) ([]byte, error) {
 		}
 
 		// Check if the field is of type Nullable
-		if strings.HasPrefix(fieldType.Type.Name(), "Nullable[") {
+		if strings.HasPrefix(fieldType.Type.Name(), "Nilable[") {
 			isSet := field.FieldByName("hasValue").Bool()
 			if !isSet {
 				if shouldOmitEmpty {

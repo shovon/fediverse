@@ -12,6 +12,7 @@ import (
 	"fediverse/httphelpers/httperrors"
 	"fediverse/httphelpers/requestbaseurl"
 	"fediverse/json/jsonhttp"
+	"fediverse/pathhelpers"
 	"fediverse/security/rsahelpers"
 	"net/http"
 	"os"
@@ -43,31 +44,52 @@ func actor() func(http.Handler) http.Handler {
 				return nil, httperrors.InternalServerError()
 			}
 
-			actorRoot := requestbaseurl.GetRequestOrigin(r) + r.URL.Path
+			origin := requestbaseurl.GetRequestOrigin(r)
+
+			params := map[string]string{
+				// TODO: this should be soft-coded.
+				"username": hh.GetRouteParam(r, "username"),
+			}
+
+			actorRoot := origin + pathhelpers.FillFields(userRoute, params)
 
 			return map[string]any{
 				"@context": []interface{}{
 					"https://www.w3.org/ns/activitystreams",
 					"https://w3id.org/security/v1",
 				},
-				"id":                        actorRoot,
-				"type":                      "Person",
-				"preferredUsername":         config.Username(),
-				"name":                      config.DisplayName(),
-				"summary":                   "This person doesn't have a bio yet.",
-				"following":                 actorRoot + routes.Following{}.Route().FullRoute(),
-				"followers":                 actorRoot + routes.Followers{}.Route().FullRoute(),
-				"inbox":                     actorRoot + routes.Inbox{}.Route().FullRoute(),
-				"outbox":                    actorRoot + routes.Outbox{}.Route().FullRoute(),
-				"liked":                     actorRoot + routes.Liked{}.Route().FullRoute(),
+				"id":   actorRoot,
+				"type": "Person",
+
+				// TODO: this should be soft-coded. That is, retrieve the username,
+				//   given some lookup invocation.
+				"preferredUsername": config.Username(),
+
+				// TODO: this should be soft-coded. That is, retrieve the display name,
+				//   given some lookup invocation.
+				"name": config.DisplayName(),
+
+				// TODO: also find a way to soft code this.
+				"summary": "<p>This person doesn't have a bio yet.</p>",
+
+				"following": origin + pathhelpers.FillFields(followingRoute, params),
+				"followers": origin + pathhelpers.FillFields(followersRoute, params),
+				"inbox":     origin + pathhelpers.FillFields(inboxRoute, params),
+				"outbox":    origin + pathhelpers.FillFields(outboxRoute, params),
+				"liked":     origin + pathhelpers.FillFields(likedRoute, params),
+
+				// TODO: manually approving followers is definitely an important
+				//   feature.
 				"manuallyApprovesFollowers": false,
 				"publicKey": map[string]any{
 					"id":           actorRoot + "#main-key",
 					"owner":        actorRoot,
 					"publicKeyPem": pubKeyString,
 				},
+
+				// TODO:
 				"endpoints": map[string]any{
-					"sharedInbox": requestbaseurl.GetRequestOrigin(r) + "/" + routes.Activity{}.SharedInbox().Route().FullRoute(),
+					"sharedInbox": origin + sharedInbox,
 				},
 			}, nil
 		}))),

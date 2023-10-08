@@ -29,8 +29,8 @@ func TestNull(t *testing.T) {
 		String Nilable[string] `json:"string"`
 	}
 	test := testStruct{
-		Number: Null[int](),
-		String: Null[string](),
+		Number: Nil[int](),
+		String: Nil[string](),
 	}
 	data, err := MarshalJSONWithNilable(test)
 	if err != nil {
@@ -49,8 +49,8 @@ func TestMissing(t *testing.T) {
 		String Nilable[string] `json:"string,omitempty"`
 	}
 	test := testStruct{
-		Number: Null[int](),
-		String: Null[string](),
+		Number: Nil[int](),
+		String: Nil[string](),
 	}
 	data, err := MarshalJSONWithNilable(test)
 	if err != nil {

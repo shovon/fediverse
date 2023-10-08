@@ -16,7 +16,7 @@ func Just[T any](v T) Nilable[T] {
 	}
 }
 
-func Null[T any]() Nilable[T] {
+func Nil[T any]() Nilable[T] {
 	var t T
 	return Nilable[T]{
 		hasValue: false,
@@ -80,7 +80,7 @@ func (n *Nilable[T]) UnmarshalJSON(data []byte) error {
 
 func Then[T any, V any](n Nilable[T], fn func(T) Nilable[V]) Nilable[V] {
 	if !n.hasValue {
-		return Null[V]()
+		return Nil[V]()
 	}
 
 	return fn(n.value)

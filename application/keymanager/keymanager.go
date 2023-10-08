@@ -28,6 +28,14 @@ func generateAndSavePrivateKey() {
 }
 
 func init() {
+	// Note: remember, the act of saving a private key to a file is not part of
+	//   any general-purpose library; this is purely a domain-specific,
+	//   application-specific purpose, and in the future, we will be saving the
+	//   private key on other mediums (perhaps in-memory).
+	//
+	//   Perhaps we are going to eliminate the requirement to save the private
+	//   key to disk in the future.
+
 	if b, err := os.ReadFile(getPrivateKeyFilename()); err != nil {
 		generateAndSavePrivateKey()
 	} else {
@@ -40,6 +48,7 @@ func init() {
 	}
 }
 
+// GetPrivateKey get
 func GetPrivateKey() *rsa.PrivateKey {
 	return privateKey
 }

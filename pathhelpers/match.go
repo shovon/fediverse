@@ -1,6 +1,8 @@
 package pathhelpers
 
-import "strings"
+import (
+	"strings"
+)
 
 // TODO: unit test this
 

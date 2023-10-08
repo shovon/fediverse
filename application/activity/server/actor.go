@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fediverse/application/activity/routes"
 	"fediverse/application/activity/server/orderedcollection"
 	"fediverse/application/config"
 	"fediverse/application/keymanager"
@@ -21,20 +20,22 @@ import (
 type Following string
 type Follower string
 
+func searchUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !lib.UserExists(hh.GetRouteParam(r, "username")) {
+			httperrors.NotFound().ServeHTTP(w, r)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func actor() func(http.Handler) http.Handler {
 	return functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler){
-		func(next http.Handler) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if !lib.UserExists(hh.GetRouteParam(r, routes.Actor{}.Route().ParameterName())) {
-					httperrors.NotFound().ServeHTTP(w, r)
-					return
-				}
-				next.ServeHTTP(w, r)
-			})
-		},
+		hh.PartialRoute(userRoute, searchUser),
 		hh.Processors{
 			hh.Method("GET"),
-			hh.Route("/"),
+			hh.Route(userRoute),
 		}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
 			key := keymanager.GetPrivateKey()
 
@@ -58,7 +59,9 @@ func actor() func(http.Handler) http.Handler {
 					"https://www.w3.org/ns/activitystreams",
 					"https://w3id.org/security/v1",
 				},
-				"id":   actorRoot,
+
+				"id": actorRoot,
+
 				"type": "Person",
 
 				// TODO: this should be soft-coded. That is, retrieve the username,
@@ -94,7 +97,7 @@ func actor() func(http.Handler) http.Handler {
 			}, nil
 		}))),
 		orderedcollection.Middleware(
-			"/following",
+			followersRoute,
 			orderedcollection.NewOrderedCollection[Following](
 				func(hh.ReadOnlyRequest) uint64 {
 					return 0
@@ -105,7 +108,7 @@ func actor() func(http.Handler) http.Handler {
 			),
 		),
 		orderedcollection.Middleware(
-			"/followers",
+			followersRoute,
 			orderedcollection.NewOrderedCollection[Follower](
 				func(hh.ReadOnlyRequest) uint64 {
 					return 0
@@ -116,7 +119,7 @@ func actor() func(http.Handler) http.Handler {
 			),
 		),
 		hh.Processors{
-			hh.Route("/inbox"),
+			hh.Route(inboxRoute),
 		}.Process(printbody.Middleware(os.Stdout)),
 	})
 }

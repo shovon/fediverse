@@ -249,6 +249,7 @@ func main() {
 			activityclient.InboxURL(inboxURL),
 		)
 
+		fmt.Println("Sent. Checking to see if any error")
 		if err != nil {
 			panic(err)
 		}

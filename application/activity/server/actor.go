@@ -32,7 +32,9 @@ func searchUser(next http.Handler) http.Handler {
 
 func actor() func(http.Handler) http.Handler {
 	return functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler){
+		// Checks to see if the user associated with the username exists.
 		hh.PartialRoute(userRoute, searchUser),
+
 		hh.Processors{
 			hh.Method("GET"),
 			hh.Route(userRoute),

@@ -22,3 +22,17 @@ Create a post (planned to be deprecated):
 
 ```
 env -S "`cat ./.example.env`" go run ./application/cli* create "$POST"
+
+## TODO
+
+- [ ] Send "Follow" activity
+- [ ] Store the "Follow" confirmation, once received
+- [ ] Send "Unfollow" activity
+- [ ] Accept "Follow" activity
+- [ ] Send acknowledgement of follow
+- [ ] Receive notes
+- [ ] Receive reply to notes
+- [ ] Receive delete activity
+- [ ] Send delete activity
+- [ ] Receive "like" activity
+- [ ] Receive "undo" activity

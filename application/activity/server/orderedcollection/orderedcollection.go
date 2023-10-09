@@ -77,72 +77,67 @@ func isNaturalNumber(str string) bool {
 	return true
 }
 
-func Middleware[V any](route string, retriever OrderedCollectionRetriever[V]) func(http.Handler) http.Handler {
-	return hh.PartialRoute(
-		route,
-		functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler){
-			hh.Processors{
-				hh.Method("GET"),
-				hh.Route("/"),
-				hh.Condition(func(r hh.ReadOnlyRequest) bool {
-					return strings.TrimSpace(r.URL.Query().Get("page")) != ""
-				}),
-				hh.ConditionMust(func(r hh.ReadOnlyRequest) bool {
-					return isNaturalNumber(r.URL.Query().Get("page"))
-				}, httperrors.BadRequest()),
-			}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
-				bbreq, err := hh.ToReadOnlyRequest(r)
-				if err != nil {
-					return nil, err
-				}
-				count := retriever.Count(bbreq)
+func Middleware[V any](retriever OrderedCollectionRetriever[V]) func(http.Handler) http.Handler {
+	return functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler){
+		hh.Processors{
+			hh.Method("GET"),
+			hh.Condition(func(r hh.ReadOnlyRequest) bool {
+				return strings.TrimSpace(r.URL.Query().Get("page")) != ""
+			}),
+			hh.ConditionMust(func(r hh.ReadOnlyRequest) bool {
+				return isNaturalNumber(r.URL.Query().Get("page"))
+			}, httperrors.BadRequest()),
+		}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
+			bbreq, err := hh.ToReadOnlyRequest(r)
+			if err != nil {
+				return nil, err
+			}
+			count := retriever.Count(bbreq)
 
-				root := requestbaseurl.GetRequestOrigin(r) + r.URL.Path
+			root := requestbaseurl.GetRequestOrigin(r) + r.URL.Path
 
-				return map[string]any{
-					"@context": []interface{}{
-						"https://www.w3.org/ns/activitystreams",
-					},
-					"id":         root,
-					"type":       "OrderedCollectionPage",
-					"totalItems": count,
-					"partOf":     root,
+			return map[string]any{
+				"@context": []interface{}{
+					"https://www.w3.org/ns/activitystreams",
+				},
+				"id":         root,
+				"type":       "OrderedCollectionPage",
+				"totalItems": count,
+				"partOf":     root,
 
-					// TODO: stuff here.
-				}, nil
-			}))),
-			hh.Processors{
-				hh.Method("GET"),
-				hh.Route("/"),
-			}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
-				bbreq, err := hh.ToReadOnlyRequest(r)
-				if err != nil {
-					return nil, err
-				}
-				count := retriever.Count(bbreq)
+				// TODO: stuff here.
+			}, nil
+		}))),
+		hh.Processors{
+			hh.Method("GET"),
+		}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
+			bbreq, err := hh.ToReadOnlyRequest(r)
+			if err != nil {
+				return nil, err
+			}
+			count := retriever.Count(bbreq)
 
-				root := requestbaseurl.GetRequestOrigin(r) + r.URL.Path
+			root := requestbaseurl.GetRequestOrigin(r) + r.URL.Path
 
-				document := map[string]any{
-					"@context": []interface{}{
-						"https://www.w3.org/ns/activitystreams",
-					},
-					"id":         root,
-					"type":       "OrderedCollection",
-					"totalItems": count,
-				}
+			document := map[string]any{
+				"@context": []interface{}{
+					"https://www.w3.org/ns/activitystreams",
+				},
+				"id":         root,
+				"type":       "OrderedCollection",
+				"totalItems": count,
+			}
 
-				if count > 0 {
-					document["first"] = possibleerror.Then(possibleerror.New(url.Parse(root)), possibleerror.MapToThen(func(s *url.URL) string {
-						v := s.Query()
-						v.Add("page", "1")
-						s.RawQuery = v.Encode()
-						return s.String()
-					}))
-				}
+			if count > 0 {
+				document["first"] = possibleerror.Then(possibleerror.New(url.Parse(root)), possibleerror.MapToThen(func(s *url.URL) string {
+					v := s.Query()
+					v.Add("page", "1")
+					s.RawQuery = v.Encode()
+					return s.String()
+				}))
+			}
 
-				return document, nil
-			}))),
-		}),
-	)
+			return document, nil
+		}))),
+	})
 }

@@ -3,7 +3,6 @@ package httphelpers
 import (
 	"context"
 	"fediverse/pathhelpers"
-	"fmt"
 	"net/http"
 )
 
@@ -26,7 +25,6 @@ func Route(route string) Processor {
 
 				newR := r.WithContext(r.Context())
 				for key, value := range params {
-					fmt.Println(key, value)
 					newR = newR.WithContext(context.WithValue(newR.Context(), contextValue{key}, value))
 				}
 

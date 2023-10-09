@@ -6,7 +6,6 @@ import (
 	"fediverse/application/keymanager"
 	"fediverse/application/lib"
 	"fediverse/application/printbody"
-	"fediverse/functional"
 	hh "fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
 	"fediverse/httphelpers/requestbaseurl"
@@ -31,14 +30,12 @@ func searchUser(next http.Handler) http.Handler {
 }
 
 func actor() func(http.Handler) http.Handler {
-	return functional.RecursiveApply[http.Handler]([](func(http.Handler) http.Handler){
-		// Checks to see if the user associated with the username exists.
-		hh.PartialRoute(userRoute, searchUser),
-
+	return hh.ApplyMiddlewares(hh.MiddlewaresList{
+		// The main user route
 		hh.Processors{
 			hh.Method("GET"),
 			hh.Route(userRoute),
-		}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
+		}.Process(hh.ToMiddleware(searchUser(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
 			key := keymanager.GetPrivateKey()
 
 			// TODO: this should ideally be cached.
@@ -97,29 +94,43 @@ func actor() func(http.Handler) http.Handler {
 					"sharedInbox": origin + sharedInbox,
 				},
 			}, nil
-		}))),
-		orderedcollection.Middleware(
-			followersRoute,
-			orderedcollection.NewOrderedCollection[Following](
-				func(hh.ReadOnlyRequest) uint64 {
-					return 0
-				},
-				func(hh.ReadOnlyRequest, orderedcollection.ItemsFunctionParams) []Following {
-					return []Following{}
-				},
+		})))),
+
+		// The followers collection.
+		hh.Processors{
+			hh.Route(followingRoute),
+		}.Process(hh.ApplyMiddlewares(hh.MiddlewaresList{
+			searchUser,
+			orderedcollection.Middleware(
+				orderedcollection.NewOrderedCollection[Following](
+					func(hh.ReadOnlyRequest) uint64 {
+						return 0
+					},
+					func(hh.ReadOnlyRequest, orderedcollection.ItemsFunctionParams) []Following {
+						return []Following{}
+					},
+				),
 			),
-		),
-		orderedcollection.Middleware(
-			followersRoute,
-			orderedcollection.NewOrderedCollection[Follower](
-				func(hh.ReadOnlyRequest) uint64 {
-					return 0
-				},
-				func(hh.ReadOnlyRequest, orderedcollection.ItemsFunctionParams) []Follower {
-					return []Follower{}
-				},
+		})),
+
+		// The following collection
+		hh.Processors{
+			hh.Route(followersRoute),
+		}.Process(hh.ApplyMiddlewares(hh.MiddlewaresList{
+			searchUser,
+			orderedcollection.Middleware(
+				orderedcollection.NewOrderedCollection[Following](
+					func(hh.ReadOnlyRequest) uint64 {
+						return 0
+					},
+					func(hh.ReadOnlyRequest, orderedcollection.ItemsFunctionParams) []Following {
+						return []Following{}
+					},
+				),
 			),
-		),
+		})),
+
+		// The inbox route.
 		hh.Processors{
 			hh.Route(inboxRoute),
 		}.Process(printbody.Middleware(os.Stdout)),

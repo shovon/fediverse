@@ -1,20 +1,18 @@
 package application
 
 import (
-	"fediverse/application/activity/routes"
+	"fediverse/application/activity/server"
 	"fediverse/application/common"
 	"fediverse/jrd"
 	"fediverse/nullable"
+	"fediverse/pathhelpers"
 	"net/url"
 )
 
 func webFingerJRD(userHost UserHost) jrd.JRD {
 	user, host := userHost.Username, userHost.Host
-
 	htmlAddress := common.Origin() + "/@" + user
-
-	// TODO: ideally we should be soft-coding the "/activity/users" part
-	jsonLDAddress := common.Origin() + routes.Activity{}.Actors().Actor().Route().FullRoute(user)
+	jsonLDAddress := common.Origin() + pathhelpers.FillFields(server.UserRoute, map[string]string{"username": user})
 
 	return jrd.JRD{
 		Subject: nullable.Just("acct:" + user + "@" + url.QueryEscape(host)),

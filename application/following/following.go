@@ -84,6 +84,23 @@ func AddFollowing(address accountaddress.AccountAddress) (int64, error) {
 	return existingID, nil
 }
 
+func AcknowledgeFollowing(id int) {
+	lock.RLock()
+	defer lock.RUnlock()
+
+	db, err := database.Open()
+	if err != nil {
+		return
+	}
+	defer db.Close()
+
+	if _, err := db.Exec(
+		"UPDATE following SET has_accepted_follow_request = 1 WHERE id = ?", id,
+	); err != nil {
+		return
+	}
+}
+
 func FollowRequestAccepted(address accountaddress.AccountAddress) error {
 	lock.RLock()
 	defer lock.RUnlock()

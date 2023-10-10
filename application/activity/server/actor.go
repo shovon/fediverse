@@ -34,7 +34,7 @@ func actor() func(http.Handler) http.Handler {
 		// The main user route
 		hh.Processors{
 			hh.Method("GET"),
-			hh.Route(userRoute),
+			hh.Route(UserRoute),
 		}.Process(hh.ToMiddleware(searchUser(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
 			key := keymanager.GetPrivateKey()
 
@@ -51,7 +51,7 @@ func actor() func(http.Handler) http.Handler {
 				"username": hh.GetRouteParam(r, "username"),
 			}
 
-			actorRoot := origin + pathhelpers.FillFields(userRoute, params)
+			actorRoot := origin + pathhelpers.FillFields(UserRoute, params)
 
 			return map[string]any{
 				"@context": []interface{}{
@@ -74,11 +74,11 @@ func actor() func(http.Handler) http.Handler {
 				// TODO: also find a way to soft code this.
 				"summary": "<p>This person doesn't have a bio yet.</p>",
 
-				"following": origin + pathhelpers.FillFields(followingRoute, params),
-				"followers": origin + pathhelpers.FillFields(followersRoute, params),
-				"inbox":     origin + pathhelpers.FillFields(inboxRoute, params),
-				"outbox":    origin + pathhelpers.FillFields(outboxRoute, params),
-				"liked":     origin + pathhelpers.FillFields(likedRoute, params),
+				"following": origin + pathhelpers.FillFields(FollowingRoute, params),
+				"followers": origin + pathhelpers.FillFields(FollowersRoute, params),
+				"inbox":     origin + pathhelpers.FillFields(InboxRoute, params),
+				"outbox":    origin + pathhelpers.FillFields(OutboxRoute, params),
+				"liked":     origin + pathhelpers.FillFields(LikedRoute, params),
 
 				// TODO: manually approving followers is definitely an important
 				//   feature.
@@ -91,14 +91,14 @@ func actor() func(http.Handler) http.Handler {
 
 				// TODO:
 				"endpoints": map[string]any{
-					"sharedInbox": origin + sharedInbox,
+					"sharedInbox": origin + SharedInbox,
 				},
 			}, nil
 		})))),
 
 		// The followers collection.
 		hh.Processors{
-			hh.Route(followingRoute),
+			hh.Route(FollowingRoute),
 		}.Process(hh.ApplyMiddlewares(hh.MiddlewaresList{
 			searchUser,
 			orderedcollection.Middleware(
@@ -115,7 +115,7 @@ func actor() func(http.Handler) http.Handler {
 
 		// The following collection
 		hh.Processors{
-			hh.Route(followersRoute),
+			hh.Route(FollowersRoute),
 		}.Process(hh.ApplyMiddlewares(hh.MiddlewaresList{
 			searchUser,
 			orderedcollection.Middleware(
@@ -132,7 +132,7 @@ func actor() func(http.Handler) http.Handler {
 
 		// The inbox route.
 		hh.Processors{
-			hh.Route(inboxRoute),
+			hh.Route(InboxRoute),
 		}.Process(printbody.Middleware(os.Stdout)),
 	})
 }

@@ -68,7 +68,7 @@ func ActivityPub() func(http.Handler) http.Handler {
 
 			hh.Processors{
 				hh.Method("POST"),
-				hh.Route(sharedInbox),
+				hh.Route(SharedInbox),
 			}.Process(printbody.Middleware(os.Stdout)),
 
 			actor(),

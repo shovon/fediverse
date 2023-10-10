@@ -9,13 +9,14 @@ import (
 	"fediverse/accountaddress"
 	"fediverse/acct"
 	activityclient "fediverse/application/activity/client"
-	"fediverse/application/activity/routes"
+	"fediverse/application/activity/server"
 	"fediverse/application/common"
 	"fediverse/application/config"
 	"fediverse/application/following"
 	"fediverse/application/keymanager"
 	"fediverse/application/posts"
 	"fediverse/application/schema"
+	"fediverse/pathhelpers"
 	"fediverse/security/rsahelpers"
 	"fediverse/security/rsassapkcsv115sha256"
 	"fediverse/webfinger"
@@ -232,10 +233,16 @@ func main() {
 			panic(err)
 		}
 
+		params := map[string]string{
+			"username": config.Username(),
+		}
+
+		actorIRI := common.Origin() + pathhelpers.FillFields(server.UserRoute, params)
+
 		privateKey := keymanager.GetPrivateKey()
-		signingKeyIRI := common.Origin() + routes.Activity{}.Actors().Actor().Route().FullRoute(config.Username()) + "#main-key"
-		followActivityIRI := common.Origin() + routes.Activity{}.Actors().Actor().Following().FullRoute(config.Username()).Route().FullRoute() + strconv.FormatInt(id, 10)
-		senderIRI := common.Origin() + routes.Activity{}.Actors().Actor().Route().FullRoute(config.Username())
+		signingKeyIRI := actorIRI + "#main-key"
+		followActivityIRI := common.Origin() + pathhelpers.FillFields(server.FollowingRoute, params) + "/" + strconv.FormatInt(id, 10)
+		senderIRI := actorIRI
 		recipientID := selfLink
 		inboxURL := inboxID
 

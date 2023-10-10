@@ -53,7 +53,7 @@ func ActivityPub() func(http.Handler) http.Handler {
 	//   "type": "Accept",
 	//   "actor": "https://techhub.social/users/manlycoffee",
 	//   "object": {
-	//     "id": "https://feditest.salrahman.com/activity/actors/johndoe/following1",
+	//     "id": "https://feditest.salrahman.com/activity/actors/johndoe/following/1",
 	//     "type": "Follow",
 	//     "actor": "https://feditest.salrahman.com/activity/actors/johndoe",
 	//     "object": "https://techhub.social/users/manlycoffee"

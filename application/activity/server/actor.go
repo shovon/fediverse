@@ -1,19 +1,26 @@
 package server
 
 import (
+	"encoding/json"
 	"fediverse/application/activity/server/orderedcollection"
 	"fediverse/application/config"
+	"fediverse/application/following"
 	"fediverse/application/keymanager"
 	"fediverse/application/lib"
-	"fediverse/application/printbody"
 	hh "fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
 	"fediverse/httphelpers/requestbaseurl"
 	"fediverse/json/jsonhttp"
+	"fediverse/jsonld"
 	"fediverse/pathhelpers"
 	"fediverse/security/rsahelpers"
+	"fmt"
+	"io"
 	"net/http"
-	"os"
+	"strconv"
+	"strings"
+
+	"github.com/piprate/json-gold/ld"
 )
 
 type Following string
@@ -133,6 +140,81 @@ func actor() func(http.Handler) http.Handler {
 		// The inbox route.
 		hh.Processors{
 			hh.Route(InboxRoute),
-		}.Process(printbody.Middleware(os.Stdout)),
+		}.Process(hh.ToMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Println("Inbox")
+
+			d, err := io.ReadAll(r.Body)
+			if err != nil {
+				fmt.Println("Failed to read body")
+				w.WriteHeader(500)
+				return
+			}
+			var parsed map[string]any
+			if err := json.Unmarshal(d, &parsed); err != nil {
+				fmt.Println("Failed to unmarshal JSON")
+				w.WriteHeader(400)
+				return
+			}
+
+			proc := ld.NewJsonLdProcessor()
+			options := ld.NewJsonLdOptions("")
+
+			expanded, err := proc.Expand(parsed, options)
+			if err != nil {
+				fmt.Println("Failed to expand JSON-LD")
+				w.WriteHeader(400)
+				return
+			}
+
+			if len(expanded) != 1 {
+				fmt.Println("Expected exactly one JSON-LD document")
+				w.WriteHeader(400)
+				return
+			}
+
+			activity := expanded[0]
+
+			switch {
+			case jsonld.IsType(activity, "https://www.w3.org/ns/activitystreams#Accept"):
+				doc, ok := activity.(map[string]any)
+				if !ok {
+					fmt.Println("Failed to cast activity to map")
+					w.WriteHeader(500)
+					return
+				}
+				obj, ok := doc["https://www.w3.org/ns/activitystreams#object"]
+				if !ok {
+					fmt.Println("Unable to determine object of Accept activity")
+					w.WriteHeader(400)
+				}
+				if !jsonld.IsType(obj, "https://www.w3.org/ns/activitystreams#Follow") {
+					fmt.Println("Unknown activity to 'accept'")
+					w.WriteHeader(400)
+				}
+
+				id, ok := jsonld.GetID(obj)
+				if !ok {
+					fmt.Println("Unable to determine ID of Follow activity")
+					w.WriteHeader(400)
+				}
+
+				components := strings.Split(id, "/")
+				if len(components) == 0 {
+					fmt.Println("Invalid ID string supplied")
+					w.WriteHeader(400)
+				}
+
+				followID := components[len(components)-1]
+				i, err := strconv.Atoi(followID)
+				if err != nil {
+					fmt.Println("Unable to determine following ID")
+					w.WriteHeader(500)
+				}
+				following.AcknowledgeFollowing(i)
+			default:
+				fmt.Println("Unknown activity type")
+				fmt.Println(string(d))
+			}
+		}))),
 	})
 }

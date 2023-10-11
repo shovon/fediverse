@@ -73,6 +73,7 @@ func WebFinger(queryHandler WebFingerQueryHandler) func(http.Handler) http.Handl
 	))
 }
 
+// Lookup issues an HTTP request to grab the JRD for the given resource.
 func Lookup(host string, resource string, rel []string) (jrd.JRD, error) {
 	u, err := url.Parse(fmt.Sprintf("https://%s", host))
 	if err != nil {

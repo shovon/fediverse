@@ -14,6 +14,7 @@ import (
 	"fediverse/jsonldhelpers"
 	"fediverse/pathhelpers"
 	"fediverse/security/rsahelpers"
+	"fediverse/slices"
 	"fmt"
 	"io"
 	"net/http"
@@ -161,6 +162,8 @@ func actor() func(http.Handler) http.Handler {
 			proc := ld.NewJsonLdProcessor()
 			options := ld.NewJsonLdOptions("")
 
+			// TODO: add a fallback for the event that the context is not provided.
+			//   or is invalid.
 			expanded, err := proc.Expand(parsed, options)
 			if err != nil {
 				fmt.Println("Failed to expand JSON-LD")
@@ -254,6 +257,7 @@ func actor() func(http.Handler) http.Handler {
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "Unable to parse actor IRI %e", err)
 					w.WriteHeader(400)
+					return
 				}
 
 				host := strings.TrimSpace(u.Host)
@@ -261,8 +265,62 @@ func actor() func(http.Handler) http.Handler {
 				if host == "" {
 					fmt.Fprintf(os.Stderr, "Actor IRI does not have a resolvable host")
 					w.WriteHeader(400)
+					return
 				}
 
+				req, err := http.NewRequest("GET", actorIRI, nil)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Unable to create request %e", err)
+					w.WriteHeader(500)
+					return
+				}
+
+				client := &http.Client{}
+
+				resp, err := client.Do(req)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Unable to perform request %e", err)
+					w.WriteHeader(500)
+					return
+				}
+
+				b, err := io.ReadAll(resp.Body)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Unable to read response body %e", err)
+					w.WriteHeader(500)
+					return
+				}
+
+				var actorJSON map[string]any
+				err = json.Unmarshal(b, &actorJSON)
+				if err != nil {
+					fmt.Fprint(os.Stderr, "Unable to parse and interpret the actor")
+					w.WriteHeader(400)
+					return
+				}
+
+				// TODO: add a fallback for the event that the context is not provided.
+				//   or is invalid.
+				remoteActor, err := proc.Expand(actorJSON, options)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Unable to expand actor %e", err)
+					w.WriteHeader(400)
+					return
+				}
+
+				obj, ok := slices.First(remoteActor)
+				if !ok {
+					fmt.Fprint(os.Stderr, "Unable to determine actor")
+					w.WriteHeader(400)
+					return
+				}
+
+				user, ok := jsonldhelpers.GetObject(obj, "https://www.w3.org/ns/activitystreams#preferredUsername")
+				if !ok {
+					fmt.Fprint(os.Stderr, "Unable to get username")
+					w.WriteHeader(400)
+					return
+				}
 			default:
 				fmt.Println("Unknown activity type")
 				fmt.Println(string(d))

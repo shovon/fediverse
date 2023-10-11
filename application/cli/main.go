@@ -195,6 +195,8 @@ func main() {
 		proc := ld.NewJsonLdProcessor()
 		options := ld.NewJsonLdOptions("")
 
+		// TODO: add a fallback for the event that the context is not provided.
+		//   or is invalid.
 		expanded, err := proc.Expand(parsed, options)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to expand JSON-LD document: %s\n", err.Error())

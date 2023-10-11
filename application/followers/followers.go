@@ -20,7 +20,7 @@ func AddFollower(i string) error {
 		return err
 	}
 	defer db.Close()
-	if _, err := db.Exec("INSERT INTO following (following) VALUES (?)", i); err != nil {
+	if _, err := db.Exec("INSERT INTO following (followers) VALUES (?)", i); err != nil {
 		return err
 	}
 	return nil

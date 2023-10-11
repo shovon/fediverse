@@ -26,6 +26,7 @@ var revisions = []string{
 		UNIQUE(account_address_user, account_address_host, actor_iri)
 	);
 
+	CREATE INDEX followers_account_address_user_account_address_host_index ON followers(account_address_user, account_address_host);
 	CREATE INDEX followers_actor_iri_index ON followers(actor_iri);
 
 	CREATE TABLE following (
@@ -40,6 +41,9 @@ var revisions = []string{
 
 		UNIQUE(account_address_user, account_address_host, actor_iri)
 	);
+
+	CREATE INDEX following_account_address_user_account_address_host_index ON following(account_address_user, account_address_host);
+	CREATE INDEX following_actor_iri_index ON following(actor_iri);
 
 	CREATE TABLE inbox (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,

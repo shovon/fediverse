@@ -211,6 +211,11 @@ func actor() func(http.Handler) http.Handler {
 					w.WriteHeader(500)
 				}
 				following.AcknowledgeFollowing(i)
+			case jsonld.IsType(activity, "https://www.w3.org/ns/activitystreams#Follow"):
+				// {"@context":"https://www.w3.org/ns/activitystreams","id":"https://techhub.social/a1456ff0-ca04-4c0c-83b8-38df5c693f85","type":"Follow","actor":"https://techhub.social/users/manlycoffee","object":"https://feditest.salrahman.com/activity/actors/john10"}
+				doc, ok := activity.(map[string]any)
+
+				// Step 1: grab the object of the post.
 			default:
 				fmt.Println("Unknown activity type")
 				fmt.Println(string(d))

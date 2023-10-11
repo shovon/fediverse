@@ -21,9 +21,12 @@ var revisions = []string{
 		
 		account_address_user TEXT,
 		account_address_host TEXT,
+		actor_iri TEXT,
 
-		UNIQUE(account_address_user, account_address_host)
+		UNIQUE(account_address_user, account_address_host, actor_iri)
 	);
+
+	CREATE INDEX followers_actor_iri_index ON followers(actor_iri);
 
 	CREATE TABLE following (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,10 +34,11 @@ var revisions = []string{
 
 		account_address_user TEXT,
 		account_address_host TEXT,
+		actor_iri TEXT,
 
 		has_accepted_follow_request INT DEFAULT 0,
 
-		UNIQUE(account_address_user, account_address_host)
+		UNIQUE(account_address_user, account_address_host, actor_iri)
 	);
 
 	CREATE TABLE inbox (

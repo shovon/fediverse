@@ -11,10 +11,13 @@ import (
 var lock sync.RWMutex
 
 type Following struct {
-	ID           string    `json:"id"`
-	WhenFollowed time.Time `json:"whenFollowed"`
-	ActorIRI     string    `json:"actor_iri"`
+	ID             string                        `json:"id"`
+	WhenFollowed   time.Time                     `json:"whenFollowed"`
+	AccountAddress accountaddress.AccountAddress `json:"accountAddress"`
+	ActorIRI       string                        `json:"actorIri"`
 }
+
+// TODO: handle a way to update the current user IRI
 
 // GetFollowing gets a following from the database, given an offset.
 //
@@ -29,7 +32,7 @@ func GetFollowing(offset int, limit int) (_ []Following, err error) {
 	}
 	defer db.Close()
 	result, err := db.Query(
-		"SELECT id, when_followed, actor_iri FROM following ORDER BY when_followed DESC LIMIT ? OFFSET ?",
+		"SELECT id, when_followed, account_address_user, account_address_host, actor_iri FROM following ORDER BY when_followed DESC LIMIT ? OFFSET ?",
 		limit,
 		offset,
 	)
@@ -37,12 +40,21 @@ func GetFollowing(offset int, limit int) (_ []Following, err error) {
 		return nil, err
 	}
 	defer func() {
-		err = result.Close()
+		closeError := result.Close()
+		if closeError != nil {
+			err = closeError
+		}
 	}()
 	followings := []Following{}
 	for result.Next() {
 		var following Following
-		if err := result.Scan(&following.ID, &following.WhenFollowed, &following.ActorIRI); err != nil {
+		if err := result.Scan(
+			&following.ID,
+			&following.WhenFollowed,
+			&following.AccountAddress.User,
+			&following.AccountAddress.Host,
+			&following.ActorIRI,
+		); err != nil {
 			return nil, err
 		}
 		followings = append(followings, following)
@@ -54,7 +66,7 @@ func GetFollowing(offset int, limit int) (_ []Following, err error) {
 //
 // Not sure what the implication is for just interpreting the IRI as a string,
 // but it will be so much simpler to work with, for now.
-func AddFollowing(address accountaddress.AccountAddress) (int64, error) {
+func AddFollowing(actorIRI string, address accountaddress.AccountAddress) (int64, error) {
 	lock.RLock()
 	defer lock.RUnlock()
 	db, err := database.Open()
@@ -64,14 +76,15 @@ func AddFollowing(address accountaddress.AccountAddress) (int64, error) {
 	defer db.Close()
 
 	var existingID int64
-	err = db.QueryRow("SELECT id FROM following WHERE account_address_user = ? AND account_address_host = ?", address.User, address.Host).Scan(&existingID)
+	err = db.QueryRow("SELECT id FROM following WHERE actor_iri = ?", actorIRI).Scan(&existingID)
 
 	switch {
 	case err == sql.ErrNoRows:
 		result, err := db.Exec(
-			"INSERT INTO following (account_address_user, account_address_host) VALUES (?, ?)",
+			"INSERT INTO following (account_address_user, account_address_host, actor_iri) VALUES (?, ?)",
 			address.User,
 			address.Host,
+			actorIRI,
 		)
 		if err != nil {
 			return 0, err

@@ -16,6 +16,7 @@ import (
 	"fediverse/application/keymanager"
 	"fediverse/application/posts"
 	"fediverse/application/schema"
+	"fediverse/jsonld"
 	"fediverse/pathhelpers"
 	"fediverse/security/rsahelpers"
 	"fediverse/security/rsassapkcsv115sha256"
@@ -226,7 +227,11 @@ func main() {
 
 		fmt.Println("The URL to the inbox:", inboxID)
 
-		id, err := following.AddFollowing(address)
+		actorID, ok := jsonld.GetID(expanded[0])
+		if !ok {
+
+		}
+		id, err := following.AddFollowing(selfLink, address)
 		if err != nil {
 			// TODO: this also fails if the user is already following the account.
 			//   just silently ignore the error, and return

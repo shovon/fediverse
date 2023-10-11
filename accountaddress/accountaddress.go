@@ -6,8 +6,8 @@ import (
 )
 
 type AccountAddress struct {
-	User string
-	Host string
+	User string `json:"user"`
+	Host string `json:"host"`
 }
 
 func (a AccountAddress) String() string {

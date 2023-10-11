@@ -11,12 +11,14 @@ import (
 	"fediverse/httphelpers/httperrors"
 	"fediverse/httphelpers/requestbaseurl"
 	"fediverse/json/jsonhttp"
-	"fediverse/jsonld"
+	"fediverse/jsonldhelpers"
 	"fediverse/pathhelpers"
 	"fediverse/security/rsahelpers"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
@@ -175,7 +177,7 @@ func actor() func(http.Handler) http.Handler {
 			activity := expanded[0]
 
 			switch {
-			case jsonld.IsType(activity, "https://www.w3.org/ns/activitystreams#Accept"):
+			case jsonldhelpers.IsType(activity, "https://www.w3.org/ns/activitystreams#Accept"):
 				doc, ok := activity.(map[string]any)
 				if !ok {
 					fmt.Println("Failed to cast activity to map")
@@ -186,22 +188,26 @@ func actor() func(http.Handler) http.Handler {
 				if !ok {
 					fmt.Println("Unable to determine object of Accept activity")
 					w.WriteHeader(400)
+					return
 				}
-				if !jsonld.IsType(obj, "https://www.w3.org/ns/activitystreams#Follow") {
+				if !jsonldhelpers.IsType(obj, "https://www.w3.org/ns/activitystreams#Follow") {
 					fmt.Println("Unknown activity to 'accept'")
 					w.WriteHeader(400)
+					return
 				}
 
-				id, ok := jsonld.GetID(obj)
+				id, ok := jsonldhelpers.GetID(obj)
 				if !ok {
 					fmt.Println("Unable to determine ID of Follow activity")
 					w.WriteHeader(400)
+					return
 				}
 
 				components := strings.Split(id, "/")
 				if len(components) == 0 {
 					fmt.Println("Invalid ID string supplied")
 					w.WriteHeader(400)
+					return
 				}
 
 				followID := components[len(components)-1]
@@ -209,13 +215,54 @@ func actor() func(http.Handler) http.Handler {
 				if err != nil {
 					fmt.Println("Unable to determine following ID")
 					w.WriteHeader(500)
+					return
 				}
 				following.AcknowledgeFollowing(i)
-			case jsonld.IsType(activity, "https://www.w3.org/ns/activitystreams#Follow"):
-				// {"@context":"https://www.w3.org/ns/activitystreams","id":"https://techhub.social/a1456ff0-ca04-4c0c-83b8-38df5c693f85","type":"Follow","actor":"https://techhub.social/users/manlycoffee","object":"https://feditest.salrahman.com/activity/actors/john10"}
+			case jsonldhelpers.IsType(activity, "https://www.w3.org/ns/activitystreams#Follow"):
+				// {
+				//   "@context":"https://www.w3.org/ns/activitystreams",
+				//   "id":"https://techhub.social/a1456ff0-ca04-4c0c-83b8-38df5c693f85",
+				//   "type":"Follow",
+				//   "actor":"https://techhub.social/users/manlycoffee",
+				//   "object":"https://feditest.salrahman.com/activity/actors/john10"
+				// }
+
 				doc, ok := activity.(map[string]any)
 
-				// Step 1: grab the object of the post.
+				// Step 1: grab the object of the body.
+				if !ok {
+					fmt.Fprint(os.Stderr, "Failed to cast activity to map")
+					w.WriteHeader(400)
+					return
+				}
+
+				actor, ok := doc["https://www.w3.org/ns/activitystreams#actor"]
+				if !ok {
+					fmt.Fprint(os.Stderr, "There does not appear to be ")
+					w.WriteHeader(400)
+					return
+				}
+
+				actorIRI, ok := jsonldhelpers.GetID(actor)
+				if !ok {
+					fmt.Fprint(os.Stderr, "Unable to determine actor IRI")
+					w.WriteHeader(400)
+					return
+				}
+
+				u, err := url.Parse(actorIRI)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Unable to parse actor IRI %e", err)
+					w.WriteHeader(400)
+				}
+
+				host := strings.TrimSpace(u.Host)
+
+				if host == "" {
+					fmt.Fprintf(os.Stderr, "Actor IRI does not have a resolvable host")
+					w.WriteHeader(400)
+				}
+
 			default:
 				fmt.Println("Unknown activity type")
 				fmt.Println(string(d))

@@ -16,7 +16,7 @@ import (
 	"fediverse/application/keymanager"
 	"fediverse/application/posts"
 	"fediverse/application/schema"
-	"fediverse/jsonld"
+	"fediverse/jsonldhelpers"
 	"fediverse/pathhelpers"
 	"fediverse/security/rsahelpers"
 	"fediverse/security/rsassapkcsv115sha256"
@@ -227,11 +227,11 @@ func main() {
 
 		fmt.Println("The URL to the inbox:", inboxID)
 
-		actorID, ok := jsonld.GetID(expanded[0])
+		actorID, ok := jsonldhelpers.GetID(expanded[0])
 		if !ok {
-
+			fmt.Fprintf(os.Stderr, "The object did not have an actor ID specified")
 		}
-		id, err := following.AddFollowing(selfLink, address)
+		id, err := following.AddFollowing(actorID, address)
 		if err != nil {
 			// TODO: this also fails if the user is already following the account.
 			//   just silently ignore the error, and return

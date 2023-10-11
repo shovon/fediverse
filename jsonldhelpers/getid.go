@@ -1,4 +1,4 @@
-package jsonld
+package jsonldhelpers
 
 func GetID(v any) (string, bool) {
 	if v == nil {

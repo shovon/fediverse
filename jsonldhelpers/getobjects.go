@@ -1,20 +1,24 @@
 package jsonldhelpers
 
-func GetObjects(v any, predicate string) ([]any, bool) {
+func GetObjects(v any, predicate string) []any {
 	if v == nil {
-		return nil, false
+		return nil
 	}
 
 	m, ok := v.(map[string]any)
 	if !ok {
-		return nil, false
+		return nil
 	}
 
 	o, ok := m[predicate]
 	if !ok {
-		return nil, false
+		return nil
 	}
 
 	list, ok := o.([]any)
-	return list, ok
+	if !ok {
+		return nil
+	}
+
+	return list
 }

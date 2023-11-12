@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	activityclient "fediverse/application/activity/client"
 	"fediverse/application/activity/server/orderedcollection"
 	"fediverse/application/config"
 	"fediverse/application/followers"
@@ -152,8 +153,8 @@ func actor() func(http.Handler) http.Handler {
 				w.WriteHeader(500)
 				return
 			}
-			var parsed map[string]any
-			if err := json.Unmarshal(d, &parsed); err != nil {
+			var parsedActivity map[string]any
+			if err := json.Unmarshal(d, &parsedActivity); err != nil {
 				fmt.Println("Failed to unmarshal JSON")
 				w.WriteHeader(400)
 				return
@@ -164,7 +165,7 @@ func actor() func(http.Handler) http.Handler {
 
 			// TODO: add a fallback for the event that the context is not provided.
 			//   or is invalid.
-			expanded, err := proc.Expand(parsed, options)
+			expanded, err := proc.Expand(parsedActivity, options)
 			if err != nil {
 				fmt.Println("Failed to expand JSON-LD")
 				w.WriteHeader(400)
@@ -177,6 +178,7 @@ func actor() func(http.Handler) http.Handler {
 				return
 			}
 
+			// Parse tthe activity.
 			activity, ok := slices.First(expanded)
 			if !ok {
 				fmt.Println("Failed to determine activity")
@@ -185,6 +187,7 @@ func actor() func(http.Handler) http.Handler {
 			}
 
 			switch {
+			// Accept activity
 			case jsonldhelpers.IsType(activity, "https://www.w3.org/ns/activitystreams#Accept"):
 				doc, ok := activity.(map[string]any)
 				if !ok {
@@ -226,6 +229,8 @@ func actor() func(http.Handler) http.Handler {
 					return
 				}
 				following.AcknowledgeFollowing(i)
+
+			// Follow activity.
 			case jsonldhelpers.IsType(activity, "https://www.w3.org/ns/activitystreams#Follow"):
 				// {
 				//   "@context":"https://www.w3.org/ns/activitystreams",
@@ -244,8 +249,8 @@ func actor() func(http.Handler) http.Handler {
 					return
 				}
 
-				actor, ok := jsonldhelpers.GetObjects(doc, "https://www.w3.org/ns/activitystreams#actor")
-				if !ok {
+				actor := jsonldhelpers.GetObjects(doc, "https://www.w3.org/ns/activitystreams#actor")
+				if actor == nil {
 					fmt.Fprintln(os.Stderr, "There does not appear to be an actor associated with the user")
 					w.WriteHeader(400)
 					return
@@ -271,9 +276,146 @@ func actor() func(http.Handler) http.Handler {
 					return
 				}
 
-				_, err = followers.AddFollower(actorIRI)
+				objectObject, ok := slices.First(jsonldhelpers.GetObjects(doc, "https://www.w3.org/ns/activitystreams#object"))
+				if !ok {
+					fmt.Fprintln(os.Stderr, "Unable to determine object")
+					w.WriteHeader(400)
+					return
+				}
+
+				objectIRI, ok := jsonldhelpers.GetNodeID(objectObject)
+				if !ok {
+					fmt.Fprintln(os.Stderr, "Unable to determine object IRI")
+					w.WriteHeader(400)
+					return
+				}
+
+				origin := requestbaseurl.GetRequestOrigin(r)
+
+				params := map[string]string{
+					// TODO: this should be soft-coded.
+					"username": hh.GetRouteParam(r, "username"),
+				}
+
+				fmt.Println("Origin", origin)
+				actorRoot := origin + pathhelpers.FillFields(UserRoute, params)
+
+				if objectIRI != actorRoot {
+					fmt.Fprintln(os.Stderr, "The object IRI must be the same as the actor IRI")
+					w.WriteHeader(400)
+					return
+				}
+
+				// TODO: this should really be placed at the bottom.
+				followerID, err := followers.AddFollower(actorIRI)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "Unable to add follower %e", err)
+					w.WriteHeader(500)
+					return
+				}
+
+				// We want to send an activity of the following form:
+				//
+				// {
+				//   "@context": "https://www.w3.org/ns/activitystreams",
+				//   "id": "https://techhub.social/users/manlycoffee#accepts/follows/1129830",
+				//   "type": "Accept",
+				//   "actor": "https://techhub.social/users/manlycoffee",
+				//   "object": {
+				//     "id": "https://feditest.salrahman.com/activity/actors/johndoe/following/1",
+				//     "type": "Follow",
+				//     "actor": "https://feditest.salrahman.com/activity/actors/johndoe",
+				//     "object": "https://techhub.social/users/manlycoffee"
+				//   }
+				// }
+
+				// acceptDoc := map[string]any{
+				// 	"@context": "https://www.w3.org/ns/activitystreams",
+				// 	"id":       actorRoot + "#accepts/follows/" + strconv.FormatInt(followerID, 10),
+				// 	"type":     "Accept",
+				// 	"actor":    actorRoot,
+				// 	"object":   doc,
+				// }
+
+				req, err := http.NewRequest("GET", actorIRI, nil)
+				req.Header.Add("Accept", "application/activity+json")
+
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Unable to create request to %s: %e", actorIRI, err)
+					w.WriteHeader(500)
+					return
+				}
+
+				client := &http.Client{}
+				resp, err := client.Do(req)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Unable to send request to %s: %e", actorIRI, err)
+					w.WriteHeader(500)
+					return
+				}
+
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Unable to read response body: %s\n", err.Error())
+					w.WriteHeader(400)
+					return
+				}
+
+				var parsed any
+				err = json.Unmarshal(body, &parsed)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Unable to unmarshal JSON: %s\n", err.Error())
+					w.WriteHeader(400)
+					return
+				}
+
+				objects, err := proc.Expand(parsed, options)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Unable to expand JSON-LD: %s\n", err.Error())
+					w.WriteHeader(400)
+					return
+				}
+
+				if len(objects) != 1 {
+					fmt.Fprintf(os.Stderr, "Expected exactly one JSON-LD document but got %d\n", len(objects))
+					w.WriteHeader(400)
+					return
+				}
+
+				object, ok := slices.First(objects)
+				if !ok {
+					fmt.Fprintln(os.Stderr, "Unable to determine object")
+					w.WriteHeader(400)
+					return
+				}
+
+				inbox, ok := jsonldhelpers.GetIDFromPredicate(object, "http://www.w3.org/ns/ldp#inbox")
+				if !ok {
+					fmt.Fprintln(os.Stderr, "Unable to determine inbox")
+					w.WriteHeader(400)
+					return
+				}
+
+				privateKey := keymanager.GetPrivateKey()
+				signingKeyIRI := actorRoot + "#main-key"
+				acceptActivityIRI := actorRoot + "#accepts/follows/" + strconv.FormatInt(followerID, 10)
+				senderIRI := actorRoot
+				obj := parsedActivity
+				inboxURL := inbox
+
+				fmt.Println(acceptActivityIRI)
+
+				err = activityclient.AcceptFollow(
+					privateKey,
+					activityclient.SigningKeyIRI(signingKeyIRI),
+					activityclient.AcceptActivityIRI(acceptActivityIRI),
+					activityclient.SenderIRI(senderIRI),
+					obj,
+					activityclient.InboxURL(inboxURL),
+				)
+
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Unable to send Accept activity: %s\n", err.Error())
 					w.WriteHeader(500)
 					return
 				}

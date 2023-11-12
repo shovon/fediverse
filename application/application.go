@@ -4,6 +4,7 @@ import (
 	"fediverse/acct"
 	"fediverse/application/activity/server"
 	"fediverse/application/config"
+	"fediverse/application/followers"
 	"fediverse/application/following"
 	"fediverse/application/posts"
 	"fediverse/functional"
@@ -160,6 +161,13 @@ func Start() error {
 		hh.Route("/useless-api/following"),
 	}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
 		return following.GetFollowing(0, math.MaxInt)
+	}))))
+
+	m = append(m, hh.Processors{
+		hh.Method("GET"),
+		hh.Route("/useless-api/followers"),
+	}.Process(hh.ToMiddleware(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
+		return followers.GetFollowers(0, math.MaxInt)
 	}))))
 
 	m = append(m, server.ActivityPub())

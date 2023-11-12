@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fediverse/application/activity/server/orderedcollection"
 	"fediverse/application/config"
+	"fediverse/application/followers"
 	"fediverse/application/following"
 	"fediverse/application/keymanager"
 	"fediverse/application/lib"
@@ -18,7 +19,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -177,7 +177,12 @@ func actor() func(http.Handler) http.Handler {
 				return
 			}
 
-			activity := expanded[0]
+			activity, ok := slices.First(expanded)
+			if !ok {
+				fmt.Println("Failed to determine activity")
+				w.WriteHeader(400)
+				return
+			}
 
 			switch {
 			case jsonldhelpers.IsType(activity, "https://www.w3.org/ns/activitystreams#Accept"):
@@ -199,7 +204,7 @@ func actor() func(http.Handler) http.Handler {
 					return
 				}
 
-				id, ok := jsonldhelpers.GetID(obj)
+				id, ok := jsonldhelpers.GetNodeID(obj)
 				if !ok {
 					fmt.Println("Unable to determine ID of Follow activity")
 					w.WriteHeader(400)
@@ -239,88 +244,40 @@ func actor() func(http.Handler) http.Handler {
 					return
 				}
 
-				actor, ok := doc["https://www.w3.org/ns/activitystreams#actor"]
+				actor, ok := jsonldhelpers.GetObjects(doc, "https://www.w3.org/ns/activitystreams#actor")
 				if !ok {
-					fmt.Fprint(os.Stderr, "There does not appear to be ")
+					fmt.Fprintln(os.Stderr, "There does not appear to be an actor associated with the user")
 					w.WriteHeader(400)
 					return
 				}
 
-				actorIRI, ok := jsonldhelpers.GetID(actor)
+				if len(actor) != 1 {
+					fmt.Fprintf(os.Stderr, "Expected only a single actor but got %d actors\n", len(actor))
+					w.WriteHeader(400)
+					return
+				}
+
+				firstActor, ok := slices.First(actor)
 				if !ok {
-					fmt.Fprint(os.Stderr, "Unable to determine actor IRI")
+					fmt.Fprintln(os.Stderr, "Unable to determine actor")
 					w.WriteHeader(400)
 					return
 				}
 
-				u, err := url.Parse(actorIRI)
+				actorIRI, ok := jsonldhelpers.GetNodeID(firstActor)
+				if !ok {
+					fmt.Fprintln(os.Stderr, "Unable to determine actor IRI")
+					w.WriteHeader(400)
+					return
+				}
+
+				_, err = followers.AddFollower(actorIRI)
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "Unable to parse actor IRI %e", err)
-					w.WriteHeader(400)
-					return
-				}
-
-				host := strings.TrimSpace(u.Host)
-
-				if host == "" {
-					fmt.Fprintf(os.Stderr, "Actor IRI does not have a resolvable host")
-					w.WriteHeader(400)
-					return
-				}
-
-				req, err := http.NewRequest("GET", actorIRI, nil)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Unable to create request %e", err)
+					fmt.Fprintf(os.Stderr, "Unable to add follower %e", err)
 					w.WriteHeader(500)
 					return
 				}
 
-				client := &http.Client{}
-
-				resp, err := client.Do(req)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Unable to perform request %e", err)
-					w.WriteHeader(500)
-					return
-				}
-
-				b, err := io.ReadAll(resp.Body)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Unable to read response body %e", err)
-					w.WriteHeader(500)
-					return
-				}
-
-				var actorJSON map[string]any
-				err = json.Unmarshal(b, &actorJSON)
-				if err != nil {
-					fmt.Fprint(os.Stderr, "Unable to parse and interpret the actor")
-					w.WriteHeader(400)
-					return
-				}
-
-				// TODO: add a fallback for the event that the context is not provided.
-				//   or is invalid.
-				remoteActor, err := proc.Expand(actorJSON, options)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Unable to expand actor %e", err)
-					w.WriteHeader(400)
-					return
-				}
-
-				obj, ok := slices.First(remoteActor)
-				if !ok {
-					fmt.Fprint(os.Stderr, "Unable to determine actor")
-					w.WriteHeader(400)
-					return
-				}
-
-				user, ok := jsonldhelpers.GetObject(obj, "https://www.w3.org/ns/activitystreams#preferredUsername")
-				if !ok {
-					fmt.Fprint(os.Stderr, "Unable to get username")
-					w.WriteHeader(400)
-					return
-				}
 			default:
 				fmt.Println("Unknown activity type")
 				fmt.Println(string(d))

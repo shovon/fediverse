@@ -86,6 +86,7 @@ func main() {
 	err := schema.Initialize()
 
 	if err != nil {
+		fmt.Println("Hmm…")
 		panic(err)
 	}
 
@@ -130,6 +131,7 @@ func main() {
 		}
 
 		// Perform a WebFinger lookup.
+
 		fmt.Printf("Performing WebFinger lookup for %s...\n", acct.Acct(address).String())
 		j, err := webfinger.Lookup(address.Host, acct.Acct(address).String(), []string{"self"})
 		if err != nil {
@@ -164,6 +166,8 @@ func main() {
 		}
 
 		fmt.Println("Got self link:", selfLink)
+
+		// Perform ActivityPub actor lookup.
 
 		req, err := http.NewRequest("GET", selfLink, nil)
 		if err != nil {
@@ -229,16 +233,18 @@ func main() {
 
 		fmt.Println("The URL to the inbox:", inboxID)
 
-		actorID, ok := jsonldhelpers.GetID(expanded[0])
+		actorID, ok := jsonldhelpers.GetNodeID(expanded[0])
 		if !ok {
 			fmt.Fprintf(os.Stderr, "The object did not have an actor ID specified")
 		}
-		id, err := following.AddFollowing(actorID, address)
+		id, err := following.AddFollowing(actorID)
 		if err != nil {
 			// TODO: this also fails if the user is already following the account.
 			//   just silently ignore the error, and return
 			panic(err)
 		}
+
+		// Actually send the follow request
 
 		params := map[string]string{
 			"username": config.Username(),

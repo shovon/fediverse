@@ -26,7 +26,7 @@ env -S "`cat ./.example.env`" go run ./application/cli* create "$POST"
 ## TODO
 
 - [x] Send "Follow" activity
-- [ ] Store the "Follow" confirmation, once received
+- [x] Store the "Follow" confirmation, once received
 - [ ] Convert the "Follow" command into an API request
 - [ ] Send "Unfollow" activity
 - [ ] Accept "Follow" activity

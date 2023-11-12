@@ -1,20 +1,21 @@
 package jsonldhelpers
 
-func GetID(v any) (string, bool) {
+func GetValue[T any](v any) (T, bool) {
+	var zero T
 	if v == nil {
-		return "", false
+		return zero, false
 	}
 
 	m, ok := v.(map[string]any)
 	if !ok {
-		return "", false
+		return zero, false
 	}
 
 	id, ok := m["@id"]
 	if !ok {
-		return "", false
+		return zero, false
 	}
 
-	idStr, ok := id.(string)
+	idStr, ok := id.(T)
 	return idStr, ok
 }

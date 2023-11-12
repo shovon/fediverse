@@ -1,4 +1,4 @@
-package jsonld
+package jsonldhelpers
 
 import "testing"
 

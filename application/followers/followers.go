@@ -1,6 +1,7 @@
 package followers
 
 import (
+	"database/sql"
 	"fediverse/application/database"
 	"sync"
 	"time"
@@ -12,18 +13,33 @@ var lock sync.RWMutex
 //
 // Not sure what the implication is for just interpreting the IRI as a string,
 // but it will be so much simpler to work with, for now.
-func AddFollower(i string) error {
-	lock.Lock()
-	defer lock.Unlock()
+func AddFollower(actorIRI string) (int64, error) {
+	lock.RLock()
+	defer lock.RUnlock()
 	db, err := database.Open()
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer db.Close()
-	if _, err := db.Exec("INSERT INTO following (followers) VALUES (?)", i); err != nil {
-		return err
+
+	var existingID int64
+	err = db.QueryRow("SELECT id FROM followers WHERE actor_iri = ?", actorIRI).Scan(&existingID)
+
+	switch {
+	case err == sql.ErrNoRows:
+		result, err := db.Exec(
+			"INSERT INTO followers (actor_iri) VALUES (?)",
+			actorIRI,
+		)
+		if err != nil {
+			return 0, err
+		}
+		return result.LastInsertId()
+	case err != nil:
+		return 0, err
 	}
-	return nil
+
+	return existingID, nil
 }
 
 type Follower struct {

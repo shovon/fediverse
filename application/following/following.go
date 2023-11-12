@@ -11,10 +11,9 @@ import (
 var lock sync.RWMutex
 
 type Following struct {
-	ID             string                        `json:"id"`
-	WhenFollowed   time.Time                     `json:"whenFollowed"`
-	AccountAddress accountaddress.AccountAddress `json:"accountAddress"`
-	ActorIRI       string                        `json:"actorIri"`
+	ID           string    `json:"id"`
+	WhenFollowed time.Time `json:"whenFollowed"`
+	ActorIRI     string    `json:"actorIri"`
 }
 
 // TODO: handle a way to update the current user IRI
@@ -32,7 +31,7 @@ func GetFollowing(offset int, limit int) (_ []Following, err error) {
 	}
 	defer db.Close()
 	result, err := db.Query(
-		"SELECT id, when_followed, account_address_user, account_address_host, actor_iri FROM following ORDER BY when_followed DESC LIMIT ? OFFSET ?",
+		"SELECT id, when_followed, actor_iri FROM following ORDER BY when_followed DESC LIMIT ? OFFSET ?",
 		limit,
 		offset,
 	)
@@ -51,8 +50,6 @@ func GetFollowing(offset int, limit int) (_ []Following, err error) {
 		if err := result.Scan(
 			&following.ID,
 			&following.WhenFollowed,
-			&following.AccountAddress.User,
-			&following.AccountAddress.Host,
 			&following.ActorIRI,
 		); err != nil {
 			return nil, err
@@ -66,7 +63,7 @@ func GetFollowing(offset int, limit int) (_ []Following, err error) {
 //
 // Not sure what the implication is for just interpreting the IRI as a string,
 // but it will be so much simpler to work with, for now.
-func AddFollowing(actorIRI string, address accountaddress.AccountAddress) (int64, error) {
+func AddFollowing(actorIRI string) (int64, error) {
 	lock.RLock()
 	defer lock.RUnlock()
 	db, err := database.Open()
@@ -81,9 +78,7 @@ func AddFollowing(actorIRI string, address accountaddress.AccountAddress) (int64
 	switch {
 	case err == sql.ErrNoRows:
 		result, err := db.Exec(
-			"INSERT INTO following (account_address_user, account_address_host, actor_iri) VALUES (?, ?)",
-			address.User,
-			address.Host,
+			"INSERT INTO following (actor_iri) VALUES (?)",
 			actorIRI,
 		)
 		if err != nil {

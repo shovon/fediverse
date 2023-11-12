@@ -19,30 +19,24 @@ var revisions = []string{
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		when_followed DATETIME DEFAULT CURRENT_TIMESTAMP,
 		
-		account_address_user TEXT,
-		account_address_host TEXT,
 		actor_iri TEXT,
 
-		UNIQUE(account_address_user, account_address_host, actor_iri)
+		UNIQUE(actor_iri)
 	);
 
-	CREATE INDEX followers_account_address_user_account_address_host_index ON followers(account_address_user, account_address_host);
 	CREATE INDEX followers_actor_iri_index ON followers(actor_iri);
 
 	CREATE TABLE following (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		when_followed DATETIME DEFAULT CURRENT_TIMESTAMP,
 
-		account_address_user TEXT,
-		account_address_host TEXT,
 		actor_iri TEXT,
 
 		has_accepted_follow_request INT DEFAULT 0,
 
-		UNIQUE(account_address_user, account_address_host, actor_iri)
+		UNIQUE(actor_iri)
 	);
 
-	CREATE INDEX following_account_address_user_account_address_host_index ON following(account_address_user, account_address_host);
 	CREATE INDEX following_actor_iri_index ON following(actor_iri);
 
 	CREATE TABLE inbox (
@@ -51,24 +45,36 @@ var revisions = []string{
 
 		-- This is a JSON document, more specifically a JSON-LD document.
 		body TEXT
-	)
+	);
 	`,
 
 	// In the future, we may want to add a cache to hold the actor's IRI
 }
 
-func runRevision(db *sql.DB, revision string) error {
+func runRevision(db *sql.DB, revision string) (err error) {
+	err = nil
 	tx, err := db.Begin()
+	defer func() {
+		if err != nil {
+			if e := tx.Rollback(); e != nil {
+				err = e
+			}
+		} else {
+			if e := tx.Commit(); e != nil {
+				err = e
+			}
+		}
+	}()
 	if err != nil {
-		return err
+		return
 	}
-	if _, err := db.Exec(revision); err != nil {
-		return err
+	if _, err = db.Exec(revision); err != nil {
+		return
 	}
-	if _, err := db.Exec("INSERT INTO schema_revisions DEFAULT VALUES", revision); err != nil {
-		return err
+	if _, err = db.Exec("INSERT INTO schema_revisions DEFAULT VALUES", revision); err != nil {
+		return
 	}
-	return tx.Commit()
+	return
 }
 
 func runRevisions(db *sql.DB, revisions []string) error {
@@ -80,7 +86,7 @@ func runRevisions(db *sql.DB, revisions []string) error {
 	return nil
 }
 
-func Initialize() (err error) {
+func Initialize() error {
 	db, err := database.Open()
 	if err != nil {
 		return err
@@ -116,5 +122,9 @@ func Initialize() (err error) {
 			return err
 		}
 	}
-	return nil
+	result, err = db.Query("SELECT revision FROM schema_revisions")
+	if err != nil {
+		return err
+	}
+	return err
 }

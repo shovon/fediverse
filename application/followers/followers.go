@@ -14,8 +14,8 @@ var lock sync.RWMutex
 // Not sure what the implication is for just interpreting the IRI as a string,
 // but it will be so much simpler to work with, for now.
 func AddFollower(actorIRI string) (int64, error) {
-	lock.RLock()
-	defer lock.RUnlock()
+	lock.Lock()
+	defer lock.Unlock()
 	db, err := database.Open()
 	if err != nil {
 		return 0, err
@@ -40,6 +40,21 @@ func AddFollower(actorIRI string) (int64, error) {
 	}
 
 	return existingID, nil
+}
+
+func RemoveFollower(actorIRI string) error {
+	lock.Lock()
+	defer lock.Unlock()
+	db, err := database.Open()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	_, err = db.Exec("DELETE FROM followers WHERE actor_iri = ?", actorIRI)
+	return err
+
+	// TODO: what if the delete silently failed? How are we going to know?
 }
 
 type Follower struct {

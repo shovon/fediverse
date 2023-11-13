@@ -12,14 +12,13 @@ import (
 	hh "fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
 	"fediverse/httphelpers/requestbaseurl"
-	"fediverse/json/jsonhttp"
 	"fediverse/jsonldhelpers"
 	"fediverse/pathhelpers"
-	"fediverse/security/rsahelpers"
 	"fediverse/slices"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -43,69 +42,7 @@ func searchUser(next http.Handler) http.Handler {
 func actor() func(http.Handler) http.Handler {
 	return hh.ApplyMiddlewares(hh.MiddlewaresList{
 		// The main user route
-		hh.Processors{
-			hh.Method("GET"),
-			hh.Route(UserRoute),
-		}.Process(hh.ToMiddleware(searchUser(jsonhttp.JSONResponder(func(r *http.Request) (any, error) {
-			key := keymanager.GetPrivateKey()
-
-			// TODO: this should ideally be cached.
-			pubKeyString, err := rsahelpers.PublicKeyToPKIXString(&key.PublicKey)
-			if err != nil {
-				return nil, httperrors.InternalServerError()
-			}
-
-			origin := requestbaseurl.GetRequestOrigin(r)
-
-			params := map[string]string{
-				// TODO: this should be soft-coded.
-				"username": hh.GetRouteParam(r, "username"),
-			}
-
-			actorRoot := origin + pathhelpers.FillFields(UserRoute, params)
-
-			return map[string]any{
-				"@context": []interface{}{
-					"https://www.w3.org/ns/activitystreams",
-					"https://w3id.org/security/v1",
-				},
-
-				"id": actorRoot,
-
-				"type": "Person",
-
-				// TODO: this should be soft-coded. That is, retrieve the username,
-				//   given some lookup invocation.
-				"preferredUsername": config.Username(),
-
-				// TODO: this should be soft-coded. That is, retrieve the display name,
-				//   given some lookup invocation.
-				"name": config.DisplayName(),
-
-				// TODO: also find a way to soft code this.
-				"summary": "<p>This person doesn't have a bio yet.</p>",
-
-				"following": origin + pathhelpers.FillFields(FollowingRoute, params),
-				"followers": origin + pathhelpers.FillFields(FollowersRoute, params),
-				"inbox":     origin + pathhelpers.FillFields(InboxRoute, params),
-				"outbox":    origin + pathhelpers.FillFields(OutboxRoute, params),
-				"liked":     origin + pathhelpers.FillFields(LikedRoute, params),
-
-				// TODO: manually approving followers is definitely an important
-				//   feature.
-				"manuallyApprovesFollowers": false,
-				"publicKey": map[string]any{
-					"id":           actorRoot + "#main-key",
-					"owner":        actorRoot,
-					"publicKeyPem": pubKeyString,
-				},
-
-				// TODO:
-				"endpoints": map[string]any{
-					"sharedInbox": origin + SharedInbox,
-				},
-			}, nil
-		})))),
+		actorRoute(),
 
 		// The followers collection.
 		hh.Processors{
@@ -229,6 +166,8 @@ func actor() func(http.Handler) http.Handler {
 					return
 				}
 				following.AcknowledgeFollowing(i)
+
+				w.WriteHeader(200)
 
 			// Follow activity.
 			case jsonldhelpers.IsType(activity, "https://www.w3.org/ns/activitystreams#Follow"):
@@ -420,9 +359,91 @@ func actor() func(http.Handler) http.Handler {
 					return
 				}
 
+				w.WriteHeader(200)
+
+			case jsonldhelpers.IsType(activity, "https://www.w3.org/ns/activitystreams#Undo"):
+				// {
+				//   "@context":"https://www.w3.org/ns/activitystreams",
+				//   "id":"https://techhub.social/users/manlycoffee#follows/1196224/undo",
+				//   "type":"Undo",
+				//   "actor":"https://techhub.social/users/manlycoffee",
+				//   "object":{
+				//     "id":"https://techhub.social/4e82a642-3472-46fe-a28d-abb8dd709fc6",
+				//     "type":"Follow",
+				//     "actor":"https://techhub.social/users/manlycoffee",
+				//     "object":"https://feditest.salrahman.com/activity/actors/john13"
+				//   }
+				// }
+
+				objectAny, ok := slices.First(jsonldhelpers.GetObjects(activity, "https://www.w3.org/ns/activitystreams#object"))
+				if !ok {
+					fmt.Fprintln(os.Stderr, "Unable to determine object")
+					w.WriteHeader(400)
+					return
+				}
+
+				object, ok := objectAny.(map[string]any)
+				if !ok {
+					fmt.Fprintln(os.Stderr, "Unable to cast object to map")
+					w.WriteHeader(400)
+					return
+				}
+
+				switch {
+				case jsonldhelpers.IsType(object, "https://www.w3.org/ns/activitystreams#Follow"):
+					obj, ok := jsonldhelpers.GetIDFromPredicate(object, "https://www.w3.org/ns/activitystreams#object")
+					if !ok {
+						fmt.Fprintln(os.Stderr, "Unable to determine object")
+						w.WriteHeader(400)
+						return
+					}
+					parsed, err := url.Parse(obj)
+					if err != nil {
+						fmt.Fprintln(os.Stderr, "Unable to parse object")
+						w.WriteHeader(400)
+						return
+					}
+					ok, params := pathhelpers.Match(UserRoute, parsed.Path)
+					if !ok {
+						fmt.Fprintln(os.Stderr, "actor not found at route")
+						w.WriteHeader(404)
+						return
+					}
+					// TOOD: this should really be soft-coded
+					if params["username"] != config.Username() {
+						fmt.Fprintln(os.Stderr, "actor not found")
+						w.WriteHeader(404)
+						return
+					}
+
+					fmt.Println(object)
+					act, ok := jsonldhelpers.GetIDFromPredicate(object, "https://www.w3.org/ns/activitystreams#actor")
+					if !ok {
+						fmt.Fprintln(os.Stderr, "Unable to determine actor")
+						w.WriteHeader(400)
+						return
+					}
+
+					err = followers.RemoveFollower(act)
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "Unable to remove follower: %s\n", err.Error())
+						w.WriteHeader(500)
+						return
+					}
+
+					fmt.Fprintf(os.Stderr, "Unfollowed by %s", act)
+					w.WriteHeader(200)
+
+				default:
+					fmt.Fprintln(os.Stderr, "Unknown activity type to undo")
+					w.WriteHeader(400)
+					return
+				}
+
 			default:
-				fmt.Println("Unknown activity type")
-				fmt.Println(string(d))
+				fmt.Fprintln(os.Stderr, "Unknown activity type")
+				fmt.Fprintln(os.Stderr, string(d))
+				w.WriteHeader(400)
 			}
 		}))),
 	})

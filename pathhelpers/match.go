@@ -4,8 +4,6 @@ import (
 	"strings"
 )
 
-// TODO: unit test this
-
 func Match(pattern, path string) (bool, map[string]string) {
 	patternSplit := strings.Split(pattern, "/")
 	pathSplit := strings.Split(path, "/")

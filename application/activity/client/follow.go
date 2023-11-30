@@ -25,11 +25,50 @@ import (
 // }
 
 type FollowActivityIRI string
+type UndoActivityIRI string
 type AcceptActivityIRI string
 type SigningKeyIRI string
 type SenderIRI string
 type ObjectIRI string
 type InboxURL string
+
+func Unfollow(
+	signingKey *rsa.PrivateKey,
+	signingKeyIRI SigningKeyIRI,
+	undoActivityIRI UndoActivityIRI,
+	senderIRI SenderIRI,
+	followActivityIRI FollowActivityIRI,
+	recipientID ObjectIRI,
+	inboxURL InboxURL,
+) error {
+	// {
+	//   "@context":"https://www.w3.org/ns/activitystreams",
+	//   "id":"https://techhub.social/users/manlycoffee#follows/1196224/undo",
+	//   "type":"Undo",
+	//   "actor":"https://techhub.social/users/manlycoffee",
+	//   "object":{
+	//     "id":"https://techhub.social/4e82a642-3472-46fe-a28d-abb8dd709fc6",
+	//     "type":"Follow",
+	//     "actor":"https://techhub.social/users/manlycoffee",
+	//     "object":"https://feditest.salrahman.com/activity/actors/john13"
+	//   }
+	// }
+
+	// b, err := json.Marshal(map[string]any{
+	// 	"@context": "https://www.w3.org/ns/activitystreams",
+	// 	"id":       undoActivityIRI,
+	// 	"type":     "Undo",
+	// 	"actor":    senderIRI,
+	// 	"object": map[string]any{
+	// 		"id": undoActivityIRI,
+	// 	},
+	// })
+	// if err != nil {
+	// 	return err
+	// }
+
+	return nil
+}
 
 func Follow(
 	signingKey *rsa.PrivateKey,

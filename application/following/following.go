@@ -16,7 +16,11 @@ type Following struct {
 	ActorIRI     string    `json:"actorIri"`
 }
 
-// TODO: handle a way to update the current user IRI
+// TODO: handle a way to update the current user IRIs
+
+// TODO: all of these functions should also factor in the follower/followee.
+//
+// Right now, all of these functions only really care about the followee.
 
 // GetFollowing gets a following from the database, given an offset.
 //
@@ -59,13 +63,36 @@ func GetFollowing(offset int, limit int) (_ []Following, err error) {
 	return followings, nil
 }
 
+// TODO: this should also really factor in a follower/followee relationship
+//   somehow
+
+func GetSingleFollowingID(actorID string) (Following, error) {
+	lock.RLock()
+	defer lock.RUnlock()
+	db, err := database.Open()
+	if err != nil {
+		return Following{}, err
+	}
+	defer db.Close()
+	var following Following
+	err = db.QueryRow(
+		"SELECT id, when_followed, actor_iri FROM following WHERE id = ?",
+		actorID,
+	).Scan(
+		&following.ID,
+		&following.WhenFollowed,
+		&following.ActorIRI,
+	)
+	return following, err
+}
+
 // AddFollowing adds a following to the database.
 //
 // Not sure what the implication is for just interpreting the IRI as a string,
 // but it will be so much simpler to work with, for now.
 func AddFollowing(actorIRI string) (int64, error) {
-	lock.RLock()
-	defer lock.RUnlock()
+	lock.Lock()
+	defer lock.Unlock()
 	db, err := database.Open()
 	if err != nil {
 		return 0, err
@@ -92,9 +119,22 @@ func AddFollowing(actorIRI string) (int64, error) {
 	return existingID, nil
 }
 
+func RemoveFollowing(actorIRI string) error {
+	lock.Lock()
+	defer lock.Unlock()
+	db, err := database.Open()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	_, err = db.Exec("DELETE FROM following WHERE actor_iri = ?", actorIRI)
+	return err
+}
+
 func AcknowledgeFollowing(id int) {
-	lock.RLock()
-	defer lock.RUnlock()
+	lock.Lock()
+	defer lock.Unlock()
 
 	db, err := database.Open()
 	if err != nil {
@@ -110,8 +150,8 @@ func AcknowledgeFollowing(id int) {
 }
 
 func FollowRequestAccepted(address accountaddress.AccountAddress) error {
-	lock.RLock()
-	defer lock.RUnlock()
+	lock.Lock()
+	defer lock.Unlock()
 
 	db, err := database.Open()
 	if err != nil {

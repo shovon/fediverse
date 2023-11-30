@@ -207,6 +207,18 @@ func main() {
 		}
 		var inboxID string
 		gotInbox := false
+
+		// TODO: it's already obvious by now that JSON-LD is not RDF. Sure, the doc
+		//   can be interpreted as RDF, but no matter how much the doc conforms to
+		//   the JSON-LD spec, there are still some significant amount of metadata
+		//   encoded in the document, that devs actually take advantage of that.
+		//   For example: JSON-LD can encode the concept of a "root node". Indeed,
+		//   an actor, no matter how much it's represented as a JSON-LD document—
+		//   which can be interpreted as RDF—the `id` field of the JSON document is
+		//   important; not only does it represent the ID of the actor, but it is
+		//   also serves as the URL from which to capture the actor.
+		//
+		//   Remove this loop. This is just pointless.
 		for _, node := range expanded {
 			predicateObjectMap, ok := node.(map[string]any)
 			if !ok {
@@ -247,14 +259,15 @@ func main() {
 		// Actually send the follow request
 
 		params := map[string]string{
-			"username": config.Username(),
+			"username":  config.Username(),
+			"following": strconv.FormatInt(id, 10),
 		}
 
 		actorIRI := common.Origin() + pathhelpers.FillFields(server.UserRoute, params)
 
 		privateKey := keymanager.GetPrivateKey()
 		signingKeyIRI := actorIRI + "#main-key"
-		followActivityIRI := common.Origin() + pathhelpers.FillFields(server.FollowingRoute, params) + "/" + strconv.FormatInt(id, 10)
+		followActivityIRI := actorIRI + "#follows" + "/" + strconv.FormatInt(id, 10)
 		senderIRI := actorIRI
 		recipientID := selfLink
 		inboxURL := inboxID
@@ -273,6 +286,153 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+	case "unfollow":
+		// if len(args) <= 1 {
+		// 	fmt.Fprintf(os.Stderr, "Please provide a account address to follow\n")
+		// 	os.Exit(1)
+		// 	return
+		// }
+
+		// address, err := accountaddress.ParseAccountAddress(args[1])
+		// if err != nil && errors.Is(err, accountaddress.ErrInvalidAccountAddress()) {
+		// 	fmt.Fprintf(os.Stderr, "Invalid account address\n")
+		// 	os.Exit(1)
+		// 	return
+		// }
+
+		// // Perform a WebFinger lookup.
+
+		// fmt.Printf("Performing WebFinger lookup for %s...\n", acct.Acct(address).String())
+		// j, err := webfinger.Lookup(address.Host, acct.Acct(address).String(), []string{"self"})
+		// if err != nil {
+		// 	fmt.Fprintf(os.Stderr, "Error looking up account: %s\n", err.Error())
+		// 	os.Exit(2)
+		// 	return
+		// }
+
+		// links, ok := j.Links.Value()
+		// if !ok {
+		// 	fmt.Fprint(os.Stderr, "No properties found\n")
+		// 	os.Exit(1)
+		// 	return
+		// }
+
+		// var selfLink string
+		// ok = false
+		// for _, link := range links {
+		// 	if link.Rel == "self" {
+		// 		selfLink = link.Href
+		// 		ok = true
+		// 		break
+		// 	}
+		// }
+		// if !ok {
+		// 	fmt.Fprint(os.Stderr, "self link not found in WebFinger lookup\n")
+		// 	os.Exit(1)
+		// }
+		// if selfLink == "" {
+		// 	fmt.Fprint(os.Stderr, "self link is empty\n")
+		// 	os.Exit(1)
+		// }
+
+		// fmt.Println("Got self link:", selfLink)
+
+		// // Perform ActivityPub actor lookup.
+
+		// req, err := http.NewRequest("GET", selfLink, nil)
+		// if err != nil {
+		// 	fmt.Fprintf(os.Stderr, "error creating request: %s\n", err.Error())
+		// 	os.Exit(1)
+		// }
+		// req.Header.Set("Accept", "application/activity+json")
+
+		// fmt.Println("Looking up the ActivityPub actor using the self link")
+
+		// client := &http.Client{}
+		// resp, err := client.Do(req)
+		// if err != nil {
+		// 	fmt.Fprintf(os.Stderr, "Response failed %s\n", err.Error())
+		// 	os.Exit(1)
+		// }
+		// body, err := io.ReadAll(resp.Body)
+		// if err != nil {
+		// 	fmt.Fprintf(os.Stderr, "Unable to read response body: %s\n", err.Error())
+		// 	os.Exit(1)
+		// }
+		// var parsed any
+		// err = json.Unmarshal(body, &parsed)
+		// if err != nil {
+		// 	fmt.Fprintf(os.Stderr, "Unable to parse response body: %s\n", err.Error())
+		// 	os.Exit(1)
+		// }
+
+		// proc := ld.NewJsonLdProcessor()
+		// options := ld.NewJsonLdOptions("")
+
+		// // TODO: add a fallback for the event that the context is not provided.
+		// //   or is invalid.
+		// expanded, err := proc.Expand(parsed, options)
+		// if err != nil {
+		// 	fmt.Fprintf(os.Stderr, "Unable to expand JSON-LD document: %s\n", err.Error())
+		// }
+
+		// doc, ok := slices.First(expanded)
+		// if !ok {
+		// 	fmt.Fprintln(os.Stderr, "Not a valid JSON-LD document")
+		// 	os.Exit(1)
+		// }
+
+		// inbox, ok := jsonldhelpers.GetIDFromPredicate(doc, "http://www.w3.org/ns/ldp#inbox")
+		// if !ok {
+		// 	fmt.Fprintln(os.Stderr, "No inbox found with actor")
+		// }
+
+		// actorID, ok := jsonldhelpers.GetNodeID(doc)
+		// if !ok {
+		// 	fmt.Fprintf(os.Stderr, "The object did not have an actor ID specified\n")
+		// }
+		// err = following.RemoveFollowing(actorID)
+		// if err != nil {
+		// 	// TODO: this also fails if the user is already following the account.
+		// 	//   just silently ignore the error, and return
+		// 	panic(err)
+		// }
+
+		// // Actually send the follow request
+
+		// params := map[string]string{
+		// 	"username": config.Username(),
+		// }
+
+		// actorIRI := common.Origin() + pathhelpers.FillFields(server.UserRoute, params)
+
+		// following, err := following.GetSingleFollowingID(string(actorID))
+		// if err != nil {
+		// 	fmt.Fprintf(os.Stderr, "Failed to get actor at actor ID %s\n", actorID)
+		// 	panic(err)
+		// }
+
+		// privateKey := keymanager.GetPrivateKey()
+		// signingKeyIRI := actorIRI + "#main-key"
+		// followActivityIRI := common.Origin() + pathhelpers.FillFields(server.FollowingRoute, params) + "/" + strconv.FormatInt(id, 10)
+		// senderIRI := actorIRI
+		// recipientID := selfLink
+		// inboxURL := inbox
+
+		// fmt.Println("Sending follow activity...")
+		// err = activityclient.Unfollow(
+		// 	privateKey,
+		// 	activityclient.SigningKeyIRI(signingKeyIRI),
+		// 	activityclient.UndoActivityIRI(followActivityIRI),
+		// 	activityclient.SenderIRI(senderIRI),
+		// 	activityclient.ObjectIRI(recipientID),
+		// 	activityclient.InboxURL(inboxURL),
+		// )
+
+		// fmt.Println("Sent. Checking to see if any error")
+		// if err != nil {
+		// 	panic(err)
+		// }
 	case "genrsa":
 		// This command generates a new RSA key pair. It accepts a `--public` flag
 		// to show the public key.

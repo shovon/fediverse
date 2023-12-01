@@ -90,6 +90,7 @@ func actor() func(http.Handler) http.Handler {
 				w.WriteHeader(500)
 				return
 			}
+
 			var parsedActivity map[string]any
 			if err := json.Unmarshal(d, &parsedActivity); err != nil {
 				fmt.Println("Failed to unmarshal JSON")
@@ -115,8 +116,8 @@ func actor() func(http.Handler) http.Handler {
 				return
 			}
 
-			// Parse tthe activity.
-			activity, ok := slices.First(expanded)
+			// Parse the activity.
+			activity, ok := slices.Get(expanded, 0)
 			if !ok {
 				fmt.Println("Failed to determine activity")
 				w.WriteHeader(400)
@@ -179,6 +180,13 @@ func actor() func(http.Handler) http.Handler {
 				//   "object":"https://feditest.salrahman.com/activity/actors/john10"
 				// }
 
+				type follow struct {
+					ID     string                 `mapstructure:"@id"`
+					Type   []string               `mapstructure:"@type"`
+					Actor  []jsonldhelpers.IDNode `mapstructure:"https://www.w3.org/ns/activitystreams#actor"`
+					Object []jsonldhelpers.IDNode `mapstructure:"https://www.w3.org/ns/activitystreams#object"`
+				}
+
 				doc, ok := activity.(map[string]any)
 
 				// Step 1: grab the object of the body.
@@ -201,7 +209,7 @@ func actor() func(http.Handler) http.Handler {
 					return
 				}
 
-				firstActor, ok := slices.First(actor)
+				firstActor, ok := slices.Get(actor, 0)
 				if !ok {
 					fmt.Fprintln(os.Stderr, "Unable to determine actor")
 					w.WriteHeader(400)
@@ -215,7 +223,7 @@ func actor() func(http.Handler) http.Handler {
 					return
 				}
 
-				objectObject, ok := slices.First(jsonldhelpers.GetObjects(doc, "https://www.w3.org/ns/activitystreams#object"))
+				objectObject, ok := slices.Get(jsonldhelpers.GetObjects(doc, "https://www.w3.org/ns/activitystreams#object"), 0)
 				if !ok {
 					fmt.Fprintln(os.Stderr, "Unable to determine object")
 					w.WriteHeader(400)
@@ -321,7 +329,7 @@ func actor() func(http.Handler) http.Handler {
 					return
 				}
 
-				object, ok := slices.First(objects)
+				object, ok := slices.Get(objects, 0)
 				if !ok {
 					fmt.Fprintln(os.Stderr, "Unable to determine object")
 					w.WriteHeader(400)
@@ -375,7 +383,7 @@ func actor() func(http.Handler) http.Handler {
 				//   }
 				// }
 
-				objectAny, ok := slices.First(jsonldhelpers.GetObjects(activity, "https://www.w3.org/ns/activitystreams#object"))
+				objectAny, ok := slices.Get(jsonldhelpers.GetObjects(activity, "https://www.w3.org/ns/activitystreams#object"), 0)
 				if !ok {
 					fmt.Fprintln(os.Stderr, "Unable to determine object")
 					w.WriteHeader(400)

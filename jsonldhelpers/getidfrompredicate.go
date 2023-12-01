@@ -15,7 +15,7 @@ func GetIDFromPredicate(v any, predicate string) (string, bool) {
 		return "", false
 	}
 
-	object, ok := slices.First(objects)
+	object, ok := slices.Get(objects, 0)
 	if !ok {
 		return "", false
 	}

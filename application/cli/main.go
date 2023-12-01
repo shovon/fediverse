@@ -5,9 +5,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
-	"errors"
-	"fediverse/accountaddress"
-	"fediverse/acct"
 	activityclient "fediverse/application/activity/client"
 	"fediverse/application/activity/server"
 	"fediverse/application/common"
@@ -20,7 +17,7 @@ import (
 	"fediverse/pathhelpers"
 	"fediverse/security/rsahelpers"
 	"fediverse/security/rsassapkcsv115sha256"
-	"fediverse/webfinger"
+	"fediverse/slices"
 	"flag"
 	"fmt"
 	"io"
@@ -117,55 +114,14 @@ func main() {
 		}
 		fmt.Println("Post successfully created!")
 	case "follow":
-		if len(args) <= 1 {
+		selfLink, ok := slices.Get(args, 1)
+		if !ok {
 			fmt.Fprintf(os.Stderr, "Please provide a account address to follow\n")
 			os.Exit(1)
 			return
 		}
 
-		address, err := accountaddress.ParseAccountAddress(args[1])
-		if err != nil && errors.Is(err, accountaddress.ErrInvalidAccountAddress()) {
-			fmt.Fprintf(os.Stderr, "Invalid account address\n")
-			os.Exit(1)
-			return
-		}
-
-		// Perform a WebFinger lookup.
-
-		fmt.Printf("Performing WebFinger lookup for %s...\n", acct.Acct(address).String())
-		j, err := webfinger.Lookup(address.Host, acct.Acct(address).String(), []string{"self"})
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error looking up account: %s\n", err.Error())
-			os.Exit(2)
-			return
-		}
-
-		links, ok := j.Links.Value()
-		if !ok {
-			fmt.Fprint(os.Stderr, "No properties found\n")
-			os.Exit(1)
-			return
-		}
-
-		var selfLink string
-		ok = false
-		for _, link := range links {
-			if link.Rel == "self" {
-				selfLink = link.Href
-				ok = true
-				break
-			}
-		}
-		if !ok {
-			fmt.Fprint(os.Stderr, "self link not found in WebFinger lookup\n")
-			os.Exit(1)
-		}
-		if selfLink == "" {
-			fmt.Fprint(os.Stderr, "self link is empty\n")
-			os.Exit(1)
-		}
-
-		fmt.Println("Got self link:", selfLink)
+		fmt.Println("Actor ID:", selfLink)
 
 		// Perform ActivityPub actor lookup.
 
@@ -176,7 +132,7 @@ func main() {
 		}
 		req.Header.Set("Accept", "application/activity+json")
 
-		fmt.Println("Looking up the ActivityPub actor using the self link")
+		fmt.Println("Looking up the ActivityPub actor using the actor's ID")
 
 		client := &http.Client{}
 		resp, err := client.Do(req)

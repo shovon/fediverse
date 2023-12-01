@@ -8,8 +8,8 @@ import (
 func TestDecode(t *testing.T) {
 	t.Run("Decode flat", func(t *testing.T) {
 		type testObject struct {
-			ID   string                `mapstructure:"@id"`
-			Name []SingleValue[string] `mapstructure:"https://example.com/ns#name"`
+			ID   string              `mapstructure:"@id"`
+			Name []ValueNode[string] `mapstructure:"https://example.com/ns#name"`
 		}
 
 		var data []testObject
@@ -25,33 +25,33 @@ func TestDecode(t *testing.T) {
 			t.Errorf("Expected no error, but got %v", err)
 			t.Fail()
 		}
-		first, ok := slices.First(data)
+		first, ok := slices.Get(data, 0)
 		if !ok {
 			t.Errorf("Expected slice to have at least one element, but it does not")
 			t.FailNow()
 		}
-		if slices.FirstOrDefault(data, testObject{}).ID != "https://example.com/application/people/1" {
-			t.Errorf("Expected ID to be https://example.com/application/people/1, but got %v", slices.FirstOrDefault(data, testObject{}).ID)
+		if slices.GetOrDefault(data, 0, testObject{}).ID != "https://example.com/application/people/1" {
+			t.Errorf("Expected ID to be https://example.com/application/people/1, but got %v", slices.GetOrDefault(data, 0, testObject{}).ID)
 			t.Fail()
 		}
-		if slices.FirstOrDefault(first.Name, SingleValue[string]{Value: "Hello"}).Value != "John Doe" {
-			t.Errorf("Expected name to be John Doe, but got %v", slices.FirstOrDefault(first.Name, SingleValue[string]{Value: "Hello"}).Value)
+		if slices.GetOrDefault(first.Name, 0, ValueNode[string]{Value: "Hello"}).Value != "John Doe" {
+			t.Errorf("Expected name to be John Doe, but got %v", slices.GetOrDefault(first.Name, 0, ValueNode[string]{Value: "Hello"}).Value)
 			t.Fail()
 		}
 	})
 
 	t.Run("Decode nested", func(t *testing.T) {
 		type nestedObject struct {
-			Type []string              `mapstructure:"@type"`
-			ID   string                `mapstructure:"@id"`
-			Name []SingleValue[string] `mapstructure:"https://example.com/ns#name"`
+			Type []string            `mapstructure:"@type"`
+			ID   string              `mapstructure:"@id"`
+			Name []ValueNode[string] `mapstructure:"https://example.com/ns#name"`
 		}
 
 		type testObject struct {
-			Type []string              `mapstructure:"@type"`
-			ID   string                `mapstructure:"@id"`
-			Name []SingleValue[string] `mapstructure:"https://example.com/ns#name"`
-			Dogs []nestedObject        `mapstructure:"https://example.com/ns#dogs"`
+			Type []string            `mapstructure:"@type"`
+			ID   string              `mapstructure:"@id"`
+			Name []ValueNode[string] `mapstructure:"https://example.com/ns#name"`
+			Dogs []nestedObject      `mapstructure:"https://example.com/ns#dogs"`
 		}
 
 		var data []testObject
@@ -79,7 +79,7 @@ func TestDecode(t *testing.T) {
 			t.Errorf("Expected no error, but got %v", err)
 			t.Fail()
 		}
-		first, ok := slices.First(data)
+		first, ok := slices.Get(data, 0)
 		if !ok {
 			t.Errorf("Expected slice to have at least one element, but it does not")
 			t.FailNow()
@@ -88,16 +88,16 @@ func TestDecode(t *testing.T) {
 			t.Errorf("Expected type to contain https://example.com/ns#Person, but it does not")
 			t.FailNow()
 		}
-		if slices.FirstOrDefault(data, testObject{}).ID != "https://example.com/application/people/1" {
-			t.Errorf("Expected ID to be https://example.com/application/people/1, but got %v", slices.FirstOrDefault(data, testObject{}).ID)
+		if slices.GetOrDefault(data, 0, testObject{}).ID != "https://example.com/application/people/1" {
+			t.Errorf("Expected ID to be https://example.com/application/people/1, but got %v", slices.GetOrDefault(data, 0, testObject{}).ID)
 			t.Fail()
 		}
-		if slices.FirstOrDefault(first.Name, SingleValue[string]{Value: "Hello"}).Value != "John Doe" {
-			t.Errorf("Expected name to be John Doe, but got %v", slices.FirstOrDefault(first.Name, SingleValue[string]{Value: "Hello"}).Value)
+		if slices.GetOrDefault(first.Name, 0, ValueNode[string]{Value: "Hello"}).Value != "John Doe" {
+			t.Errorf("Expected name to be John Doe, but got %v", slices.GetOrDefault(first.Name, 0, ValueNode[string]{Value: "Hello"}).Value)
 			t.Fail()
 		}
 
-		dog, ok := slices.First(first.Dogs)
+		dog, ok := slices.Get(first.Dogs, 0)
 		if !ok {
 			t.Errorf("Expected at least one dog in the slice of dogs, but got none")
 			t.Fail()
@@ -111,8 +111,8 @@ func TestDecode(t *testing.T) {
 			t.Errorf("Expected ID to be https://example.com/application/dogs/1, but got %v", dog.ID)
 			t.Fail()
 		}
-		if slices.FirstOrDefault(dog.Name, SingleValue[string]{}).Value != "Waffles" {
-			t.Errorf("Expected name to be Waffles, but got %v", slices.FirstOrDefault(first.Dogs, nestedObject{}).Name)
+		if slices.GetOrDefault(dog.Name, 0, ValueNode[string]{}).Value != "Waffles" {
+			t.Errorf("Expected name to be Waffles, but got %v", slices.GetOrDefault(first.Dogs, 0, nestedObject{}).Name)
 			t.Fail()
 		}
 	})

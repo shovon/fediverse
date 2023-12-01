@@ -7,10 +7,14 @@ import (
 	"github.com/piprate/json-gold/ld"
 )
 
-// SingleValue represents a subset of an object, that contains that object's
+// ValueNode represents a subset of an object, that contains that object's
 // @value field
-type SingleValue[T any] struct {
+type ValueNode[T any] struct {
 	Value T `mapstructure:"@value"`
+}
+
+type IDNode struct {
+	ID string `mapstructure:"@id"`
 }
 
 // Decoder is what is used for decoding a JSON-LD document into a Go struct.

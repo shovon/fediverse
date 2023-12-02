@@ -13,7 +13,7 @@ import (
 	"fediverse/httphelpers/requestbaseurl"
 	"fediverse/httplogger"
 	"fediverse/jrd"
-	"fediverse/json/jsonhttp"
+	"fediverse/jsonhelpers/jsonhttp"
 	"fediverse/nodeinfo"
 	"fediverse/pathhelpers"
 	"fediverse/webfinger"

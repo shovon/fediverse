@@ -3,7 +3,7 @@ package jrdhttp
 import (
 	"fediverse/httphelpers/httperrors"
 	"fediverse/jrd"
-	"fediverse/json/jsonhttp"
+	"fediverse/jsonhelpers/jsonhttp"
 	"net/http"
 )
 

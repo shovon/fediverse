@@ -5,7 +5,7 @@ import (
 	hh "fediverse/httphelpers"
 	"fediverse/httphelpers/httperrors"
 	"fediverse/httphelpers/requestbaseurl"
-	"fediverse/json/jsonhttp"
+	"fediverse/jsonhelpers/jsonhttp"
 	"fediverse/possibleerror"
 	"fediverse/urlhelpers"
 	"net/http"

@@ -1,7 +1,8 @@
 package jsonldhelpers
 
 import (
-	"encoding/json"
+	"fediverse/jsonhelpers"
+	"fediverse/pointers"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/piprate/json-gold/ld"
@@ -19,28 +20,38 @@ type IDNode struct {
 
 // Decoder is what is used for decoding a JSON-LD document into a Go struct.
 type Decoder struct {
-	Processor *ld.JsonLdProcessor
-	Options   *ld.JsonLdOptions
+	processor *ld.JsonLdProcessor
+	options   *ld.JsonLdOptions
 }
 
 var decoder Decoder
 
+var processor = ld.NewJsonLdProcessor()
+var options = ld.NewJsonLdOptions("")
+
 func init() {
 	decoder = Decoder{
-		Processor: ld.NewJsonLdProcessor(),
-		Options:   ld.NewJsonLdOptions(""),
+		processor: processor,
+		options:   options,
 	}
 }
 
 // Decode decodes a JSON-LD document into a Go struct.
 func (d Decoder) Decode(source []byte, destination any) error {
-	var objOutput any
-	err := json.Unmarshal(source, &objOutput)
+	objOutput, err := jsonhelpers.UnmarshalAny(source)
 	if err != nil {
 		return err
 	}
 
-	expanded, err := d.Processor.Expand(objOutput, d.Options)
+	return d.DecodeValue(objOutput, &destination)
+}
+
+// DecodeValue decodes the given deserialized object into to the given
+// destination object.
+func (d Decoder) DecodeValue(source any, destination any) error {
+	expanded, err := pointers.
+		ValueOrDefault(d.processor, processor).
+		Expand(source, pointers.ValueOrDefault(d.options, options))
 	if err != nil {
 		return err
 	}
@@ -48,7 +59,14 @@ func (d Decoder) Decode(source []byte, destination any) error {
 	return mapstructure.Decode(expanded, destination)
 }
 
-// Decode decodes a JSON-LD document into a Go struct.
-func Decode(source []byte, destination any) error {
+// DecodeBytes decodes a JSON-LD document from a byte slice into a go value
+// (ideally a struct that uses mitchelh)
+func DecodeBytes(source []byte, destination any) error {
 	return decoder.Decode(source, &destination)
+}
+
+// DecodeValue decodes the deserialized value (ideally a map[string]any or
+// slices of map[stringany]) of a JSON-LD document into the given destination.
+func DecodeValue(source any, destination any) error {
+	return decoder.DecodeValue(source, &destination)
 }

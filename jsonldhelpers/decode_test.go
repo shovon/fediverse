@@ -13,7 +13,7 @@ func TestDecode(t *testing.T) {
 		}
 
 		var data []testObject
-		err := Decode([]byte(`{
+		err := DecodeBytes([]byte(`{
 		"@context": {
 			"ex": "https://example.com/ns#",
 			"name": "ex:name"
@@ -55,7 +55,7 @@ func TestDecode(t *testing.T) {
 		}
 
 		var data []testObject
-		err := Decode([]byte(`{
+		err := DecodeBytes([]byte(`{
 		"@context": {
 			"ex": "https://example.com/ns#",
 			"name": "ex:name",

@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// JSONResponder is used to create a HTTP
 func JSONResponder(handler func(r *http.Request) (any, error)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		v, err := handler(r)

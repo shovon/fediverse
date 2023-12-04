@@ -24,6 +24,7 @@ Here's what a "real" JSON-LD document would look like:
 
 ```json
 {
+	"@id": "https://example.com/api/people/1",
 	"https://example.com/ns#name": [
 		{
 			"@value": "John Doe"
@@ -50,10 +51,16 @@ For example:
 		"name": "ex:name",
 		"address": "ex:address"
 	},
+	"@id": "https://example.com/api/people/1",
 	"name": "John Doe",
 	"address": "123 Peachtree Avenue"
 }
 ```
+
+> [!Note]
+> Notice the `@id` field? That is a special field that represents the **node's ID**.
+>
+> Remember, JSON-LD, and LD are used to define relationships between nodes. The ID helps identify the source node.
 
 In the above, you can see that `ex` is an alias for `https://example.com/ns#`, `name` is an alias for `ex:name` (which in turn is an alias for `https://example.com/ns#name`).
 
@@ -64,6 +71,7 @@ The above document will expand to become:
 ```json
 [
 	{
+		"@id": "https://example.com/api/people/1",
 		"https://example.com/ns#name": [
 			{
 				"@value": "John Doe"
@@ -78,7 +86,9 @@ The above document will expand to become:
 ]
 ```
 
-The `@context` can also be a link to a JSON document that actually describes the schema/vocabulary.
+As you can see, the root-level document is expanded and placed in an array.
+
+The `@context` can also be a URL to a JSON document that actually describes the schema/vocabulary.
 
 For example, let's say `https://example.com/ns` actually points to another JSON-LD object that contains a `@context` at its root.
 
@@ -97,6 +107,7 @@ Then you can simply substitute the context in your document with the URL to `htt
 ```json
 {
 	"@context": "https://example.com/ns",
+	"@id": "https://example.com/api/people/1",
 	"name": "John Doe",
 	"address": "123 Peachtree Avenue"
 }
@@ -106,7 +117,7 @@ Again, that above document will expand to what we saw earlier, but this time, mo
 
 ### Actual Linked Data
 
-Linked data not only links a node to other nodes, via a subject -> predicate -> object relationship, but of course, as the name implies, it also links data!
+LD not only links a node to other nodes, via a subject -> predicate -> object relationship, but of course, as the name implies, it also links data!
 
 Let's take the above document, add a field that gives the person one or many dogs.
 
@@ -117,23 +128,51 @@ Let's take the above document, add a field that gives the person one or many dog
 		"name": "ex:name",
 		"address": "ex:address"
 	},
+	"@id": "https://example.com/api/people/1",
 	"name": "John Doe",
 	"address": "123 Peachtree Avenue",
 	"https://example.com/ns#dogs": [
 		{
+			"@id": "https://example.com/api/dogs/1",
 			"name": "Waffles"
 		}
 	]
 }
 ```
 
-Here, we have the root node that points to (at least) another node, as predicated by `https://example.com/ns#dogs`.
+Here, we have the root node (subject) that points to—at least—another node, as predicated by `https://example.com/ns#dogs` (object).
 
 Notice now you have this ugly `"https://example.com/ns#dogs"`? Let's clean that up by moving it to the context.
 
 ```json
+{
+	"@context": {
+		"ex": "https://example.com/ns#",
+		"name": "ex:name",
+		"address": "ex:address",
+		"dogs": {
+			"@type": "@id",
+			"@id": "ex:dogs"
+		}
+	},
+	"@id": "https://example.com/api/people/1",
+	"name": "John Doe",
+	"address": "123 Peachtree Avenue",
+	"dogs": [
+		{
+			"@id": "https://example.com/api/dogs/1",
+			"name": "Waffles"
+		}
+	]
+}
+```
+
+The `{"@type": "@id", "@id": "ex:dogs"}`, pretty much describes the field associated with `https://example.com/ns#` to be a full node, rather than a value node.
+
+```json
 [
 	{
+		"@id": "https://example.com/api/people/1",
 		"https://example.com/ns#name": [
 			{
 				"@value": "John Doe"
@@ -148,6 +187,7 @@ Notice now you have this ugly `"https://example.com/ns#dogs"`? Let's clean that 
 			{
 				"https://example.com/ns#name": [
 					{
+						"@id": "https://example.com/api/dogs/1",
 						"@value": "Waffles"
 					}
 				]
@@ -156,8 +196,6 @@ Notice now you have this ugly `"https://example.com/ns#dogs"`? Let's clean that 
 	}
 ]
 ```
-
-The `{"@type": "@id", "@id": "ex:dogs"}`, pretty much describes the field associated with `https://example.com/ns#` to be a full node, rather than a value node.
 
 Given that it is generally a good idea to first expand a JSON-LD document prior interpreting it, we can simply move `{"name": "Waffles"}`, out of the array, and into a single non-array value.
 
@@ -172,9 +210,11 @@ Given that it is generally a good idea to first expand a JSON-LD document prior 
 			"@id": "ex:dogs"
 		}
 	},
+	"@id": "https://example.com/api/people/1",
 	"name": "John Doe",
 	"address": "123 Peachtree Avenue",
 	"dogs": {
+		"@id": "https://example.com/api/dogs/1",
 		"name": "Waffles"
 	}
 }
@@ -209,13 +249,57 @@ Its owner:
 			"@id": "ex:dogs"
 		}
 	},
+	"@id": "https://example.com/api/people/1",
 	"name": "John Doe",
 	"address": "123 Peachtree Avenue",
 	"dogs": "https://example.com/api/dogs/1"
 }
 ```
 
-In case you're wondering what would the
+Bear in mind, unlike resolving the context, which involves making a request over the Internet, a single ID field will not yield any such requests, during the expansion.
+
+So, for example, the following two documents are not equivalent.
+
+```json
+{
+	"@context": {
+		"ex": "https://example.com/ns#",
+		"name": "ex:name",
+		"dogs": {
+			"@type": "@id",
+			"@id": "ex:dogs"
+		}
+	},
+	"dogs": {
+		"@id": "https://example.com/api/dogs/1",
+		"name": "Waffles"
+	}
+}
+```
+
+```json
+{
+	"@context": {
+		"dogs": {
+			"@type": "@id",
+			"@id": "https://example.com/ns#dogs"
+		}
+	},
+	"dogs": "https://example.com/api/dogs/1"
+}
+```
+
+It doesn't matter whether `https://example.com/api/dogs/1` points to a document that is represented by the object represented by `dogs` in the first of the two above documents, in the end of the day, the responsibility lies squarely on the interpreter of the document. If the interpreter prefers to always lookup the document associated with the `@id`, then they can do so, otherwise, they are also free to interpret `dogs`, as-is, even if it is missing the `ex:name` field.
+
+### The `@type` field
+
+Even though the `@type` field doesn't play _that_ major of a role in terms of interpreting an LD node, it's still there, in case you need it. This way, you don't need to describe your own custom predicate to describe the "type" of a node.
+
+```json
+{
+	"@type": "https://example.com/ns#Person"
+}
+```
 
 ## Actor
 

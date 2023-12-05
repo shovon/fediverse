@@ -301,6 +301,45 @@ Even though the `@type` field doesn't play _that_ major of a role in terms of in
 }
 ```
 
+You could even alias a type. So rather than entering a whole URL, you can instead use the `@context` to define something shorter.
+
+For example:
+
+```json
+{
+	"@context": {
+		"ex": "https://example.com/ns#",
+		"Person": "ex:Person"
+	},
+	"@type": "Person"
+}
+```
+
+Expanding the above should yield
+
+```json
+[
+	{
+		"@type": ["https://example.com/ns#Person"]
+	}
+]
+```
+
+Notice that `@type` is expanded into an array?
+
+This is because a single node can represent more than one type.
+
+```json
+{
+	"@context": {
+		"ex": "https://example.com/ns#",
+		"Person": "ex:Person",
+		"Employee": "ex:Employee"
+	},
+	"@type": ["Person", "Employee"]
+}
+```
+
 ## Actor
 
 An actor is represented by a [JSON-LD](https://json-ld.org/) document. An actor does not need to be too complicated.

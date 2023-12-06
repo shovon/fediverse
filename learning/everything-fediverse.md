@@ -258,7 +258,7 @@ Its owner:
 
 Bear in mind, unlike resolving the context, which involves making a request over the Internet, a single ID field will not yield any such requests, during the expansion.
 
-So, for example, the following two documents are not equivalent.
+So, for example, of the following two documents are not equivalent.
 
 ```json
 {
@@ -289,7 +289,42 @@ So, for example, the following two documents are not equivalent.
 }
 ```
 
+The first one will expand to:
+
+```json
+[
+	{
+		"https://example.com/ns#dogs": [
+			{
+				"@id": "https://example.com/api/dogs/1",
+				"https://example.com/ns#name": [
+					{
+						"@value": "Waffles"
+					}
+				]
+			}
+		]
+	}
+]
+```
+
+And the second one to:
+
+```json
+[
+	{
+		"https://example.com/ns#dogs": [
+			{
+				"@id": "https://example.com/api/dogs/1"
+			}
+		]
+	}
+]
+```
+
 It doesn't matter whether `https://example.com/api/dogs/1` points to a document that is represented by the object represented by `dogs` in the first of the two above documents, in the end of the day, the responsibility lies squarely on the interpreter of the document. If the interpreter prefers to always lookup the document associated with the `@id`, then they can do so, otherwise, they are also free to interpret `dogs`, as-is, even if it is missing the `ex:name` field.
+
+The first one will expand to:
 
 ### The `@type` field
 
@@ -339,6 +374,39 @@ This is because a single node can represent more than one type.
 	"@type": ["Person", "Employee"]
 }
 ```
+
+### Aliasing URIs
+
+Everything that is represented by a URI, such as `@id`s, fields, and `@type`s, can be aliased in the from inside the `@context`.
+
+```json
+{
+	"@context": {
+		"ex": "https://example.com/"
+	},
+	"ex:ns#cool": {
+		"@id": "ex:"
+	}
+}
+```
+
+Will expand to:
+
+```json
+[
+	{
+		"https://example.com/ns#cool": [
+			{
+				"@id": "https://example.com/"
+			}
+		]
+	}
+]
+```
+
+> ![Note]
+>
+> JSON-LD doesn't only work with URIs. Instead, it works with a superset of URIs called Internationalized Resource Identifier, or IRI for short. While URIs only support ASCII, IRIs support unicode.
 
 ## Actor
 

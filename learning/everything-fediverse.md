@@ -62,6 +62,13 @@ For example:
 >
 > Remember, JSON-LD, and LD are used to define relationships between nodes. The ID helps identify the source node.
 
+> [!Note]
+> Depedning on the expansion library that you use, you can also supply your own contexts.
+>
+> This is especially useful for applications where each actor in a networking application already knows what the context is, and so senders are free to omit the context, if they so choose.
+>
+> This is especially important with ActivityPub, since the specification states that absent the context, then interpretation (typically expansion, among others) must be done with the ActivityStreams context.
+
 In the above, you can see that `ex` is an alias for `https://example.com/ns#`, `name` is an alias for `ex:name` (which in turn is an alias for `https://example.com/ns#name`).
 
 To get back the original "predicates", you can throw your JSON-LD document into an expander.
@@ -404,15 +411,35 @@ Will expand to:
 ]
 ```
 
-> ![Note]
->
+> [!Note]
 > JSON-LD doesn't only work with URIs. Instead, it works with a superset of URIs called Internationalized Resource Identifier, or IRI for short. While URIs only support ASCII, IRIs support unicode.
+
+## ActivityPub and ActivityStreams Administrivia
+
+A "field" in JSON-LD is an IRI, and not the human-readable field names that everyone is used to.
+
+For example, the field `inbox` technically doesn't make sense in ActivityPub, because JSON-LD expanders will ignore that field—without a valid alias.
+
+For that reason, when talking about fields in these paragraphs, rather than printing the entire field (predicate) name as an IRI, instead, I will prefix with `as`, which aliases `https://www.w3.org/ns/activitystreams#`.
+
+For example, rather than writing out `http://www.w3.org/ns/ldp#inbox`, I will write out `as:inbox`, which aliases `https://www.w3.org/ns/activitystreams#inbox`, which in turn aliases `ldp:inbox`, and `ldp` aliases `http://www.w3.org/ns/ldp#`.
+
+That said, in JSON form, explicit aliasing is not necessary, because JSON-LD expanders are perfectly capable of resolving the so-called "human-readable" field names perfectly fine, given the appropriate aliases in the contexts.
+
+So while I'd write `as:inbox` in this paragraphs, in JSON, as long as I provide the appropriate context, I'd simply write `inbox`, like so:
+
+```json
+{
+	"@context": "https://www.w3.org/ns/activitystreams",
+	"inbox": "https://sources.example.com/actors/1/inbox"
+}
+```
 
 ## Actor
 
 An actor is represented by a [JSON-LD](https://json-ld.org/) document. An actor does not need to be too complicated.
 
-Here's a very simple barebones actor.
+Here's a barebones actor.
 
 ```json
 {

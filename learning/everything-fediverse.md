@@ -331,8 +331,6 @@ And the second one to:
 
 It doesn't matter whether `https://example.com/api/dogs/1` points to a document that is represented by the object represented by `dogs` in the first of the two above documents, in the end of the day, the responsibility lies squarely on the interpreter of the document. If the interpreter prefers to always lookup the document associated with the `@id`, then they can do so, otherwise, they are also free to interpret `dogs`, as-is, even if it is missing the `ex:name` field.
 
-The first one will expand to:
-
 ### The `@type` field
 
 Even though the `@type` field doesn't play _that_ major of a role in terms of interpreting an LD node, it's still there, in case you need it. This way, you don't need to describe your own custom predicate to describe the "type" of a node.
@@ -424,9 +422,9 @@ For that reason, when talking about fields in these paragraphs, rather than prin
 
 For example, rather than writing out `http://www.w3.org/ns/ldp#inbox`, I will write out `as:inbox`, which aliases `https://www.w3.org/ns/activitystreams#inbox`, which in turn aliases `ldp:inbox`, and `ldp` aliases `http://www.w3.org/ns/ldp#`.
 
-That said, in JSON form, explicit aliasing is not necessary, because JSON-LD expanders are perfectly capable of resolving the so-called "human-readable" field names perfectly fine, given the appropriate aliases in the contexts.
+That said, in JSON form, explicit aliasing is not necessary, because JSON-LD expanders are capable of resolving the so-called "human-readable" field names perfectly fine, given the appropriate aliases in the contexts.
 
-So while I'd write `as:inbox` in this paragraphs, in JSON, as long as I provide the appropriate context, I'd simply write `inbox`, like so:
+So while I'd write `as:inbox` in these paragraphs, in JSON, as long as I provide the appropriate context, I'd simply write `inbox`, like so:
 
 ```json
 {
@@ -444,12 +442,12 @@ Here's a barebones actor.
 ```json
 {
 	"@context": "https://www.w3.org/ns/activitystreams",
-	"id": "https://source.example.com/actors/1",
-	"inbox": "https://sources.example.com/actors/1/inbox",
-	"outbox": "https://sources.example.com/actors/1/outbox",
-	"following": "https://sources.example.com/actors/1/following",
-	"followers": "https://sources.example.com/actors/1/followers",
-	"liked": "https://sources.example.com/actors/1/liked"
+	"id": "https://source.example.com",
+	"inbox": "https://sources.example.com/inbox",
+	"outbox": "https://sources.example.com/outbox",
+	"following": "https://sources.example.com/following",
+	"followers": "https://sources.example.com/followers",
+	"liked": "https://sources.example.com/liked"
 }
 ```
 
@@ -473,17 +471,17 @@ So, taking the actor from earlier, and then adding the necessary fields in order
 		"https://www.w3.org/ns/activitystreams",
 		"https://w3id.org/security/v1"
 	],
-	"id": "https://source.example.com/actors/1",
+	"id": "https://source.example.com",
 	"type": "Person",
-	"inbox": "https://sources.example.com/actors/1/inbox",
-	"outbox": "https://sources.example.com/actors/1/outbox",
-	"following": "https://sources.example.com/actors/1/following",
-	"followers": "https://sources.example.com/actors/1/followers",
-	"liked": "https://sources.example.com/actors/1/liked",
+	"inbox": "https://sources.example.com/inbox",
+	"outbox": "https://sources.example.com/outbox",
+	"following": "https://sources.example.com/following",
+	"followers": "https://sources.example.com/followers",
+	"liked": "https://sources.example.com/liked",
 	"preferredUsername": "actor",
 	"publicKey": {
-		"id": "https://source.example.com/actors/1#main-key",
-		"owner": "https://source.example.com/actors/1",
+		"id": "https://source.example.com#main-key",
+		"owner": "https://source.example.com",
 		"publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArLEIhmSM4UXoUbh/UNri\nOmsruokiG4GU0jz7R/rZ3lC0kGEMEJpk7x8hLEtg0DhV9DW3jPOsPi1KvLRkTgiE\nCSEEG+ULqZ3/WTZR3VX+/Tb1huemD2rBZkv9vpL+3qSRuFTvcMumonVuJ6rtT3pG\nTbsXlYmp2n7VkbPQPz6Wy3R7YeGmdNxtRiccwrpeovc+kCCoY/t467cK1ON+FDrq\nT/xgNhG2jPfotMF3ixk5/EQuakKEz2YQP4duD6D86QciZQWjw5YMv96NxV6D24CV\nn8HxEcxM5AfWvqbNLpEvi6UBUVCnM4IzJTlboPBO4tUPSu01YDqb8jbTC0f6rOCZ\nOQIDAQAB\n-----END PUBLIC KEY-----\n"
 	}
 }
@@ -491,16 +489,37 @@ So, taking the actor from earlier, and then adding the necessary fields in order
 
 ## Following someone
 
-When following someone, you would send an activity in the form of a JSON-LD document, of type `https://www.w3.org/ns/activitystreams#Follow`. It usually looks like this:
+When following an actor, you would send a "follow activity". It usually looks like this:
 
 ```json
 {
 	"@context": "https://www.w3.org/ns/activitystreams",
-	"id": "https://example.com#follows/follow/1",
+	"id": "https://source.example.com#follow/1",
 	"type": "Follow",
-	"actor": "https://source.example.com/actors/1",
-	"object": "https://destination.example.com/actors/1"
+	"actor": "https://source.example.com",
+	"object": "https://destination.example.com"
 }
 ```
 
-But, in order to actually send a follow, we must also ensure that the
+However, that follow activity is merely a request to follow.
+
+Your follow request is therefore merely "pending".
+
+If the followee is willing to welcome the prospective follower to become an actual follower, then the followee is responsible for responding with an "accept activity". It typically looks like so:
+
+```json
+{
+	"@context": "https://www.w3.org/ns/activitystreams",
+	"id": "https://destination.example.com#accepts/follows/1",
+	"type": "Accept",
+	"actor": "https://destination.example.com",
+	"object": {
+		"id": "https://source.example.com#follow/1",
+		"type": "Follow",
+		"actor": "https://source.example.com",
+		"object": "https://destination.example.com"
+	}
+}
+```
+
+Ideally, the followee should store the follow activity's `@id` for record-keeping, and the follower should do likewise.

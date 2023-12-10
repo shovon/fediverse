@@ -54,22 +54,66 @@ func Unfollow(
 	//   }
 	// }
 
-	// b, err := json.Marshal(map[string]any{
-	// 	"@context": "https://www.w3.org/ns/activitystreams",
-	// 	"id":       undoActivityIRI,
-	// 	"type":     "Undo",
-	// 	"actor":    senderIRI,
-	// 	"object": map[string]any{
-	// 		"id": undoActivityIRI,
-	// 	},
-	// })
-	// if err != nil {
-	// 	return err
-	// }
+	b, err := json.Marshal(map[string]any{
+		"@context": "https://www.w3.org/ns/activitystreams",
+		"id":       undoActivityIRI,
+		"type":     "Undo",
+		"actor":    senderIRI,
+		"object": map[string]any{
+			"id":     followActivityIRI,
+			"type":   "Follow",
+			"actor":  senderIRI,
+			"object": recipientID,
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST", string(inboxURL), bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+
+	digesters := []rfc3230.Digester{apphttp.SHA256Digest{}}
+	if err := rfc3230.AddDigestToRequest(req, digesters); err != nil {
+		return err
+	}
+
+	signer := rsassapkcsv115sha256.Base64Signer(signingKey)
+
+	if err := cavage.AddSignatureToRequest(req, cavage.Params{
+		KeyID:     nullable.Just(string(signingKeyIRI)),
+		Algorithm: nullable.Just("hs2019"),
+		Headers:   nullable.Just([]string{"digest", "(created)", "(request-target)"}),
+		Created:   time.Now(),
+		// TODO: consider adding an expries field
+	}, signer); err != nil {
+		return err
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(body))
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
 
 	return nil
 }
 
+// Follow simply constructs an activity, and sends it to the intended recipient,
+// via HTTP, for the purposes of following a user.
 func Follow(
 	signingKey *rsa.PrivateKey,
 	signingKeyIRI SigningKeyIRI,
@@ -78,6 +122,9 @@ func Follow(
 	recipientID ObjectIRI,
 	inboxURL InboxURL,
 ) error {
+	// Generate the message payload.
+	// TODO: consider using a marshaller for this. The use of a naked "Follow", as
+	// the `@type` is giving me anxiety.
 	b, err := json.Marshal(map[string]any{
 		"@context": "https://www.w3.org/ns/activitystreams",
 		"id":       followActivityIRI,
@@ -99,8 +146,6 @@ func Follow(
 		return err
 	}
 
-	fmt.Println(req.Header.Get("Digest"))
-
 	signer := rsassapkcsv115sha256.Base64Signer(signingKey)
 
 	if err := cavage.AddSignatureToRequest(req, cavage.Params{
@@ -112,8 +157,6 @@ func Follow(
 	}, signer); err != nil {
 		return err
 	}
-
-	fmt.Println(req.Header.Get("Signature"))
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -150,6 +193,8 @@ func Follow(
 //   }
 // }
 
+// AcceptFollow simply sends constructs an activity and sends it to the intended
+// recipient.
 func AcceptFollow(
 	signingKey *rsa.PrivateKey,
 	signingKeyIRI SigningKeyIRI,

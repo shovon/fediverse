@@ -62,13 +62,6 @@ For example:
 >
 > Remember, JSON-LD, and LD are used to define relationships between nodes. The ID helps identify the source node.
 
-> [!Note]
-> Depedning on the expansion library that you use, you can also supply your own contexts.
->
-> This is especially useful for applications where each actor in a networking application already knows what the context is, and so senders are free to omit the context, if they so choose.
->
-> This is especially important with ActivityPub, since the specification states that absent the context, then interpretation (typically expansion, among others) must be done with the ActivityStreams context.
-
 In the above, you can see that `ex` is an alias for `https://example.com/ns#`, `name` is an alias for `ex:name` (which in turn is an alias for `https://example.com/ns#name`).
 
 To get back the original "predicates", you can throw your JSON-LD document into an expander.
@@ -122,6 +115,13 @@ Then you can simply substitute the context in your document with the URL to `htt
 
 Again, that above document will expand to what we saw earlier, but this time, most expanders will do an additional lookup over at `https://example.com/ns` to retrieve and interpret the context.
 
+> [!Note]
+> Depedning on the expansion library that you use, you can also supply your own contexts.
+>
+> This is especially useful for applications where each actor in a networking application already knows what the context is, and so senders are free to omit the `@context` field, if they so choose.
+>
+> This is especially important with ActivityPub, since the specification states that absent the context, then interpretation (typically expansion, among others) must be done with the ActivityStreams context.
+
 ### Actual Linked Data
 
 LD not only links a node to other nodes, via a subject -> predicate -> object relationship, but of course, as the name implies, it also links data!
@@ -174,7 +174,7 @@ Notice now you have this ugly `"https://example.com/ns#dogs"`? Let's clean that 
 }
 ```
 
-The `{"@type": "@id", "@id": "ex:dogs"}`, pretty much describes the field associated with `https://example.com/ns#` to be a full node, rather than a value node.
+The `{"@type": "@id", "@id": "ex:dogs"}`, pretty much describes the field associated with `https://example.com/ns#dogs` to be a full node, rather than a value node.
 
 ```json
 [
@@ -412,6 +412,78 @@ Will expand to:
 > [!Note]
 > JSON-LD doesn't only work with URIs. Instead, it works with a superset of URIs called Internationalized Resource Identifier, or IRI for short. While URIs only support ASCII, IRIs support unicode.
 
+### Aliasing the `@type` and `@id` field.
+
+JSON-LD allows authors to alias the `@type` and `@id` fields to anything that they so choose. Often times, authors dislike the `@` symbol.
+
+For that reason, many authors take advantage of JSON-LD's capability to alias those fields, and the syntax for it looks like so:
+
+```json
+{
+	"@context": {
+		"ex": "https://example.com/ns#",
+		"id": "@id",
+		"type": "@type",
+		"Object": "ex:Object",
+		"Nothing": "ex:Nothing"
+	},
+
+	"id": "https://example.com/api/objects/1",
+	"type": ["Object", "Nothing"]
+}
+```
+
+And as you can see above, no need to explicitly include the `@` symbol right befre `type` or `id`.
+
+### Compacted vs Expanded form
+
+When people talk about JSON-LD, they typically talk about its two forms: compacted and expanded.
+
+As far as interpreters are concerned, both forms are perfectly valid JSON-LD. Not only can you expand a compacted JSON-LD document, but you can also expand an expanded document. Not only can you compact an expanded JSON-LD document, you can compact a compacted JSON-LD document, as long as you provide the valid contexts.
+
+You can even even mix and match the compacted and expanded forms. As long as you follow the "rules" of JSON-LD, you are dealing with perfectly valid JSON-LD documents.
+
+I even demonstrated this in a previous example. Here it is again:
+
+```json
+{
+	"@context": {
+		"ex": "https://example.com/ns#",
+		"name": "ex:name",
+		"address": "ex:address"
+	},
+	"@id": "https://example.com/api/people/1",
+	"name": "John Doe",
+	"address": "123 Peachtree Avenue",
+	"https://example.com/ns#dogs": [
+		{
+			"@id": "https://example.com/api/dogs/1",
+			"name": "Waffles"
+		}
+	]
+}
+```
+
+As you can see, what could have otherwise been aliased as `dogs`, and referenced as so, instead, we didn't bother aliasing, and directly used the URI as the predicate.
+
+This is perfectly valid JSON-LD.
+
+Just be sure to expand, before interpreting the document.
+
+And, just as a courtesy, be sure to alias the fields, via the `@context`, compact the document, before sending it out to an intended recipient. This way, you won't need to repeat a whole URL prefix for every field. This should help save bandwidth.
+
+### Practicing JSON-LD
+
+Some may find JSON-LD to be rather confusing. Fear not, you are not alone.
+
+Fortunately, there is a tool for you to explore the various ways to work with JSON-LD.
+
+Head on over to [json-ld.org/playground](https://json-ld.org/playground/), and start playing around.
+
+Bear in mind: for most applications, you're probably going to only be expanding JSON-LD, but that said, it's probably a good idea to teach yourself the motivation behind JSON-LD. As a quick hint: JSON-LD is just one way to deliver RDF, which, again, is a way to establish relationships from node to node.
+
+So not only should you write a few lines of JSON-LD
+
 ## ActivityPub and ActivityStreams Administrivia
 
 A "field" in JSON-LD is an IRI, and not the human-readable field names that everyone is used to.
@@ -432,6 +504,8 @@ So while I'd write `as:inbox` in these paragraphs, in JSON, as long as I provide
 	"inbox": "https://sources.example.com/actors/1/inbox"
 }
 ```
+
+So remember: we are assuming the context derived from `https://www.w3.org/ns/activitystreams`, which is aliased to `as`. When talking about individual "fields" (wherein people are intuitively going to expect a human-readable field), to avoid any confusion, I will be prefixing with `as:` rather than spell out the field name itself. But in JSON, just use the "human-readable" field name.
 
 ## Actor
 
@@ -523,3 +597,22 @@ If the followee is willing to welcome the prospective follower to become an actu
 ```
 
 Ideally, the followee should store the follow activity's `@id` for record-keeping, and the follower should do likewise.
+
+## Unfollow someone
+
+When unfollowing an actor, the unfollower must send an "undo activity".
+
+```json
+{
+	"@context": "https://www.w3.org/ns/activitystreams",
+	"id": "https://destination.example.com#accepts/follows/1",
+	"type": "Undo",
+	"actor": "https://destination.example.com",
+	"object": {
+		"id": "https://source.example.com#follow/1",
+		"type": "Follow",
+		"actor": "https://source.example.com",
+		"object": "https://destination.example.com"
+	}
+}
+```

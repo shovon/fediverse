@@ -18,7 +18,7 @@ The caveat with using LD is that fields should be defined not as human-readable 
 
 So, if we have an organization that owns the domain name `example.com`, they can use the domain name to express "ownership" of those fields.
 
-Additionally, those fields can point to more than one object. And hence a JSON-LD fields are associated with an array of nodes, rather than an just a single node.
+Additionally, those fields can point to more than one object. And hence a JSON-LD fields are associated with an array of nodes, rather than just a single node.
 
 Here's what a "real" JSON-LD document would look like:
 
@@ -62,7 +62,7 @@ For example:
 >
 > Remember, JSON-LD, and LD are used to define relationships between nodes. The ID helps identify the source node.
 
-In the above, you can see that `ex` is an alias for `https://example.com/ns#`, `name` is an alias for `ex:name` (which in turn is an alias for `https://example.com/ns#name`).
+In the above, you can see that `ex` is an alias for `https://example.com/ns#`, `name` is an alias for `ex:name`, which in turn is an alias for `https://example.com/ns#name`.
 
 To get back the original "predicates", you can throw your JSON-LD document into an expander.
 
@@ -86,7 +86,9 @@ The above document will expand to become:
 ]
 ```
 
-As you can see, the root-level document is expanded and placed in an array.
+As you can see, the root-level document is expanded and placed in an array. This is because, again, JSON-LD is a way to represent a graph of linked data, and a single JSON-LD document (or any document representing linked data) can have multiple nodes in the graph.
+
+### The context as a URL
 
 The `@context` can also be a URL to a JSON document that actually describes the schema/vocabulary.
 
@@ -121,6 +123,62 @@ Again, that above document will expand to what we saw earlier, but this time, mo
 > This is especially useful for applications where each actor in a networking application already knows what the context is, and so senders are free to omit the `@context` field, if they so choose.
 >
 > This is especially important with ActivityPub, since the specification states that absent the context, then interpretation (typically expansion, among others) must be done with the ActivityStreams context.
+
+### JSON-LD and triples
+
+Before we go any further, let me go ahead and explain what JSON-LD really is.
+
+Earlier I mentioned that JSON-LD is a way to represent a "subject -> predicate -> object" relationship.
+
+That relationship is what is called a "triple". And we can have multiple of these triples, all thrown into a pile, and reading them individually, tracing their paths, will eventually allow you to form of a graph.
+
+To actually make this concept of a pile of triples be actually practicable, the same subject, can have multiple predicate -> object relationships. In other words, we can have the same subject be used across multiple triples, to represent a single entity within what the graph represents.
+
+So, let's say we have someone named Alice, and she has a house on 123 Peachtree Avenue, and her absolute favourite colour is purple.
+
+In a very simplified syntax, the series of triples to describe Alice will look like so:
+
+```
+https://example.com/Alice https://example.com/address 123 Peachtree Avenue
+https://example.com/Alice https://example.com/color Purple
+```
+
+Repeating the subject—as represented by the ID `https://example.com/Alice`—becomes repetitive.
+
+This is where JSON-LD comes along to aleviate that repetitiveness.
+
+The above set of triples can be instead rewritten as so:
+
+```json
+{
+	"@id": "https://example.com/Alice",
+	"https://example.com/address": [
+		{
+			"@value": "123 Peachtree Avenue"
+		}
+	],
+	"https://example.com/color": [
+		{
+			"@value": "Purple"
+		}
+	]
+}
+```
+
+And of course, with a `@context`, we can alleviate the repetitiveness even more.
+
+```json
+{
+	"@context": {
+		"ex": "https://example.com/",
+		"address": "ex:address",
+		"color": "ex:color"
+	},
+	"@id": "https://example.com/Alice",
+	"address": "@value": "123 Peachtree Avenue",
+	"color":  "Purple"
+}
+```
 
 ### Actual Linked Data
 

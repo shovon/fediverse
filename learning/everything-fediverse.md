@@ -130,11 +130,14 @@ Then you can simply substitute the context in your document with the URL to `htt
 Again, that above document will expand to what we saw earlier, but this time, most expanders will do an additional lookup over at `https://example.com/ns` to retrieve and interpret the context.
 
 > [!Note]
-> Depedning on the expansion library that you use, you can also supply your own contexts.
+> Depending on the expansion library that you use, you can also supply your own contexts.
 >
 > This is especially useful for applications where each actor in a networking application already knows what the context is, and so senders are free to omit the `@context` field, if they so choose.
 >
 > This is especially important with ActivityPub, since the specification states that absent the context, then interpretation (typically expansion, among others) must be done with the ActivityStreams context.
+
+> [!Note]
+> As far as JSON-LD interpreters are concerned, a context pointed to by a URL is the only thing that will only ever trigger a network reqeuest. Beyond that JSON-LD is merely a data interchange format, and any application-level inconsistencies must be handled between clients/servers.
 
 ### JSON-LD and triples
 
@@ -155,7 +158,7 @@ https://example.com/Alice https://example.com/address "123 Peachtree Avenue"
 https://example.com/Alice https://example.com/color "Purple"
 ```
 
-> ![Note]
+> [!Note]
 > The above two triples don't need to exclusively be a part of a single file.
 >
 > In fact, if you wanted to, you can throw those triples into a database of triples, that can then be used to represent a graph.
@@ -299,9 +302,32 @@ And, to clean things with the help of the context, we now introduce an additiona
 }
 ```
 
-### Making sense of JSON-LD and triples
+Of course, if you wanted to uniquely identify Alice's dog in a global pool of triples and nodes, you can do so via the `@id` field, just as you would with the root node.
 
-The general idea behind JSON-LD and triples is that URIs are what are used to define.
+```json
+{
+	"@context": {
+		"ex": "https://example.com/",
+		"dog": {
+			"@id": "ex:dog",
+			"@type": "@id"
+		}
+	},
+	"dog": {
+		"@id": "https://example.com/Waffles",
+		"name": "Waffles"
+	}
+}
+```
+
+Not much would change in the resulting triples interpretation, but, instead of using the blank node syntax to represent Waffles, we'd use an actual URL.
+
+```
+_:alice https://example.com/dog https://example.com/Waffles
+https://example.com/Waffles https://example.com/name "Waffles"
+```
+
+Note: we're not using quotes around `https://example.com/Waffles`, because that's not a literal, but something that will point to something else.
 
 ### The `@type` field
 

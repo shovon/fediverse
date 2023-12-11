@@ -88,6 +88,18 @@ The above document will expand to become:
 
 As you can see, the root-level document is expanded and placed in an array. This is because, again, JSON-LD is a way to represent a graph of linked data, and a single JSON-LD document (or any document representing linked data) can have multiple nodes in the graph.
 
+### Practicing and debugging JSON-LD
+
+Some may find JSON-LD to be rather confusing. Fear not, you are not alone.
+
+Fortunately, there is a tool for you to explore the various ways to work with JSON-LD.
+
+Head on over to [json-ld.org/playground](https://json-ld.org/playground/), and start playing around.
+
+Bear in mind: for most applications, you're probably going to only be expanding JSON-LD, but that said, it's probably a good idea to teach yourself the motivation behind JSON-LD. As a quick hint: JSON-LD is just one way to deliver RDF, which, again, is a way to establish relationships from node to node.
+
+As you are reading through the next sections, I highly encourage you to copy and paste the JSON-LD documents into the JSON-LD playground to get a feel for what JSON-LD truly is.
+
 ### The context as a URL
 
 The `@context` can also be a URL to a JSON document that actually describes the schema/vocabulary.
@@ -139,8 +151,8 @@ So, let's say we have someone named Alice, and she has a house on 123 Peachtree 
 In a very simplified syntax, the series of triples to describe Alice will look like so:
 
 ```
-https://example.com/Alice https://example.com/address 123 Peachtree Avenue
-https://example.com/Alice https://example.com/color Purple
+https://example.com/Alice https://example.com/address "123 Peachtree Avenue"
+https://example.com/Alice https://example.com/color "Purple"
 ```
 
 > ![Note]
@@ -198,9 +210,9 @@ By convention, in many triples syntax, we still need to identify a blank node, a
 Taking that above example, let's omit Alice's ID, and instead give her a name. We can have her blank node ID be `_:alice`, and the set of triples in our custom syntax will look like so.
 
 ```
-_:alice https://exmaple.com/name Alice
-_:alice https://example.com/address 123 Peachtree Avenue
-_:alice https://example.com/color Purple
+_:alice https://exmaple.com/name "Alice"
+_:alice https://example.com/address "123 Peachtree Avenue"
+_:alice https://example.com/color "Purple"
 ```
 
 In JSON-LD, because we don't need to explicitly identify blank nodes, we can simply omit the `_:alice` ID.
@@ -243,220 +255,53 @@ And of course, using the context, the above can be abbreviated like so:
 
 ### Literals and Nodes
 
-So far, I've been talking about associating each "field" (predicate) to a literal ("object"). However, one of the powers of JSON-LD and the triples that it represents is that you can form a graph!
+So far, I've been talking about associating each "field" (predicate) to a literal (object). However, one of the powers of JSON-LD and the triples that it represents is that you can form a graph!
 
 That means a subject can point to an object, and that object can represent a subject and then points to another object, and so on and so forth.
 
-And the way to do that is to have the object be an ID instead of a literal.
+Going back to our triples example, we can give Alice a dog
 
-### Actual Linked Data
+```
+_:alice https://example.com/dog _:waffles
+_:waffles https://example.com/name "Waffles"
+```
 
-LD not only links a node to other nodes, via a subject -> predicate -> object relationship, but of course, as the name implies, it also links data!
-
-Let's take the above document, add a field that gives the person one or many dogs.
+And an equivalent JSON-LD would look like so:
 
 ```json
 {
-	"@context": {
-		"ex": "https://example.com/ns#",
-		"name": "ex:name",
-		"address": "ex:address"
-	},
-	"@id": "https://example.com/api/people/1",
-	"name": "John Doe",
-	"address": "123 Peachtree Avenue",
-	"https://example.com/ns#dogs": [
+	"https://example.com/dog": [
 		{
-			"@id": "https://example.com/api/dogs/1",
-			"name": "Waffles"
+			"https://example.com/name": [
+				{
+					"@value": "Waffles"
+				}
+			]
 		}
 	]
 }
 ```
 
-Here, we have the root node (subject) that points to—at least—another node, as predicated by `https://example.com/ns#dogs` (object).
-
-Notice now you have this ugly `"https://example.com/ns#dogs"`? Let's clean that up by moving it to the context.
+And, to clean things with the help of the context, we now introduce an additional bit of information to spcify that the `"https://example.com/dog"` field points to a non-literal.
 
 ```json
 {
 	"@context": {
-		"ex": "https://example.com/ns#",
-		"name": "ex:name",
-		"address": "ex:address",
-		"dogs": {
-			"@type": "@id",
-			"@id": "ex:dogs"
+		"ex": "https://example.com/",
+		"dog": {
+			"@id": "ex:dog",
+			"@type": "@id"
 		}
 	},
-	"@id": "https://example.com/api/people/1",
-	"name": "John Doe",
-	"address": "123 Peachtree Avenue",
-	"dogs": [
-		{
-			"@id": "https://example.com/api/dogs/1",
-			"name": "Waffles"
-		}
-	]
-}
-```
-
-The `{"@type": "@id", "@id": "ex:dogs"}`, pretty much describes the field associated with `https://example.com/ns#dogs` to be a full node, rather than a value node.
-
-```json
-[
-	{
-		"@id": "https://example.com/api/people/1",
-		"https://example.com/ns#name": [
-			{
-				"@value": "John Doe"
-			}
-		],
-		"https://example.com/ns#address": [
-			{
-				"@value": "123 Peachtree Avenue"
-			}
-		],
-		"https://example.com/ns#dogs": [
-			{
-				"https://example.com/ns#name": [
-					{
-						"@id": "https://example.com/api/dogs/1",
-						"@value": "Waffles"
-					}
-				]
-			}
-		]
-	}
-]
-```
-
-Given that it is generally a good idea to first expand a JSON-LD document prior interpreting it, we can simply move `{"name": "Waffles"}`, out of the array, and into a single non-array value.
-
-```json
-{
-	"@context": {
-		"ex": "https://example.com/ns#",
-		"name": "ex:name",
-		"address": "ex:address",
-		"dogs": {
-			"@type": "@id",
-			"@id": "ex:dogs"
-		}
-	},
-	"@id": "https://example.com/api/people/1",
-	"name": "John Doe",
-	"address": "123 Peachtree Avenue",
-	"dogs": {
-		"@id": "https://example.com/api/dogs/1",
+	"dog": {
 		"name": "Waffles"
 	}
 }
 ```
 
-And it will expand the same way had that one node linked with `dogs` been inside the array in the first place.
+### Making sense of JSON-LD and triples
 
-If we wanted to, we can then move that single document in `dogs` to an entirely separate document, somewhere on the Internet, pointed to by `https://example.com/api/dogs/1`.
-
-The dog:
-
-```json
-{
-	"@context": {
-		"name": "https://example.com/ns#name"
-	},
-	"@id": "https://example.com/api/dogs/1",
-	"name": "Waffles"
-}
-```
-
-Its owner:
-
-```json
-{
-	"@context": {
-		"ex": "https://example.com/ns#",
-		"name": "ex:name",
-		"address": "ex:address",
-		"dogs": {
-			"@type": "@id",
-			"@id": "ex:dogs"
-		}
-	},
-	"@id": "https://example.com/api/people/1",
-	"name": "John Doe",
-	"address": "123 Peachtree Avenue",
-	"dogs": "https://example.com/api/dogs/1"
-}
-```
-
-Bear in mind, unlike resolving the context, which involves making a request over the Internet, a single ID field will not yield any such requests, during the expansion.
-
-So, for example, of the following two documents are not equivalent.
-
-```json
-{
-	"@context": {
-		"ex": "https://example.com/ns#",
-		"name": "ex:name",
-		"dogs": {
-			"@type": "@id",
-			"@id": "ex:dogs"
-		}
-	},
-	"dogs": {
-		"@id": "https://example.com/api/dogs/1",
-		"name": "Waffles"
-	}
-}
-```
-
-```json
-{
-	"@context": {
-		"dogs": {
-			"@type": "@id",
-			"@id": "https://example.com/ns#dogs"
-		}
-	},
-	"dogs": "https://example.com/api/dogs/1"
-}
-```
-
-The first one will expand to:
-
-```json
-[
-	{
-		"https://example.com/ns#dogs": [
-			{
-				"@id": "https://example.com/api/dogs/1",
-				"https://example.com/ns#name": [
-					{
-						"@value": "Waffles"
-					}
-				]
-			}
-		]
-	}
-]
-```
-
-And the second one to:
-
-```json
-[
-	{
-		"https://example.com/ns#dogs": [
-			{
-				"@id": "https://example.com/api/dogs/1"
-			}
-		]
-	}
-]
-```
-
-It doesn't matter whether `https://example.com/api/dogs/1` points to a document that is represented by the object represented by `dogs` in the first of the two above documents, in the end of the day, the responsibility lies squarely on the interpreter of the document. If the interpreter prefers to always lookup the document associated with the `@id`, then they can do so, otherwise, they are also free to interpret `dogs`, as-is, even if it is missing the `ex:name` field.
+The general idea behind JSON-LD and triples is that URIs are what are used to define.
 
 ### The `@type` field
 
@@ -598,18 +443,6 @@ This is perfectly valid JSON-LD.
 Just be sure to expand, before interpreting the document.
 
 And, just as a courtesy, be sure to alias the fields, via the `@context`, compact the document, before sending it out to an intended recipient. This way, you won't need to repeat a whole URL prefix for every field. This should help save bandwidth.
-
-### Practicing JSON-LD
-
-Some may find JSON-LD to be rather confusing. Fear not, you are not alone.
-
-Fortunately, there is a tool for you to explore the various ways to work with JSON-LD.
-
-Head on over to [json-ld.org/playground](https://json-ld.org/playground/), and start playing around.
-
-Bear in mind: for most applications, you're probably going to only be expanding JSON-LD, but that said, it's probably a good idea to teach yourself the motivation behind JSON-LD. As a quick hint: JSON-LD is just one way to deliver RDF, which, again, is a way to establish relationships from node to node.
-
-So not only should you write a few lines of JSON-LD
 
 ## ActivityPub and ActivityStreams Administrivia
 

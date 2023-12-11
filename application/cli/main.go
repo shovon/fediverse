@@ -24,9 +24,8 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
-
-	"github.com/piprate/json-gold/ld"
 )
 
 func readFromStdin() []byte {
@@ -114,6 +113,11 @@ func main() {
 		}
 		fmt.Println("Post successfully created!")
 	case "follow":
+		// You might ask yourself: why not do a WebFinger lookup?
+		//
+		// This is because not all actors are associated with what the Fediverse
+		// calls an "account address". https://cosocial.ca/@evan/111518991863776667
+
 		selfLink, ok := slices.Get(args, 1)
 		if !ok {
 			fmt.Fprintf(os.Stderr, "Please provide a account address to follow\n")
@@ -145,6 +149,25 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Unable to read response body: %s\n", err.Error())
 			os.Exit(1)
 		}
+
+		type actor struct {
+			ID    string                 `mapstructure:"@id"`
+			Inbox []jsonldhelpers.IDNode `mapstructure:"http://www.w3.org/ns/ldp#inbox"`
+		}
+
+		var actorObjects []actor
+		err = jsonldhelpers.DecodeBytes(body, &actorObjects)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to parse response body: %s\n", err.Error())
+			os.Exit(1)
+		}
+
+		actorObject, ok := slices.Get(actorObjects, 0)
+		if !ok {
+			fmt.Fprintln(os.Stderr, "Not a valid JSON-LD document")
+			os.Exit(1)
+		}
+
 		var parsed any
 		err = json.Unmarshal(body, &parsed)
 		if err != nil {
@@ -152,58 +175,17 @@ func main() {
 			os.Exit(1)
 		}
 
-		proc := ld.NewJsonLdProcessor()
-		options := ld.NewJsonLdOptions("")
-
-		// TODO: add a fallback for the event that the context is not provided.
-		//   or is invalid.
-		expanded, err := proc.Expand(parsed, options)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Unable to expand JSON-LD document: %s\n", err.Error())
-		}
-		var inboxID string
-		gotInbox := false
-
-		// TODO: it's already obvious by now that JSON-LD is not RDF. Sure, the doc
-		//   can be interpreted as RDF, but no matter how much the doc conforms to
-		//   the JSON-LD spec, there are still some significant amount of metadata
-		//   encoded in the document, that devs actually take advantage of that.
-		//   For example: JSON-LD can encode the concept of a "root node". Indeed,
-		//   an actor, no matter how much it's represented as a JSON-LD document—
-		//   which can be interpreted as RDF—the `id` field of the JSON document is
-		//   important; not only does it represent the ID of the actor, but it is
-		//   also serves as the URL from which to capture the actor.
-		//
-		//   Remove this loop. This is just pointless.
-		for _, node := range expanded {
-			predicateObjectMap, ok := node.(map[string]any)
-			if !ok {
-				continue
-			}
-			inbox, ok := predicateObjectMap["http://www.w3.org/ns/ldp#inbox"].([]any)
-			if !ok {
-				continue
-			}
-			value, ok := inbox[0].(map[string]any)
-			if !ok {
-				continue
-			}
-			inboxID, ok = value["@id"].(string)
-			if !ok {
-				continue
-			}
-			gotInbox = true
-		}
-		if !gotInbox {
-			fmt.Fprintf(os.Stderr, "No inbox found\n")
+		inboxID, ok := slices.Get(actorObject.Inbox, 0)
+		if !ok {
+			fmt.Fprintln(os.Stderr, "No inbox found with actor")
 			os.Exit(1)
 		}
 
 		fmt.Println("The URL to the inbox:", inboxID)
 
-		actorID, ok := jsonldhelpers.GetNodeID(expanded[0])
-		if !ok {
-			fmt.Fprintf(os.Stderr, "The object did not have an actor ID specified")
+		actorID := actorObject.ID
+		if strings.TrimSpace(actorID) == "" {
+			fmt.Fprintln(os.Stderr, "The record from the server did not have a valid actor ID")
 		}
 		id, err := following.AddFollowing(actorID)
 		if err != nil {
@@ -212,7 +194,7 @@ func main() {
 			panic(err)
 		}
 
-		// Actually send the follow request
+		// Finally, send the follow request
 
 		params := map[string]string{
 			"username":  config.Username(),
@@ -226,7 +208,7 @@ func main() {
 		followActivityIRI := actorIRI + "#follows" + "/" + strconv.FormatInt(id, 10)
 		senderIRI := actorIRI
 		recipientID := selfLink
-		inboxURL := inboxID
+		inboxURL := inboxID.ID
 
 		fmt.Println("Sending follow activity...")
 		err = activityclient.Follow(

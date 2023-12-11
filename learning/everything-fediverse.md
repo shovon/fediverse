@@ -143,6 +143,13 @@ https://example.com/Alice https://example.com/address 123 Peachtree Avenue
 https://example.com/Alice https://example.com/color Purple
 ```
 
+> ![Note]
+> The above two triples don't need to exclusively be a part of a single file.
+>
+> In fact, if you wanted to, you can throw those triples into a database of triples, that can then be used to represent a graph.
+>
+> In fact, there are database implementations out there that are specifically geared towards storing these triples, and the class of databases responsible for that are called "triple stores", and often resort to using a query language called SPARQL.
+
 Repeating the subject—as represented by the ID `https://example.com/Alice`—becomes repetitive.
 
 This is where JSON-LD comes along to aleviate that repetitiveness.
@@ -179,6 +186,68 @@ And of course, with a `@context`, we can alleviate the repetitiveness even more.
 	"color":  "Purple"
 }
 ```
+
+### Blank nodes
+
+Previously, we had our root (subject) node have an explicit ID. But sometimes, when interpreting a single document, using IDs may be overkill. Sometimes, we just want to deliver fields to those reading and interpreting the JSON-LD document. In this case we can omit the ID.
+
+If we are to omit the ID of the node, we say that the node is a blank node.
+
+By convention, in many triples syntax, we still need to identify a blank node, and that is done by a prefixing a label with a `_:`.
+
+Taking that above example, let's omit Alice's ID, and instead give her a name. We can have her blank node ID be `_:alice`, and the set of triples in our custom syntax will look like so.
+
+```
+_:alice https://exmaple.com/name Alice
+_:alice https://example.com/address 123 Peachtree Avenue
+_:alice https://example.com/color Purple
+```
+
+In JSON-LD, because we don't need to explicitly identify blank nodes, we can simply omit the `_:alice` ID.
+
+```json
+{
+	"https://exmaple.com/name": [
+		{
+			"@value": "Alice"
+		}
+	],
+	"https://example.com/address": [
+		{
+			"@value": "123 Peachtree Avenue"
+		}
+	],
+	"https://example.com/color": [
+		{
+			"@value": "Purple"
+		}
+	]
+}
+```
+
+And of course, using the context, the above can be abbreviated like so:
+
+```json
+{
+	"@context": {
+		"ex": "https://example.com/",
+		"name": "ex:name",
+		"address": "ex:address",
+		"color": "ex:color"
+	},
+	"name": "Alice",
+	"address": "123 Peachtree Avenue",
+	"color": "Purple"
+}
+```
+
+### Literals and Nodes
+
+So far, I've been talking about associating each "field" (predicate) to a literal ("object"). However, one of the powers of JSON-LD and the triples that it represents is that you can form a graph!
+
+That means a subject can point to an object, and that object can represent a subject and then points to another object, and so on and so forth.
+
+And the way to do that is to have the object be an ID instead of a literal.
 
 ### Actual Linked Data
 

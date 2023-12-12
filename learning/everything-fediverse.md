@@ -172,6 +172,12 @@ And, the above document with two contexts will resolve like so:
 ]
 ```
 
+There are many reasons why you would want multiple contexts.
+
+One very important use case is that two parts of an application can expect two entirely distinct set of vocabularies.
+
+While one component can read fields that conforms to one set of vocabulary, the other can read from the other set of vocabulary.
+
 ### Practicing and debugging JSON-LD
 
 Some may find JSON-LD to be rather confusing. Fear not, you are not alone.

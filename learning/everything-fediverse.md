@@ -97,6 +97,7 @@ The `@context` can also be a URL to a JSON document that actually describes the 
 For example, let's say `https://example.com/ns` actually points to another JSON-LD object that contains a `@context` at its root.
 
 ```json
+// This can potentially be located at https://example.com/ns
 {
 	"@context": {
 		"ex": "https://example.com/ns#",
@@ -128,6 +129,48 @@ Again, that above document will expand to what we saw earlier, but this time, mo
 
 > [!Note]
 > As far as JSON-LD interpreters are concerned, a context pointed to by a URL is the only thing that will only ever trigger a network reqeuest. Beyond that JSON-LD is merely a data interchange format, and any application-level inconsistencies must be handled between clients/servers.
+
+### Multiple contexts
+
+In JSON-LD, you have the ability to provide multiple contexts.
+
+For example,
+
+```json
+{
+	"@context": [
+		{
+			"ex1": "https://example.com/ns1#",
+			"name": "ex1:name"
+		},
+		{
+			"ex2": "https://example.com/ns2#",
+			"address": "ex2:address"
+		}
+	],
+	"name": "Jane Doe",
+	"address": "123 Peachtree Avenue"
+}
+```
+
+And, the above document with two contexts will resolve like so:
+
+```json
+[
+	{
+		"https://example.com/ns2#address": [
+			{
+				"@value": "123 Peachtree Avenue"
+			}
+		],
+		"https://example.com/ns1#name": [
+			{
+				"@value": "Jane Doe"
+			}
+		]
+	}
+]
+```
 
 ### Practicing and debugging JSON-LD
 
@@ -429,17 +472,52 @@ And it would expand to this:
 ]
 ```
 
-### URLs don't need to resolve to anything
+### Most URLs don't need to resolve to anything
 
 So you noticed that a lot of things in the previous JSON-LD documents are URLs. Not only are the subjects often represented as URLs, and not only are some objects represented as URLs to other nodes, but so are the predicates!
 
-But here's the thing: URLs don't need to _actually_ resolve. That is, `https://example.com` doesn't even need to exist on the Internet!
+But here's the thing: URLs don't need to _actually_ resolve (with the exception of a context pointed to by a URL). That is, `https://example.com` doesn't even need to exist on the Internet!
 
 This is why the convention behind defining a predicate uses a `#` symbol (such as `https://example.com#fieldName`); that's the part of a URL that is ignored when looking up a resource on the internet.
 
 So, for example `https://example.com#fieldName` simply resolves to `https://example.com`, because the content including and after the `#` symbol don't matter.
 
-In JSON-LD, the vast majority of use cases of URLs is to uniqely identify things, without actually being able to locate them on the Internet!
+In JSON-LD, the vast majority of use cases of URLs are to uniqely identify things, without actually being able to locate them on the Internet!
+
+Whether or not a particular URL resolves in a JSON-LD document is a matter of settlement exclusively between producer and consumer of the document. If the consumer expects to be able to resolve a URL, then this is a problem between the consumer and producer, and it's up to them to figure it out.
+
+> ![Note]
+> Yes, I did say almost all URLs in a JSON-LD document need not be able to be located on the Internet.
+>
+> That there is only **one** exception, and that is the `@context`. If there is a context defined in a document found on the Internet, then JSON-LD interpreters **MUST** be able to download it in order to make sense of the document that has its context pointing to another another resource on the Internet.
+>
+> For example, the URL in the context **MUST** exist, otherwise, the document is deemed invalid.
+>
+> ```json
+> {
+> 	"@context": "https://example.com/ns"
+> }
+> ```
+>
+> If `https://example.com/ns` does not point to a JSON-LD document that represents a valid context, then the JSON-LD document is invalid!
+>
+> Yes, this means JSON-LD clients that don't have access to the Internet will not be able to process the document.
+
+### URLs, URIs, and IRIs in JSON-LD
+
+In the previous section, I mentioned how most of the URLs in a JSON-LD document does not need to actually resolve into anything. It's up to the consumer of the document to determine if the document is valid or not.
+
+Hence why not only can subject, predicate, and objects be URLs, but they can also be URIs. JSON-LD works perfectly fine with URIs
+
+An example of such a URI would be a "mailto" URI, such as `urn:isbn:0-486-27557-4`. That URI doesn't point to anything on the Internet.
+
+And then you have IRIs.
+
+IRIs are a superset of URIs.
+
+JSON-LDs also work with IRIs.
+
+In fact, by the JSON-LD specification, IRIs are what JSON-LD works with. And IRIs are a superset of URIs, and URIs are a superset of URLs. Hence why JSON-LD works perfectly fine with URLs.
 
 ### The `@type` field
 

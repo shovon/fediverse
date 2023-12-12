@@ -97,7 +97,6 @@ The `@context` can also be a URL to a JSON document that actually describes the 
 For example, let's say `https://example.com/ns` actually points to another JSON-LD object that contains a `@context` at its root.
 
 ```json
-// This can potentially be located at https://example.com/ns
 {
 	"@context": {
 		"ex": "https://example.com/ns#",

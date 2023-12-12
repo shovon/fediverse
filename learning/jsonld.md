@@ -540,7 +540,129 @@ JSON-LD processors will ignore the `foo` field entirely, and so expanding the ab
 
 As you can see, nothing.
 
+However, if you were to have foo be an alias for something, such as `https://example.com/foo`, then the JSON-LD processor will be able to pick up on something.
+
+Indeed.
+
+```json
+{
+	"@context": {
+		"ex": "https://example.com/",
+		"foo": {
+			"@id": "ex:foo",
+			"@type": "@id"
+		}
+	},
+	"foo": {
+		"bar": {
+			"baz": "qux"
+		}
+	}
+}
+```
+
+Which will expand to
+
+```json
+[
+	{
+		"https://example.com/foo": [{}]
+	}
+]
+```
+
+Of course, bar, and baz, are not being picked up.
+
+Let's start with `bar`.
+
+```json
+{
+	"@context": {
+		"ex": "https://example.com/",
+		"foo": {
+			"@id": "ex:foo",
+			"@type": "@id"
+		},
+		"bar": {
+			"@id": "ex:bar",
+			"@type": "@id"
+		}
+	},
+	"foo": {
+		"bar": {
+			"baz": "qux"
+		}
+	}
+}
+```
+
+Which yields
+
+```json
+[
+	{
+		"https://example.com/foo": [
+			{
+				"https://example.com/bar": [{}]
+			}
+		]
+	}
+]
+```
+
+And finally, baz
+
+```json
+{
+	"@context": {
+		"ex": "https://example.com/",
+		"foo": {
+			"@id": "ex:foo",
+			"@type": "@id"
+		},
+		"bar": {
+			"@id": "ex:bar",
+			"@type": "@id"
+		},
+		"baz": "ex:baz"
+	},
+	"foo": {
+		"bar": {
+			"baz": "qux"
+		}
+	}
+}
+```
+
+Which yields
+
+```json
+[
+	{
+		"https://example.com/foo": [
+			{
+				"https://example.com/bar": [
+					{
+						"https://example.com/baz": [
+							{
+								"@value": "qux"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+]
+```
+
+If you think the contexts are too verbose, consider designing your application to standardize the context, and have it be located elsewhere on the Internet.
+
+This way, you can pretty much just have it all be pointed to in a URL.
+
 ## The `@type` field
+
+JSON-LD has a lot more hidden up its sleeves. One of which is the `@type` field, which I feel is important to discuss. A lot of applications use this field.
 
 Even though the `@type` field doesn't play _that_ major of a role in terms of interpreting an LD node, it's still there, in case you need it. This way, you don't need to describe your own custom predicate to describe the "type" of a node.
 

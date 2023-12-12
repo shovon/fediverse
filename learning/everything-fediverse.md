@@ -88,6 +88,8 @@ The above document will expand to become:
 
 As you can see, the root-level document is expanded and placed in an array. This is because, again, JSON-LD is a way to represent a graph of linked data, and a single JSON-LD document (or any document representing linked data) can have multiple nodes in the graph.
 
+For example, that above node (identified as `https://example.com/api/people/1`), can have a single field (identified as `https://example.com/ns#name`), have mulitple values.
+
 ### The context as a URL
 
 The `@context` can also be a URL to a JSON document that actually describes the schema/vocabulary.
@@ -302,7 +304,7 @@ And, to clean things with the help of the context, we now introduce an additiona
 }
 ```
 
-Of course, if you wanted to uniquely identify Alice's dog in a global pool of triples and nodes, you can do so via the `@id` field, just as you would with the root node.
+Of course, if you wanted to uniquely identify Alice's dog in a global pool of triples, you can do so via the `@id` field, just as you would with the root node.
 
 ```json
 {
@@ -426,6 +428,18 @@ And it would expand to this:
 	}
 ]
 ```
+
+### URLs don't need to resolve to anything
+
+So you noticed that a lot of things in the previous JSON-LD documents are URLs. Not only are the subjects often represented as URLs, and not only are some objects represented as URLs to other nodes, but so are the predicates!
+
+But here's the thing: URLs don't need to _actually_ resolve. That is, `https://example.com` doesn't even need to exist on the Internet!
+
+This is why the convention behind defining a predicate uses a `#` symbol (such as `https://example.com#fieldName`); that's the part of a URL that is ignored when looking up a resource on the internet.
+
+So, for example `https://example.com#fieldName` simply resolves to `https://example.com`, because the content including and after the `#` symbol don't matter.
+
+In JSON-LD, the vast majority of use cases of URLs is to uniqely identify things, without actually being able to locate them on the Internet!
 
 ### The `@type` field
 

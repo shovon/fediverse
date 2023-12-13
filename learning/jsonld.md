@@ -4,7 +4,7 @@ JSON-LD may look like JSON, but the JSON is merely the container format to repre
 
 To put it simply, LD is a standard for describing nodes (subject), and their relationship (predicates) to other nodes (object).
 
-The caveat with using LD is that fields should be defined not as human-readable names (for example, `name` or `address`) but as URLs (for example, `https://example.com/ns#name` or `https://example.com/ns#address).
+The caveat with using LD is that fields should be defined not as human-readable names (for example, `name` or `address`) but as URLs (for example, `https://example.com/ns#name` or `https://example.com/ns#address`).
 
 So, if we have an organization that owns the domain name `example.com`, they can use the domain name to express "ownership" of those fields.
 

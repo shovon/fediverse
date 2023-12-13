@@ -14,17 +14,17 @@ Here's what a "real" JSON-LD document would look like:
 
 ```json
 {
-	"@id": "https://example.com/api/people/1",
-	"https://example.com/ns#name": [
-		{
-			"@value": "John Doe"
-		}
-	],
-	"https://example.com/ns#address": [
-		{
-			"@value": "123 Peachtree Avenue"
-		}
-	]
+  "@id": "https://example.com/api/people/1",
+  "https://example.com/ns#name": [
+    {
+      "@value": "John Doe"
+    }
+  ],
+  "https://example.com/ns#address": [
+    {
+      "@value": "123 Peachtree Avenue"
+    }
+  ]
 }
 ```
 
@@ -36,14 +36,14 @@ For example:
 
 ```json
 {
-	"@context": {
-		"ex": "https://example.com/ns#",
-		"name": "ex:name",
-		"address": "ex:address"
-	},
-	"@id": "https://example.com/api/people/1",
-	"name": "John Doe",
-	"address": "123 Peachtree Avenue"
+  "@context": {
+    "ex": "https://example.com/ns#",
+    "name": "ex:name",
+    "address": "ex:address"
+  },
+  "@id": "https://example.com/api/people/1",
+  "name": "John Doe",
+  "address": "123 Peachtree Avenue"
 }
 ```
 
@@ -60,19 +60,19 @@ The above document will expand to become:
 
 ```json
 [
-	{
-		"@id": "https://example.com/api/people/1",
-		"https://example.com/ns#name": [
-			{
-				"@value": "John Doe"
-			}
-		],
-		"https://example.com/ns#address": [
-			{
-				"@value": "123 Peachtree Avenue"
-			}
-		]
-	}
+  {
+    "@id": "https://example.com/api/people/1",
+    "https://example.com/ns#name": [
+      {
+        "@value": "John Doe"
+      }
+    ],
+    "https://example.com/ns#address": [
+      {
+        "@value": "123 Peachtree Avenue"
+      }
+    ]
+  }
 ]
 ```
 
@@ -88,11 +88,11 @@ For example, let's say `https://example.com/ns` actually points to another JSON-
 
 ```json
 {
-	"@context": {
-		"ex": "https://example.com/ns#",
-		"name": "ex:name",
-		"address": "ex:address"
-	}
+  "@context": {
+    "ex": "https://example.com/ns#",
+    "name": "ex:name",
+    "address": "ex:address"
+  }
 }
 ```
 
@@ -100,10 +100,10 @@ Then you can simply substitute the context in your document with the URL to `htt
 
 ```json
 {
-	"@context": "https://example.com/ns",
-	"@id": "https://example.com/api/people/1",
-	"name": "John Doe",
-	"address": "123 Peachtree Avenue"
+  "@context": "https://example.com/ns",
+  "@id": "https://example.com/api/people/1",
+  "name": "John Doe",
+  "address": "123 Peachtree Avenue"
 }
 ```
 
@@ -127,18 +127,18 @@ For example,
 
 ```json
 {
-	"@context": [
-		{
-			"ex1": "https://example.com/ns1#",
-			"name": "ex1:name"
-		},
-		{
-			"ex2": "https://example.com/ns2#",
-			"address": "ex2:address"
-		}
-	],
-	"name": "Jane Doe",
-	"address": "123 Peachtree Avenue"
+  "@context": [
+    {
+      "ex1": "https://example.com/ns1#",
+      "name": "ex1:name"
+    },
+    {
+      "ex2": "https://example.com/ns2#",
+      "address": "ex2:address"
+    }
+  ],
+  "name": "Jane Doe",
+  "address": "123 Peachtree Avenue"
 }
 ```
 
@@ -146,18 +146,18 @@ And, the above document with two contexts will resolve like so:
 
 ```json
 [
-	{
-		"https://example.com/ns2#address": [
-			{
-				"@value": "123 Peachtree Avenue"
-			}
-		],
-		"https://example.com/ns1#name": [
-			{
-				"@value": "Jane Doe"
-			}
-		]
-	}
+  {
+    "https://example.com/ns2#address": [
+      {
+        "@value": "123 Peachtree Avenue"
+      }
+    ],
+    "https://example.com/ns1#name": [
+      {
+        "@value": "Jane Doe"
+      }
+    ]
+  }
 ]
 ```
 
@@ -213,17 +213,17 @@ The above set of triples can be instead rewritten as so:
 
 ```json
 {
-	"@id": "https://example.com/Alice",
-	"https://example.com/address": [
-		{
-			"@value": "123 Peachtree Avenue"
-		}
-	],
-	"https://example.com/color": [
-		{
-			"@value": "Purple"
-		}
-	]
+  "@id": "https://example.com/Alice",
+  "https://example.com/address": [
+    {
+      "@value": "123 Peachtree Avenue"
+    }
+  ],
+  "https://example.com/color": [
+    {
+      "@value": "Purple"
+    }
+  ]
 }
 ```
 
@@ -262,21 +262,21 @@ In JSON-LD, however, because we don't need to explicitly identify blank nodes, w
 
 ```json
 {
-	"https://exmaple.com/name": [
-		{
-			"@value": "Alice"
-		}
-	],
-	"https://example.com/address": [
-		{
-			"@value": "123 Peachtree Avenue"
-		}
-	],
-	"https://example.com/color": [
-		{
-			"@value": "Purple"
-		}
-	]
+  "https://exmaple.com/name": [
+    {
+      "@value": "Alice"
+    }
+  ],
+  "https://example.com/address": [
+    {
+      "@value": "123 Peachtree Avenue"
+    }
+  ],
+  "https://example.com/color": [
+    {
+      "@value": "Purple"
+    }
+  ]
 }
 ```
 
@@ -284,15 +284,15 @@ And of course, using the context, the above can be abbreviated like so:
 
 ```json
 {
-	"@context": {
-		"ex": "https://example.com/",
-		"name": "ex:name",
-		"address": "ex:address",
-		"color": "ex:color"
-	},
-	"name": "Alice",
-	"address": "123 Peachtree Avenue",
-	"color": "Purple"
+  "@context": {
+    "ex": "https://example.com/",
+    "name": "ex:name",
+    "address": "ex:address",
+    "color": "ex:color"
+  },
+  "name": "Alice",
+  "address": "123 Peachtree Avenue",
+  "color": "Purple"
 }
 ```
 
@@ -315,15 +315,15 @@ And an equivalent JSON-LD would look like so:
 
 ```json
 {
-	"https://example.com/dog": [
-		{
-			"https://example.com/name": [
-				{
-					"@value": "Waffles"
-				}
-			]
-		}
-	]
+  "https://example.com/dog": [
+    {
+      "https://example.com/name": [
+        {
+          "@value": "Waffles"
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -331,16 +331,16 @@ And, to clean things with the help of the context, we now introduce an additiona
 
 ```json
 {
-	"@context": {
-		"ex": "https://example.com/",
-		"dog": {
-			"@id": "ex:dog",
-			"@type": "@id"
-		}
-	},
-	"dog": {
-		"name": "Waffles"
-	}
+  "@context": {
+    "ex": "https://example.com/",
+    "dog": {
+      "@id": "ex:dog",
+      "@type": "@id"
+    }
+  },
+  "dog": {
+    "name": "Waffles"
+  }
 }
 ```
 
@@ -348,18 +348,18 @@ Of course, if you wanted to uniquely identify Alice's dog in a global pool of tr
 
 ```json
 {
-	"@context": {
-		"ex": "https://example.com/",
-		"dog": {
-			"@id": "ex:dog",
-			"@type": "@id"
-		},
-		"name": "ex:name"
-	},
-	"dog": {
-		"@id": "https://example.com/Waffles",
-		"name": "Waffles"
-	}
+  "@context": {
+    "ex": "https://example.com/",
+    "dog": {
+      "@id": "ex:dog",
+      "@type": "@id"
+    },
+    "name": "ex:name"
+  },
+  "dog": {
+    "@id": "https://example.com/Waffles",
+    "name": "Waffles"
+  }
 }
 ```
 
@@ -387,16 +387,16 @@ So this is perfectly fine in such a hypothetical application.
 
 ```json
 {
-	"@context": {
-		"ex": "https://example.com/",
-		"dog": {
-			"@id": "ex:dog",
-			"@type": "@id"
-		}
-	},
-	"dog": {
-		"@id": "https://example.com/Waffles"
-	}
+  "@context": {
+    "ex": "https://example.com/",
+    "dog": {
+      "@id": "ex:dog",
+      "@type": "@id"
+    }
+  },
+  "dog": {
+    "@id": "https://example.com/Waffles"
+  }
 }
 ```
 
@@ -410,14 +410,14 @@ Like so:
 
 ```json
 {
-	"@context": {
-		"ex": "https://example.com/",
-		"dog": {
-			"@id": "ex:dog",
-			"@type": "@id"
-		}
-	},
-	"dog": "https://example.com/Waffles"
+  "@context": {
+    "ex": "https://example.com/",
+    "dog": {
+      "@id": "ex:dog",
+      "@type": "@id"
+    }
+  },
+  "dog": "https://example.com/Waffles"
 }
 ```
 
@@ -427,13 +427,13 @@ In case you're wondering, that above document will expand to this:
 
 ```json
 [
-	{
-		"https://example.com/dog": [
-			{
-				"@id": "https://example.com/Waffles"
-			}
-		]
-	}
+  {
+    "https://example.com/dog": [
+      {
+        "@id": "https://example.com/Waffles"
+      }
+    ]
+  }
 ]
 ```
 
@@ -441,14 +441,14 @@ Also, if we wanted an entity to have multiple dogs associated with it (after all
 
 ```json
 {
-	"@context": {
-		"ex": "https://example.com/",
-		"dog": {
-			"@id": "ex:dog",
-			"@type": "@id"
-		}
-	},
-	"dog": ["https://example.com/Waffles", "https://example.com/Milo"]
+  "@context": {
+    "ex": "https://example.com/",
+    "dog": {
+      "@id": "ex:dog",
+      "@type": "@id"
+    }
+  },
+  "dog": ["https://example.com/Waffles", "https://example.com/Milo"]
 }
 ```
 
@@ -456,16 +456,16 @@ And it would expand to this:
 
 ```json
 [
-	{
-		"https://example.com/dog": [
-			{
-				"@id": "https://example.com/Waffles"
-			},
-			{
-				"@id": "https://example.com/Milo"
-			}
-		]
-	}
+  {
+    "https://example.com/dog": [
+      {
+        "@id": "https://example.com/Waffles"
+      },
+      {
+        "@id": "https://example.com/Milo"
+      }
+    ]
+  }
 ]
 ```
 
@@ -492,7 +492,7 @@ Whether or not a particular URL resolves in a JSON-LD document is a matter of se
 >
 > ```json
 > {
-> 	"@context": "https://example.com/ns"
+>   "@context": "https://example.com/ns"
 > }
 > ```
 >
@@ -524,11 +524,11 @@ For example, give this a try:
 
 ```json
 {
-	"foo": {
-		"bar": {
-			"baz": "qux"
-		}
-	}
+  "foo": {
+    "bar": {
+      "baz": "qux"
+    }
+  }
 }
 ```
 
@@ -546,18 +546,18 @@ Indeed.
 
 ```json
 {
-	"@context": {
-		"ex": "https://example.com/",
-		"foo": {
-			"@id": "ex:foo",
-			"@type": "@id"
-		}
-	},
-	"foo": {
-		"bar": {
-			"baz": "qux"
-		}
-	}
+  "@context": {
+    "ex": "https://example.com/",
+    "foo": {
+      "@id": "ex:foo",
+      "@type": "@id"
+    }
+  },
+  "foo": {
+    "bar": {
+      "baz": "qux"
+    }
+  }
 }
 ```
 
@@ -565,9 +565,9 @@ Which will expand to
 
 ```json
 [
-	{
-		"https://example.com/foo": [{}]
-	}
+  {
+    "https://example.com/foo": [{}]
+  }
 ]
 ```
 
@@ -577,22 +577,22 @@ Let's start with `bar`.
 
 ```json
 {
-	"@context": {
-		"ex": "https://example.com/",
-		"foo": {
-			"@id": "ex:foo",
-			"@type": "@id"
-		},
-		"bar": {
-			"@id": "ex:bar",
-			"@type": "@id"
-		}
-	},
-	"foo": {
-		"bar": {
-			"baz": "qux"
-		}
-	}
+  "@context": {
+    "ex": "https://example.com/",
+    "foo": {
+      "@id": "ex:foo",
+      "@type": "@id"
+    },
+    "bar": {
+      "@id": "ex:bar",
+      "@type": "@id"
+    }
+  },
+  "foo": {
+    "bar": {
+      "baz": "qux"
+    }
+  }
 }
 ```
 
@@ -600,13 +600,13 @@ Which yields
 
 ```json
 [
-	{
-		"https://example.com/foo": [
-			{
-				"https://example.com/bar": [{}]
-			}
-		]
-	}
+  {
+    "https://example.com/foo": [
+      {
+        "https://example.com/bar": [{}]
+      }
+    ]
+  }
 ]
 ```
 
@@ -614,23 +614,23 @@ And finally, baz
 
 ```json
 {
-	"@context": {
-		"ex": "https://example.com/",
-		"foo": {
-			"@id": "ex:foo",
-			"@type": "@id"
-		},
-		"bar": {
-			"@id": "ex:bar",
-			"@type": "@id"
-		},
-		"baz": "ex:baz"
-	},
-	"foo": {
-		"bar": {
-			"baz": "qux"
-		}
-	}
+  "@context": {
+    "ex": "https://example.com/",
+    "foo": {
+      "@id": "ex:foo",
+      "@type": "@id"
+    },
+    "bar": {
+      "@id": "ex:bar",
+      "@type": "@id"
+    },
+    "baz": "ex:baz"
+  },
+  "foo": {
+    "bar": {
+      "baz": "qux"
+    }
+  }
 }
 ```
 
@@ -638,21 +638,21 @@ Which yields
 
 ```json
 [
-	{
-		"https://example.com/foo": [
-			{
-				"https://example.com/bar": [
-					{
-						"https://example.com/baz": [
-							{
-								"@value": "qux"
-							}
-						]
-					}
-				]
-			}
-		]
-	}
+  {
+    "https://example.com/foo": [
+      {
+        "https://example.com/bar": [
+          {
+            "https://example.com/baz": [
+              {
+                "@value": "qux"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
 ]
 ```
 
@@ -668,7 +668,7 @@ Even though the `@type` field doesn't play _that_ major of a role in terms of in
 
 ```json
 {
-	"@type": "https://example.com/ns#Person"
+  "@type": "https://example.com/ns#Person"
 }
 ```
 
@@ -678,11 +678,11 @@ For example:
 
 ```json
 {
-	"@context": {
-		"ex": "https://example.com/ns#",
-		"Person": "ex:Person"
-	},
-	"@type": "Person"
+  "@context": {
+    "ex": "https://example.com/ns#",
+    "Person": "ex:Person"
+  },
+  "@type": "Person"
 }
 ```
 
@@ -690,9 +690,9 @@ Expanding the above should yield
 
 ```json
 [
-	{
-		"@type": ["https://example.com/ns#Person"]
-	}
+  {
+    "@type": ["https://example.com/ns#Person"]
+  }
 ]
 ```
 
@@ -702,12 +702,12 @@ This is because a single node can represent more than one type.
 
 ```json
 {
-	"@context": {
-		"ex": "https://example.com/ns#",
-		"Person": "ex:Person",
-		"Employee": "ex:Employee"
-	},
-	"@type": ["Person", "Employee"]
+  "@context": {
+    "ex": "https://example.com/ns#",
+    "Person": "ex:Person",
+    "Employee": "ex:Employee"
+  },
+  "@type": ["Person", "Employee"]
 }
 ```
 
@@ -717,12 +717,12 @@ Everything that is represented by a URI, such as `@id`s, fields, and `@type`s, c
 
 ```json
 {
-	"@context": {
-		"ex": "https://example.com/"
-	},
-	"ex:ns#cool": {
-		"@id": "ex:"
-	}
+  "@context": {
+    "ex": "https://example.com/"
+  },
+  "ex:ns#cool": {
+    "@id": "ex:"
+  }
 }
 ```
 
@@ -730,13 +730,13 @@ Will expand to:
 
 ```json
 [
-	{
-		"https://example.com/ns#cool": [
-			{
-				"@id": "https://example.com/"
-			}
-		]
-	}
+  {
+    "https://example.com/ns#cool": [
+      {
+        "@id": "https://example.com/"
+      }
+    ]
+  }
 ]
 ```
 
@@ -751,16 +751,16 @@ For that reason, many authors take advantage of JSON-LD's capability to alias th
 
 ```json
 {
-	"@context": {
-		"ex": "https://example.com/ns#",
-		"id": "@id",
-		"type": "@type",
-		"Object": "ex:Object",
-		"Nothing": "ex:Nothing"
-	},
+  "@context": {
+    "ex": "https://example.com/ns#",
+    "id": "@id",
+    "type": "@type",
+    "Object": "ex:Object",
+    "Nothing": "ex:Nothing"
+  },
 
-	"id": "https://example.com/api/objects/1",
-	"type": ["Object", "Nothing"]
+  "id": "https://example.com/api/objects/1",
+  "type": ["Object", "Nothing"]
 }
 ```
 
@@ -778,20 +778,20 @@ I even demonstrated this in a previous example. Here it is again:
 
 ```json
 {
-	"@context": {
-		"ex": "https://example.com/ns#",
-		"name": "ex:name",
-		"address": "ex:address"
-	},
-	"@id": "https://example.com/api/people/1",
-	"name": "John Doe",
-	"address": "123 Peachtree Avenue",
-	"https://example.com/ns#dogs": [
-		{
-			"@id": "https://example.com/api/dogs/1",
-			"name": "Waffles"
-		}
-	]
+  "@context": {
+    "ex": "https://example.com/ns#",
+    "name": "ex:name",
+    "address": "ex:address"
+  },
+  "@id": "https://example.com/api/people/1",
+  "name": "John Doe",
+  "address": "123 Peachtree Avenue",
+  "https://example.com/ns#dogs": [
+    {
+      "@id": "https://example.com/api/dogs/1",
+      "name": "Waffles"
+    }
+  ]
 }
 ```
 

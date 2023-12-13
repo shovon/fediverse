@@ -24,8 +24,8 @@ So while I'd write `as:inbox` in these paragraphs, in JSON, as long as I provide
 
 ```json
 {
-	"@context": "https://www.w3.org/ns/activitystreams",
-	"inbox": "https://sources.example.com/actors/1/inbox"
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "inbox": "https://sources.example.com/actors/1/inbox"
 }
 ```
 
@@ -39,13 +39,13 @@ Here's a barebones actor.
 
 ```json
 {
-	"@context": "https://www.w3.org/ns/activitystreams",
-	"id": "https://source.example.com",
-	"inbox": "https://sources.example.com/inbox",
-	"outbox": "https://sources.example.com/outbox",
-	"following": "https://sources.example.com/following",
-	"followers": "https://sources.example.com/followers",
-	"liked": "https://sources.example.com/liked"
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "id": "https://source.example.com",
+  "inbox": "https://sources.example.com/inbox",
+  "outbox": "https://sources.example.com/outbox",
+  "following": "https://sources.example.com/following",
+  "followers": "https://sources.example.com/followers",
+  "liked": "https://sources.example.com/liked"
 }
 ```
 
@@ -65,23 +65,23 @@ So, taking the actor from earlier, and then adding the necessary fields in order
 
 ```json
 {
-	"@context": [
-		"https://www.w3.org/ns/activitystreams",
-		"https://w3id.org/security/v1"
-	],
-	"id": "https://source.example.com",
-	"type": "Person",
-	"inbox": "https://sources.example.com/inbox",
-	"outbox": "https://sources.example.com/outbox",
-	"following": "https://sources.example.com/following",
-	"followers": "https://sources.example.com/followers",
-	"liked": "https://sources.example.com/liked",
-	"preferredUsername": "actor",
-	"publicKey": {
-		"id": "https://source.example.com#main-key",
-		"owner": "https://source.example.com",
-		"publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArLEIhmSM4UXoUbh/UNri\nOmsruokiG4GU0jz7R/rZ3lC0kGEMEJpk7x8hLEtg0DhV9DW3jPOsPi1KvLRkTgiE\nCSEEG+ULqZ3/WTZR3VX+/Tb1huemD2rBZkv9vpL+3qSRuFTvcMumonVuJ6rtT3pG\nTbsXlYmp2n7VkbPQPz6Wy3R7YeGmdNxtRiccwrpeovc+kCCoY/t467cK1ON+FDrq\nT/xgNhG2jPfotMF3ixk5/EQuakKEz2YQP4duD6D86QciZQWjw5YMv96NxV6D24CV\nn8HxEcxM5AfWvqbNLpEvi6UBUVCnM4IzJTlboPBO4tUPSu01YDqb8jbTC0f6rOCZ\nOQIDAQAB\n-----END PUBLIC KEY-----\n"
-	}
+  "@context": [
+    "https://www.w3.org/ns/activitystreams",
+    "https://w3id.org/security/v1"
+  ],
+  "id": "https://source.example.com",
+  "type": "Person",
+  "inbox": "https://sources.example.com/inbox",
+  "outbox": "https://sources.example.com/outbox",
+  "following": "https://sources.example.com/following",
+  "followers": "https://sources.example.com/followers",
+  "liked": "https://sources.example.com/liked",
+  "preferredUsername": "actor",
+  "publicKey": {
+    "id": "https://source.example.com#main-key",
+    "owner": "https://source.example.com",
+    "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArLEIhmSM4UXoUbh/UNri\nOmsruokiG4GU0jz7R/rZ3lC0kGEMEJpk7x8hLEtg0DhV9DW3jPOsPi1KvLRkTgiE\nCSEEG+ULqZ3/WTZR3VX+/Tb1huemD2rBZkv9vpL+3qSRuFTvcMumonVuJ6rtT3pG\nTbsXlYmp2n7VkbPQPz6Wy3R7YeGmdNxtRiccwrpeovc+kCCoY/t467cK1ON+FDrq\nT/xgNhG2jPfotMF3ixk5/EQuakKEz2YQP4duD6D86QciZQWjw5YMv96NxV6D24CV\nn8HxEcxM5AfWvqbNLpEvi6UBUVCnM4IzJTlboPBO4tUPSu01YDqb8jbTC0f6rOCZ\nOQIDAQAB\n-----END PUBLIC KEY-----\n"
+  }
 }
 ```
 
@@ -91,11 +91,11 @@ When following an actor, you would send a "follow activity". It usually looks li
 
 ```json
 {
-	"@context": "https://www.w3.org/ns/activitystreams",
-	"id": "https://source.example.com#follow/1",
-	"type": "Follow",
-	"actor": "https://source.example.com",
-	"object": "https://destination.example.com"
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "id": "https://source.example.com#follow/1",
+  "type": "Follow",
+  "actor": "https://source.example.com",
+  "object": "https://destination.example.com"
 }
 ```
 
@@ -107,16 +107,16 @@ If the followee is willing to welcome the prospective follower to become an actu
 
 ```json
 {
-	"@context": "https://www.w3.org/ns/activitystreams",
-	"id": "https://destination.example.com#accepts/follows/1",
-	"type": "Accept",
-	"actor": "https://destination.example.com",
-	"object": {
-		"id": "https://source.example.com#follow/1",
-		"type": "Follow",
-		"actor": "https://source.example.com",
-		"object": "https://destination.example.com"
-	}
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "id": "https://destination.example.com#accepts/follows/1",
+  "type": "Accept",
+  "actor": "https://destination.example.com",
+  "object": {
+    "id": "https://source.example.com#follow/1",
+    "type": "Follow",
+    "actor": "https://source.example.com",
+    "object": "https://destination.example.com"
+  }
 }
 ```
 
@@ -128,15 +128,15 @@ When unfollowing an actor, the unfollower must send an "undo activity".
 
 ```json
 {
-	"@context": "https://www.w3.org/ns/activitystreams",
-	"id": "https://destination.example.com#accepts/follows/1",
-	"type": "Undo",
-	"actor": "https://destination.example.com",
-	"object": {
-		"id": "https://source.example.com#follow/1",
-		"type": "Follow",
-		"actor": "https://source.example.com",
-		"object": "https://destination.example.com"
-	}
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "id": "https://destination.example.com#accepts/follows/1",
+  "type": "Undo",
+  "actor": "https://destination.example.com",
+  "object": {
+    "id": "https://source.example.com#follow/1",
+    "type": "Follow",
+    "actor": "https://source.example.com",
+    "object": "https://destination.example.com"
+  }
 }
 ```

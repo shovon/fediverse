@@ -76,7 +76,7 @@ The above document will expand to become:
 ]
 ```
 
-As you can see, the root-level document is expanded and placed in an array. This is because, again, JSON-LD is a way to represent a graph of linked data, and a single JSON-LD document (or any document representing linked data) can have multiple nodes in the graph.
+As you can see, the root-level document is expanded and placed in an array. This is because JSON-LD is a way to represent a graph of linked data, and a single JSON-LD document (or any document representing linked data) can have multiple nodes in the graph.
 
 For example, that above node (identified as `https://example.com/api/people/1`), can have a single field (identified as `https://example.com/ns#name`), have mulitple values.
 
